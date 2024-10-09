@@ -4,13 +4,13 @@ import { CODE_SNIPPETS } from '../constants';
 type Language = keyof typeof CODE_SNIPPETS;
 
 interface LangSelectorProps {
-  language: string;
+  language: Language;
   onSelect: (language: Language) => void;
 }
 
 const languages = Object.entries(LANGUAGE_VERSIONS);
 
-export const LangSelector = ({language,onSelect}: LangSelectorProps) => {
+export const LangSelector = ({language, onSelect}: LangSelectorProps) => {
   return (
     <Box > 
       <Text mb={1} fontSize="lg">
@@ -27,12 +27,12 @@ export const LangSelector = ({language,onSelect}: LangSelectorProps) => {
         outline="black"
         >{language}</MenuButton>
         <MenuList>
-          {languages.map(([language, version]) => (
+          {languages.map(([language, details]) => (
             <MenuItem key={language} onClick={()=>onSelect(language as Language)}>
               {language}
               &nbsp;
               <Text as="span" color="gray.500" fontSize="sm">
-                {version}
+                {details.version}
               </Text>
             </MenuItem>
           ))}

@@ -1,7 +1,13 @@
 import { Box,Text,Button } from "@chakra-ui/react"
-export const Output = () => {
+
+interface outputProps{
+    onRun: () => void;
+    onSubmit: () => void;
+}
+
+export const Output = ({onRun, onSubmit}: outputProps) => {
   return (
-    <Box >
+   <Box >
         <Text my={2} fontSize="lg">
             Output
         </Text>
@@ -21,6 +27,8 @@ export const Output = () => {
             variant="outline"
             colorScheme="blue"
             my={4}
+
+            onClick={onRun}
           >
             Run Code
           </Button>
@@ -29,6 +37,8 @@ export const Output = () => {
             colorScheme="blue"
             mx={2}
             my={4}
+
+            onClick={onSubmit}
           >
             Submit Code
           </Button>
