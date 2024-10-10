@@ -11,6 +11,26 @@ const params = {
     base64_encoded: true
 };
 
+export const createBatchSubmission = async (inputData: object) =>{
+    const {data} = await axios.post(`${judge0_base_url}/submissions/batch/`, inputData, {
+        headers,
+        params
+    });
+
+    return data;
+}
+
+export const getBatchSubmission = async (tokens: string) => {
+    const {data} = await axios.get(`${judge0_base_url}/submissions/batch/`,{
+        headers,
+        params: {
+            base64_encoded: true,
+            tokens
+        }
+    })
+
+    return data;
+}
 
 export const createSubmission = async (inputData: object) =>{
     const {data} = await axios.post(`${judge0_base_url}/submissions/`, inputData, {
