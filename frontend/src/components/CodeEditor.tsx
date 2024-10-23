@@ -40,7 +40,7 @@ export const CodeEditor = () => {
         const inputFiles = ['input_0.txt', 'input_1.txt', 'input_2.txt'];  // Add your input file names here
         const outputFiles = ['output_0.txt', 'output_1.txt', 'output_2.txt'];
 
-        const input = [];
+        const input: string[]= [];
         const output: string[] = [];
 
         // Read input files
