@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  name               String?
+  token              String?
+  password           String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  Submission         Submission[]
+}
+
+model Problem {
+  id                 String              @id @default(cuid())
+  title              String
+  description        String
+  constraints        String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  difficulty         Difficulty          @default(MEDIUM)
+  owner_code         String?
+  contest_id         String?
+
+  DefaultCode        DefaultCode[]
+  Submission         Submission[]
+}
+
+model DefaultCode {
+  id                 String              @id @default(cuid())
+  languageId         Int
+  problemId          String
+  code               String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  problem            Problem             @relation(fields: [problemId], references: [id])
+  language           Language            @relation(fields: [languageId], references: [id])
+
+  @@unique([problemId, languageId])
+}
+
+model Submission {
+  id                 String              @id @default(cuid())
+  problemId          String
+  userId             String
+  UserCode           String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime?           @updatedAt
+  status             SubmissionResult
+  memory             Int?
+  time               Float?
+  total_testcases    Int
+  evaluated_testcase Int
+  ce                 Int
+  re                 Int
+  tle                Int
+  mle                Int
+  ac                 Int
+
+  user               User                @relation(fields: [userId], references: [id])
+  problem            Problem             @relation(fields: [problemId], references: [id])
+  submitted_testcase Submitted_testcase[]
+}
+
+model Language {
+  id                 Int                @id @default(autoincrement())
+  name               String
+  judge0Id           Int                @unique
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  DefaultCode        DefaultCode[]
+}
+
+model Testcase {
+  id                 String              @id @default(cuid())
+  problem_id         String
+  input_path         String
+  exp_output_path    String
+
+  submitted_testcase Submitted_testcase[]
+}
+
+model Submitted_testcase {
+  id                 String              @id @default(cuid())
+  testcase_id        String
+  submission_id      String
+  status             String
+  output             String?
+  time               Int
+  memory             Int
+
+  testcase           Testcase            @relation(fields: [testcase_id], references: [id])
+  submission         Submission          @relation(fields: [submission_id], references: [id])
+}
+
+enum SubmissionResult {
+  AC
+  REJECTED
+  PENDING
+  TLE
+  MLE
+  CE
+  RE
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
