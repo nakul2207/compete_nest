@@ -39,6 +39,7 @@ export const CodeEditor = () => {
     const handleOnRun = async () =>{
         const inputFiles = ['input_0.txt', 'input_1.txt', 'input_2.txt'];  // Add your input file names here
         const outputFiles = ['output_0.txt', 'output_1.txt', 'output_2.txt'];
+        //axios call to fetch psURLs from the server
 
         const input: string[]= [];
         const output: string[] = [];
@@ -55,6 +56,10 @@ export const CodeEditor = () => {
             if (content) output.push(btoa(content));
         }
 
+        //Read files from the aws S3
+
+
+        //make a batch submission
         const submissions = input.map((input, index) =>{
             return {
                 source_code: btoa(value),
@@ -85,12 +90,12 @@ export const CodeEditor = () => {
         // console.log(data);
         // const result = await createSubmission(data);
         // console.log(result);
-        //
-        // setTimeout(async () =>{
-        //     const status = await getSubmission(result.token);
-        //     console.log(status);
-        //     console.log(atob(status.stdout));
-        // }, 5000);
+
+        setTimeout(async () =>{
+            const status = await getSubmission(result.token);
+            console.log(status);
+            console.log(atob(status.stdout));
+        }, 5000);
     }
 
     const handleOnSubmit = async() =>{

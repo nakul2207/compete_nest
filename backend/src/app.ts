@@ -29,10 +29,11 @@ async function getObjectURL(key: string){
 }
 
 app.get("/", async (req:Request, res: Response) =>{
-    const url = await getObjectURL("Problems/sum/input/input_0.txt");
-    console.log(url);
+    // const url = await getObjectURL("Problems/sum/input/input_0.txt");
+    // console.log(url);
 
-    res.send(url);
+    // res.send(url);
+    res.send("Server is running");
 })
 
 export default app;

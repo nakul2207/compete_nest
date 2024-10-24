@@ -18,6 +18,7 @@ model User {
   updatedAt          DateTime            @updatedAt
 
   Submission         Submission[]
+  Problem            Problem[]
 }
 
 model Problem {
@@ -30,9 +31,12 @@ model Problem {
   difficulty         Difficulty          @default(MEDIUM)
   owner_code         String?
   contest_id         String?
+  userId             String
 
   DefaultCode        DefaultCode[]
   Submission         Submission[]
+
+  added_by            User               @relation(fields: [userId], references: [id])
 }
 
 model DefaultCode {
