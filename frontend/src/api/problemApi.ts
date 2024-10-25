@@ -1,9 +1,8 @@
 import axios from "axios"
 const judge0_base_url = import.meta.env.VITE_BASE_JUDGE0;
-const x_rapidapi_key = import.meta.env.VITE_X_RAPID_API_KEY;
+const server_url = import.meta.env.VITE_SERVER_URL;
 
 const headers = {
-    "X-RapidAPI-Key": x_rapidapi_key,
     'Content-Type': 'application/json'
 }
 
@@ -47,5 +46,13 @@ export const getSubmission = async (token: string) => {
         params
     })
 
+    return data;
+}
+
+export const submitProblem = async (inputData: object) =>{
+    console.log(`${server_url}/api/problem/submit`);
+    const {data} =await axios.post(`${server_url}/api/problem/submit`, inputData, {
+        headers
+    });
     return data;
 }

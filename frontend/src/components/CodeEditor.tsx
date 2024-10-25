@@ -5,12 +5,19 @@ import { LangSelector } from './LangSelector';
 import { CODE_SNIPPETS, LANGUAGE_VERSIONS} from '../constants';
 import {Output} from "./Output.tsx";
 type Language = keyof typeof CODE_SNIPPETS;
-import {createSubmission, getSubmission, createBatchSubmission, getBatchSubmission} from "../api/problemApi.ts";
+import {
+    createSubmission,
+    getSubmission,
+    createBatchSubmission,
+    getBatchSubmission,
+    submitProblem, getCall
+} from "../api/problemApi.ts";
 
 export const CodeEditor = () => {
-    const [value, setValue] = useState<string>(CODE_SNIPPETS["javascript"]);
-    const [language, setLanguage] = useState<Language>("javascript");
+    const [code, setCode] = useState<string>(CODE_SNIPPETS["cpp"]);
+    const [language, setLanguage] = useState<Language>("cpp");
     const editorRef = useRef<any>(null);
+    const problem_id: string = "234";
 
     const onMount = (editor: any) => {
         editorRef.current = editor;
@@ -19,7 +26,7 @@ export const CodeEditor = () => {
 
     const onSelect = (language: Language) => {
         setLanguage(language);
-        setValue(CODE_SNIPPETS[language] || "");
+        setCode(CODE_SNIPPETS[language] || "");
     };
 
     // Function to read a file
@@ -62,7 +69,7 @@ export const CodeEditor = () => {
         //make a batch submission
         const submissions = input.map((input, index) =>{
             return {
-                source_code: btoa(value),
+                source_code: btoa(code),
                 language_id:  LANGUAGE_VERSIONS[language].id,
                 stdin: input,
                 expected_output: output[index] as string
@@ -83,7 +90,7 @@ export const CodeEditor = () => {
         // console.log(output);
 
         // const data = {
-        //     source_code: btoa(value),
+        //     source_code: btoa(code),
         //     language_id: LANGUAGE_VERSIONS[language].id,
         // }
         //
@@ -99,20 +106,23 @@ export const CodeEditor = () => {
     }
 
     const handleOnSubmit = async() =>{
-        const data = {
-            source_code: btoa(value),
-            language_id: LANGUAGE_VERSIONS[language].id,
-        }
+        const data = await submitProblem({problem_id, code: btoa(code)});
+        console.log(data)
 
-        console.log(data);
-        const result = await createSubmission(data);
-        console.log(result);
-
-        setTimeout(async () =>{
-            const status = await getSubmission(result.token);
-            console.log(status);
-            console.log(atob(status.stdout));
-        }, 5000);
+        // const data = {
+        //     source_code: btoa(code),
+        //     language_id: LANGUAGE_VERSIONS[language].id,
+        // }
+        //
+        // console.log(data);
+        // const result = await createSubmission(data);
+        // console.log(result);
+        //
+        // setTimeout(async () =>{
+        //     const status = await getSubmission(result.token);
+        //     console.log(status);
+        //     console.log(atob(status.stdout));
+        // }, 5000);
     }
 
     return (
@@ -122,9 +132,9 @@ export const CodeEditor = () => {
                 height="50vh"
                 theme='vs-dark'
                 language={language}
-                value={value}
+                value={code}
                 onMount={onMount}
-                onChange={(value) => setValue(value || "")}
+                onChange={(code) => setCode(code || "")}
             />
 
             <Output onRun={handleOnRun} onSubmit={handleOnSubmit}/>

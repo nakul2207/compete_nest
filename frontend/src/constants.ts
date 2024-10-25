@@ -1,6 +1,6 @@
 export const LANGUAGE_VERSIONS = {
     cpp: {
-        id: 105,
+        id: 76,
         version: "GCC 14.1.0"
     },
     java: {
