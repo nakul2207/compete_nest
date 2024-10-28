@@ -7,11 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
   id                 String              @id @default(cuid())
   email              String              @unique
-  name               String?
+  name               String
   token              String?
   password           String
   createdAt          DateTime            @default(now())
@@ -26,86 +25,88 @@ model Problem {
   title              String
   description        String
   constraints        String
+  difficulty         Difficulty          @default(MEDIUM)
+  ownerCode          String
+  contestId          String?
+  topics             String[]
+  companies          String[]
+  userId             String
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
-  difficulty         Difficulty          @default(MEDIUM)
-  owner_code         String?
-  contest_id         String?
-  userId             String
 
-  DefaultCode        DefaultCode[]
   Submission         Submission[]
-
-  added_by            User               @relation(fields: [userId], references: [id])
+  Topic              Topic[]
+  Company            Company[]
+  addedBy            User               @relation(fields: [userId], references: [id])
 }
 
-model DefaultCode {
+model Topic {
   id                 String              @id @default(cuid())
-  languageId         Int
+  topic              String
   problemId          String
-  code               String
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
 
-  problem            Problem             @relation(fields: [problemId], references: [id])
-  language           Language            @relation(fields: [languageId], references: [id])
+  topicOf            Problem             @relation(fields: [problemId], references: [id])
+}
 
-  @@unique([problemId, languageId])
+model Company{
+  id                 String              @id @default(cuid())
+  company            String
+  problemId         String
+
+  companyAskedIn   Problem             @relation(fields: [problemId], references: [id])
 }
 
 model Submission {
   id                 String              @id @default(cuid())
   problemId          String
   userId             String
-  UserCode           String
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime?           @updatedAt
-  status             SubmissionResult
+  userCode           String
+  status             SubmissionResult    @default(PENDING)
   memory             Int?
   time               Float?
-  total_testcases    Int
-  evaluated_testcase Int
-  ce                 Int
-  re                 Int
-  tle                Int
-  mle                Int
-  ac                 Int
+  totalTestcases     Int
+  evaluatedTestcases Int?                @default(0)
+  ce                 Int?                @default(0)
+  re                 Int?                @default(0)
+  tle                Int?                @default(0)
+  mle                Int?                @default(0)
+  ac                 Int?                @default(0)
 
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
   user               User                @relation(fields: [userId], references: [id])
   problem            Problem             @relation(fields: [problemId], references: [id])
-  submitted_testcase Submitted_testcase[]
+  submittedTestcase Submitted_testcase[]
 }
 
 model Language {
   id                 Int                @id @default(autoincrement())
   name               String
+  DefaultCode        String
   judge0Id           Int                @unique
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-
-  DefaultCode        DefaultCode[]
 }
 
 model Testcase {
   id                 String              @id @default(cuid())
-  problem_id         String
-  input_path         String
-  exp_output_path    String
+  problemId          String
+  inputPath          String
+  expOutputPath      String
+  isExample          Boolean             @default(false)
 
   submitted_testcase Submitted_testcase[]
 }
 
 model Submitted_testcase {
   id                 String              @id @default(cuid())
-  testcase_id        String
-  submission_id      String
-  status             String
+  testcaseId         String
+  submissionId       String
+  status             SubmissionResult    @default(PENDING)
   output             String?
-  time               Int
-  memory             Int
+  time               Int?
+  memory             Int?
 
-  testcase           Testcase            @relation(fields: [testcase_id], references: [id])
-  submission         Submission          @relation(fields: [submission_id], references: [id])
+  testcase           Testcase            @relation(fields: [testcaseId], references: [id])
+  submission         Submission          @relation(fields: [submissionId], references: [id])
 }
 
 enum SubmissionResult {

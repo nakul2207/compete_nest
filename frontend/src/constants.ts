@@ -4,7 +4,7 @@ export const LANGUAGE_VERSIONS = {
         version: "GCC 14.1.0"
     },
     java: {
-        id: 91,
+        id: 62,
         version: "JDK 17.0.6"
     },
     python: {
@@ -26,10 +26,10 @@ export const LANGUAGE_VERSIONS = {
 };
 
 export const CODE_SNIPPETS = {
-    javascript: `\nfunction greet(name) {\n\tconsole.log("Hello, " + name + "!");\n}\n\ngreet("Alex");\n`,
-    python: `\ndef greet(name):\n\tprint("Hello, " + name + "!")\n\ngreet("Alex")\n`,
-    java: `\npublic class HelloWorld {\n\tpublic static void main(String[] args) {\n\t\tSystem.out.println("Hello World");\n\t}\n}\n`,
-    cpp: `\n#include <iostream>\n\nint main() {\n\tstd::cout << "Hello, World!" << std::endl;\n\treturn 0;\n}\n`, // C++ snippet
+    javascript: `function greet(name) {\n\tconsole.log("Hello, " + name + "!");\n}\n\ngreet("Alex");\n`,
+    python: `def greet(name):\n\tprint("Hello, " + name + "!")\n\ngreet("Alex")\n`,
+    java: `public class Main {\n\tpublic static void main(String[] args) {\n\t\t//write your code here\n\t}\n}\n`,
+    cpp: `#include <iostream>\n\nint main() {\n\tstd::cout << "Hello, World!" << std::endl;\n\treturn 0;\n}\n`, // C++ snippet
     rust: `fn main() {\n\tprintln!("Hello, World!");\n}`, // Rust snippet
     c: `#include <stdio.h>\n\nint main() {\n\tprintf("Hello, World!\\n");\n\treturn 0;\n}\n` // C snippet
 };

@@ -10,7 +10,7 @@ import {
     getSubmission,
     createBatchSubmission,
     getBatchSubmission,
-    submitProblem, getCall
+    submitProblem, getFileData,
 } from "../api/problemApi.ts";
 
 export const CodeEditor = () => {
@@ -44,47 +44,47 @@ export const CodeEditor = () => {
     };
 
     const handleOnRun = async () =>{
-        const inputFiles = ['input_0.txt', 'input_1.txt', 'input_2.txt'];  // Add your input file names here
-        const outputFiles = ['output_0.txt', 'output_1.txt', 'output_2.txt'];
-        //axios call to fetch psURLs from the server
-
-        const input: string[]= [];
-        const output: string[] = [];
-
-        // Read input files
-        for (const file of inputFiles) {
-            const content = await readFile(`Problems/sum/input/${file}`);
-            if (content) input.push(btoa(content));
-        }
-
-        // Read output files
-        for (const file of outputFiles) {
-            const content = await readFile(`Problems/sum/output/${file}`);
-            if (content) output.push(btoa(content));
-        }
-
-        //Read files from the aws S3
-
-
-        //make a batch submission
-        const submissions = input.map((input, index) =>{
-            return {
-                source_code: btoa(code),
-                language_id:  LANGUAGE_VERSIONS[language].id,
-                stdin: input,
-                expected_output: output[index] as string
-            }
-        });
-
-        const result = await createBatchSubmission({submissions});
-        console.log(result);
-
-        const tokens = result.map((obj: { token: any; }) => obj.token).join(",");
-
-        setTimeout(async () =>{
-            const status = await getBatchSubmission(tokens);
-            console.log(status);
-        }, 5000);
+        // const inputFiles = ['input_0.txt', 'input_1.txt', 'input_2.txt'];  // Add your input file names here
+        // const outputFiles = ['output_0.txt', 'output_1.txt', 'output_2.txt'];
+        // //axios call to fetch psURLs from the server
+        //
+        // const input: string[]= [];
+        // const output: string[] = [];
+        //
+        // // Read input files
+        // for (const file of inputFiles) {
+        //     const content = await readFile(`Problems/sum/input/${file}`);
+        //     if (content) input.push(btoa(content));
+        // }
+        //
+        // // Read output files
+        // for (const file of outputFiles) {
+        //     const content = await readFile(`Problems/sum/output/${file}`);
+        //     if (content) output.push(btoa(content));
+        // }
+        //
+        // //Read files from the aws S3
+        //
+        //
+        // //make a batch submission
+        // const submissions = input.map((input, index) =>{
+        //     return {
+        //         source_code: btoa(code),
+        //         language_id:  LANGUAGE_VERSIONS[language].id,
+        //         stdin: input,
+        //         expected_output: output[index] as string
+        //     }
+        // });
+        //
+        // const result = await createBatchSubmission({submissions});
+        // console.log(result);
+        //
+        // const tokens = result.map((obj: { token: any; }) => obj.token).join(",");
+        //
+        // setTimeout(async () =>{
+        //     const status = await getBatchSubmission(tokens);
+        //     console.log(status);
+        // }, 5000);
 
         // console.log(input);
         // console.log(output);
@@ -98,32 +98,51 @@ export const CodeEditor = () => {
         // const result = await createSubmission(data);
         // console.log(result);
 
-        setTimeout(async () =>{
-            const status = await getSubmission(result.token);
-            console.log(status);
-            console.log(atob(status.stdout));
-        }, 5000);
-    }
-
-    const handleOnSubmit = async() =>{
-        const data = await submitProblem({problem_id, code: btoa(code)});
-        console.log(data)
-
-        // const data = {
-        //     source_code: btoa(code),
-        //     language_id: LANGUAGE_VERSIONS[language].id,
-        // }
-        //
-        // console.log(data);
-        // const result = await createSubmission(data);
-        // console.log(result);
-        //
         // setTimeout(async () =>{
         //     const status = await getSubmission(result.token);
         //     console.log(status);
         //     console.log(atob(status.stdout));
         // }, 5000);
     }
+
+    const handleOnSubmit = async () => {
+        try {
+            const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id, code: btoa(code) });
+
+            // Use Promise.all to fetch data concurrently for input and output
+            const input: string[] = await Promise.all(input_urls.map((url: string) => getFileData(url)));
+            const output: string[] = await Promise.all(exp_output_urls.map((url: string) => getFileData(url)));
+
+            // Verify that submissions array is populated
+            const base_url: string = "https://c0a3-2409-40d2-1d-73c7-e9e4-ea9f-ee5a-7bdd.ngrok-free.app";
+            const submissions = input.map((inputValue, index) => ({
+                source_code: btoa(code),
+                language_id: LANGUAGE_VERSIONS[language].id,
+                stdin: btoa(inputValue),
+                expected_output: btoa(output[index]),
+                callback_url:`${base_url}${callback_urls[index]}`
+            }));
+
+            console.log("Submissions array:", submissions); // Check if populated
+            if (submissions.length === 0) {
+                console.error("Error: Submissions array is empty");
+                return;
+            }
+
+            // Make a batch submission only if submissions array is not empty
+            const result = await createBatchSubmission({ submissions });
+            console.log(result);
+
+            // const tokens = result.map((obj: { token: any; }) => obj.token).join(",");
+            // setTimeout(async () =>{
+            //     const status = await getBatchSubmission(tokens);
+            //     console.log(status);
+            // }, 5000);
+        } catch (error) {
+            console.error("Error in handleOnSubmit:", error);
+        }
+    };
+
 
     return (
         <Box>
