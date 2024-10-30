@@ -25,7 +25,7 @@ async function getObjectURL(key: string){
 
 const handleSubmitProblem = async (req:Request, res:Response) => {
     try {
-        const { code } = req.body;
+        const { code, language_id } = req.body;
         const problem_id: string = req.params.id;
         const user_id: string = "123";
 
@@ -42,6 +42,7 @@ const handleSubmitProblem = async (req:Request, res:Response) => {
                 problemId: problem_id,
                 userId: user_id,
                 userCode: code,
+                language: language_id,
                 totalTestcases: testcases.length,
             },
             select: {
@@ -59,7 +60,7 @@ const handleSubmitProblem = async (req:Request, res:Response) => {
                 const input_url = await getObjectURL(inputPath);
                 const exp_output_url = await getObjectURL(expOutputPath);
 
-                const sub_testcase_id = await prisma.submitted_testcase.create({
+                const sub_testcase_id = await prisma.SubmittedTestcase.create({
                     data: {
                         testcaseId: id,
                         submissionId: sub_id.id,

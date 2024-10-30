@@ -3,42 +3,24 @@ import { Response, Request } from "express";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-import { SubmissionResult } from '@prisma/client';
-
-const statuses: { [key: number]: SubmissionResult } = {
-    1: SubmissionResult.IN_QUEUE,
-    2: SubmissionResult.PENDING,
-    3: SubmissionResult.AC,
-    4: SubmissionResult.WA,
-    5: SubmissionResult.TLE,
-    6: SubmissionResult.CE,
-    7: SubmissionResult.RE,
-    8: SubmissionResult.RE,
-    9: SubmissionResult.RE,
-    10: SubmissionResult.RE,
-    11: SubmissionResult.RE,
-    12: SubmissionResult.RE,
-    13: SubmissionResult.INTERNAL_ERROR,
-    14: SubmissionResult.EXEC_FORMAT_ERROR
-};
-
+import { SubmissionStatus } from '@prisma/client';
 
 const handleSubmissionCallback = async (req:Request, res:Response) => {
     try {
         const sub_testcase_id = req.params.id;
         // console.log(sub_testcase_id);
-        console.log(req.body);
+        // console.log(req.body);
 
-        const updatedtestcase = await prisma.submitted_testcase.update({
+        const updatedtestcase = await prisma.SubmittedTestcase.update({
             where:{
-                id:sub_testcase_id
+                id: sub_testcase_id
             },
             data:{
-                output:(req.body.stdout==null?"":req.body.stdout),
-                status: statuses[req.body.status.id]
+                output: (req.body.stdout==null?"": req.body.stdout),
+                status: req.body.status.id
             }
         })
-        console.log(updatedtestcase)
+        // console.log(updatedtestcase)
 
         const submission = await prisma.submission.findUnique({
             where: {
@@ -46,16 +28,33 @@ const handleSubmissionCallback = async (req:Request, res:Response) => {
             },
             select: {
                 evaluatedTestcases: true,
+                status: true,
+                totalTestcases: true
             },
         });
 
         if (submission) {
+            let overall_status: SubmissionStatus = SubmissionStatus.Pending;
+
+            if (submission.status === SubmissionStatus.Rejected || updatedtestcase.status >= 4) {
+                overall_status = SubmissionStatus.Rejected;
+            }
+
+            if (submission.evaluatedTestcases + 1 === submission.totalTestcases) {
+                if (submission.status === SubmissionStatus.Rejected || updatedtestcase.status !== 3) {
+                    overall_status = SubmissionStatus.Rejected;
+                } else {
+                    overall_status = SubmissionStatus.Accepted;
+                }
+            }
+
             const updateSubmission = await prisma.submission.update({
                 where: {
                     id: updatedtestcase.submissionId,
                 },
                 data: {
                     evaluatedTestcases: submission.evaluatedTestcases as number + 1 , // Increment by 1
+                    status: overall_status
                 },
             });
 

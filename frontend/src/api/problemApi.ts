@@ -59,10 +59,10 @@ export const getSubmission = async (token: string) => {
     return data;
 }
 
-export const submitProblem = async ({ problem_id, code }: { problem_id: string; code: string }) => {
+export const submitProblem = async ({ problem_id, code, language_id }: { problem_id: string; code: string, language_id: number }) => {
     try {
         console.log(`${server_url}/api/problem/${problem_id}/submit`);
-        const { data } = await axios.post(`${server_url}/api/problem/${problem_id}/submit`, { code }, {
+        const { data } = await axios.post(`${server_url}/api/problem/${problem_id}/submit`, { code, language_id }, {
             headers,
         });
 

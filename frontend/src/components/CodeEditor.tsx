@@ -107,14 +107,14 @@ export const CodeEditor = () => {
 
     const handleOnSubmit = async () => {
         try {
-            const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id, code: btoa(code) });
+            const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id, code: btoa(code),  language_id:  LANGUAGE_VERSIONS[language].id});
 
             // Use Promise.all to fetch data concurrently for input and output
             const input: string[] = await Promise.all(input_urls.map((url: string) => getFileData(url)));
             const output: string[] = await Promise.all(exp_output_urls.map((url: string) => getFileData(url)));
 
             // Verify that submissions array is populated
-            const base_url: string = "https://c0a3-2409-40d2-1d-73c7-e9e4-ea9f-ee5a-7bdd.ngrok-free.app";
+            const base_url: string = "https://5d04-2409-40d2-102b-ae66-d4d3-7218-50c4-354e.ngrok-free.app";
             const submissions = input.map((inputValue, index) => ({
                 source_code: btoa(code),
                 language_id: LANGUAGE_VERSIONS[language].id,
