@@ -9,6 +9,11 @@ const handleSubmissionCallback = async (req:Request, res:Response) => {
     try {
         const sub_testcase_id = req.params.id;
         // console.log(sub_testcase_id);
+        if(req.body.status.id === 1 || req.body.status.id === 2){
+            console.log("Testcase Not evaluated completely.");
+
+            return;
+        }
         // console.log(req.body);
 
         const updatedtestcase = await prisma.SubmittedTestcase.update({
@@ -58,7 +63,7 @@ const handleSubmissionCallback = async (req:Request, res:Response) => {
                 },
             });
 
-            console.log(updateSubmission);
+            // console.log(updateSubmission);
         } else {
             console.log("Submission not found");
         }
