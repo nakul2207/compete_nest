@@ -5,82 +5,93 @@ const prisma = new PrismaClient();
 
 import { SubmissionStatus } from '@prisma/client';
 
-const handleSubmissionCallback = async (req:Request, res:Response) => {
+const handleSubmissionCallback = async (req: Request, res: Response) => {
     try {
-        const sub_testcase_id = req.params.id;
-        // console.log(sub_testcase_id);
-        if(req.body.status.id === 1 || req.body.status.id === 2){
-            console.log("Testcase Not evaluated completely.");
+        const subTestcaseId = req.params.id;
 
-            return;
+        // Validate required fields
+        if (!subTestcaseId || !req.body) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid request. Testcase ID or request body missing.",
+            });
         }
-        // console.log(req.body);
 
-        const updatedtestcase = await prisma.SubmittedTestcase.update({
-            where:{
-                id: sub_testcase_id
+        const { stdout, status } = req.body;
+
+        if (typeof status?.id !== 'number') {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid status ID in request body.",
+            });
+        }
+
+        // Update the specific submitted testcase
+        const updatedTestcase = await prisma.SubmittedTestcase.update({
+            where: { id: subTestcaseId },
+            data: {
+                output: stdout ?? "",
+                status: status.id,
             },
-            data:{
-                output: (req.body.stdout==null?"": req.body.stdout),
-                status: req.body.status.id
-            }
-        })
-        // console.log(updatedtestcase)
+        });
 
+        // Retrieve related submission details
         const submission = await prisma.submission.findUnique({
-            where: {
-                id: updatedtestcase.submissionId,
-            },
+            where: { id: updatedTestcase.submissionId },
             select: {
                 evaluatedTestcases: true,
                 status: true,
-                totalTestcases: true
+                totalTestcases: true,
             },
         });
 
-        if (submission) {
-            let overall_status: SubmissionStatus = SubmissionStatus.Pending;
-
-            if (submission.status === SubmissionStatus.Rejected || updatedtestcase.status >= 4) {
-                overall_status = SubmissionStatus.Rejected;
-            }
-
-            if (submission.evaluatedTestcases + 1 === submission.totalTestcases) {
-                if (submission.status === SubmissionStatus.Rejected || updatedtestcase.status !== 3) {
-                    overall_status = SubmissionStatus.Rejected;
-                } else {
-                    overall_status = SubmissionStatus.Accepted;
-                }
-            }
-
-            const updateSubmission = await prisma.submission.update({
-                where: {
-                    id: updatedtestcase.submissionId,
-                },
-                data: {
-                    evaluatedTestcases: submission.evaluatedTestcases as number + 1 , // Increment by 1
-                    status: overall_status
-                },
+        if (!submission) {
+            return res.status(404).json({
+                success: false,
+                message: "Submission not found.",
             });
-
-            // console.log(updateSubmission);
-        } else {
-            console.log("Submission not found");
         }
+
+        let overallStatus: SubmissionStatus = SubmissionStatus.Pending;
+
+        // Determine the overall submission status
+        const isRejected =
+            submission.status === SubmissionStatus.Rejected || updatedTestcase.status >= 4;
+
+        const isLastTestcase =
+            submission.evaluatedTestcases + 1 === submission.totalTestcases;
+
+        if (isRejected) {
+            overallStatus = SubmissionStatus.Rejected;
+        } else if (isLastTestcase) {
+            overallStatus = updatedTestcase.status === 3
+                ? SubmissionStatus.Accepted
+                : SubmissionStatus.Rejected;
+        }
+
+        // Update the submission with new status and increment evaluated testcases
+        const updatedSubmission = await prisma.submission.update({
+            where: { id: updatedTestcase.submissionId },
+            data: {
+                evaluatedTestcases: submission.evaluatedTestcases + 1,
+                status: overallStatus,
+            },
+        });
+
+        console.log("Submission updated successfully:", updatedSubmission);
 
         return res.status(200).json({
             success: true,
-            data: req.body
+            data: updatedSubmission,
         });
-    } catch (e) {
-        console.error("Error in handleSubmitProblem:", e);
+    } catch (error) {
+        console.error("Error in handleSubmissionCallback:", error);
 
         return res.status(500).json({
-            success: false
+            success: false,
+            message: "Internal server error. Please try again later.",
         });
     }
 };
-
-
 
 export { handleSubmissionCallback };
