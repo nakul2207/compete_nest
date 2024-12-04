@@ -1,6 +1,6 @@
 import { Response, Request } from "express";
 
-import { PrismaClient } from "@prisma/client";
+import {Prisma, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 import { SubmissionStatus } from '@prisma/client';
@@ -9,7 +9,6 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
     try {
         const subTestcaseId = req.params.id;
 
-        // Validate required fields
         if (!subTestcaseId || !req.body) {
             return res.status(400).json({
                 success: false,
@@ -19,70 +18,91 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
 
         const { stdout, status } = req.body;
 
-        if (typeof status?.id !== 'number') {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid status ID in request body.",
-            });
-        }
-
         // Update the specific submitted testcase
-        const updatedTestcase = await prisma.SubmittedTestcase.update({
+        const existingTestcase = await prisma.SubmittedTestcase.findUnique({
             where: { id: subTestcaseId },
-            data: {
-                output: stdout ?? "",
-                status: status.id,
-            },
+            select: { status: true },
         });
 
-        // Retrieve related submission details
-        const submission = await prisma.submission.findUnique({
-            where: { id: updatedTestcase.submissionId },
-            select: {
-                evaluatedTestcases: true,
-                status: true,
-                totalTestcases: true,
-            },
-        });
-
-        if (!submission) {
+        if (!existingTestcase) {
             return res.status(404).json({
                 success: false,
-                message: "Submission not found.",
+                message: "Testcase not found.",
             });
         }
 
-        let overallStatus: SubmissionStatus = SubmissionStatus.Pending;
+        console.log(exisitingTestcase);
 
-        // Determine the overall submission status
-        const isRejected =
-            submission.status === SubmissionStatus.Rejected || updatedTestcase.status >= 4;
-
-        const isLastTestcase =
-            submission.evaluatedTestcases + 1 === submission.totalTestcases;
-
-        if (isRejected) {
-            overallStatus = SubmissionStatus.Rejected;
-        } else if (isLastTestcase) {
-            overallStatus = updatedTestcase.status === 3
-                ? SubmissionStatus.Accepted
-                : SubmissionStatus.Rejected;
+        // If the testcase is already executed successfully (status > 2), return early
+        if (existingTestcase.status > 2) {
+            return res.status(200).json({
+                success: true,
+                message: "Testcase already executed successfully.",
+            });
         }
 
-        // Update the submission with new status and increment evaluated testcases
-        const updatedSubmission = await prisma.submission.update({
-            where: { id: updatedTestcase.submissionId },
-            data: {
-                evaluatedTestcases: submission.evaluatedTestcases + 1,
-                status: overallStatus,
-            },
-        });
+        await prisma.$transaction(
+            async (tx) => {
+                // If the testcase is in queue (status = 1) or in processing (status = 2), proceed to update it
+                const updatedTestcase = await tx.SubmittedTestcase.update({
+                    where: { id: subTestcaseId },
+                    data: {
+                        output: stdout ?? "",
+                        status: status.id,
+                    },
+                });
 
-        console.log("Submission updated successfully:", updatedSubmission);
+                // Lock the submission row to prevent concurrent updates
+                const submission = await tx.$queryRaw`
+                    SELECT * 
+                    FROM "Submission"
+                    WHERE "id" = ${updatedTestcase.submissionId}
+                    FOR UPDATE
+                `;
+
+                if (!submission?.length) {
+                    throw new Error("Submission not found.");
+                }
+
+                const submissionData = submission[0];
+                let overallStatus: SubmissionStatus = SubmissionStatus.Pending;
+
+                const isRejected =
+                    submissionData.status === SubmissionStatus.Rejected ||
+                    updatedTestcase.status >= 4;
+
+                const isLastTestcase =
+                    submissionData.evaluatedTestcases + 1 ===
+                    submissionData.totalTestcases;
+
+                if (isRejected) {
+                    overallStatus = SubmissionStatus.Rejected;
+                } else if (isLastTestcase) {
+                    overallStatus =
+                        updatedTestcase.status === 3
+                            ? SubmissionStatus.Accepted
+                            : SubmissionStatus.Rejected;
+                }
+
+                // Update the submission with new status and increment evaluated testcases
+                await tx.submission.update({
+                    where: { id: updatedTestcase.submissionId },
+                    data: {
+                        evaluatedTestcases: { increment: 1 }, // Atomic increment
+                        status: overallStatus,
+                    },
+                });
+            },
+            {
+                maxWait: 5000, // default: 2000
+                timeout: 10000, // default: 5000
+                // isolationLevel: Prisma.TransactionIsolationLevel.Serializable, // optional, default defined by database configuration
+            }
+        );
 
         return res.status(200).json({
             success: true,
-            data: updatedSubmission,
+            message: "Submission updated successfully.",
         });
     } catch (error) {
         console.error("Error in handleSubmissionCallback:", error);

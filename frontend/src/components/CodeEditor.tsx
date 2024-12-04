@@ -114,7 +114,7 @@ export const CodeEditor = () => {
             const output: string[] = await Promise.all(exp_output_urls.map((url: string) => getFileData(url)));
 
             // Verify that submissions array is populated
-            const base_url: string = "https://c718-2409-40d2-1023-63d2-482a-fac8-55a8-2fb3.ngrok-free.app";
+            const base_url: string = "https://ded7-2409-40d2-1327-f33f-d590-34ab-b5da-7c3.ngrok-free.app";
             const submissions = input.map((inputValue, index) => ({
                 source_code: btoa(code),
                 language_id: LANGUAGE_VERSIONS[language].id,
