@@ -2,3 +2,4 @@
 **/node_modules
 backend/public
 .idea
+backend/prisma/migrations
