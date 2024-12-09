@@ -9,15 +9,46 @@ import {
     createSubmission,
     getSubmission,
     createBatchSubmission,
+    createRunSubmission,
     getBatchSubmission,
     submitProblem, getFileData,
+    runProblem
 } from "../api/problemApi.ts";
+
+import {io} from "socket.io-client";
+import {useEffect} from "react"
+const server_url = import.meta.env.VITE_SERVER_URL;
+const socket = io(server_url, { transports: ["websocket"] });
 
 export const CodeEditor = () => {
     const [code, setCode] = useState<string>(CODE_SNIPPETS["cpp"]);
     const [language, setLanguage] = useState<Language>("cpp");
     const editorRef = useRef<any>(null);
     const problem_id: string = "234";
+
+    useEffect(() => {
+        // Socket connection setup
+        socket.on("connect", () => {
+            console.log("Connected to Socket.IO server with id:", socket.id);
+        });
+
+        socket.on("join", (uid) => {
+            console.log(`Socket joined room with UID: ${uid}`);
+        });
+
+        socket.on("disconnect", () => {
+            console.log("Disconnected from Socket.IO server");
+        });
+
+        // Clean up socket listeners on component unmount
+        return () => {
+            socket.off("connect");
+            socket.off("join");
+            socket.off("disconnect");
+            socket.off("update");
+        };
+    }, []);
+
 
     const onMount = (editor: any) => {
         editorRef.current = editor;
@@ -44,6 +75,27 @@ export const CodeEditor = () => {
     };
 
     const handleOnRun = async () =>{
+        try {
+            const { uid } = await runProblem({ problem_id });
+            console.log("UID for submission:", uid);
+
+            // Join the socket room with the UID
+            socket.emit("join", uid);
+
+            // Set up the listener for the 'update' event
+            socket.on("update", (data) => {
+                console.log("UpdatedSubmission:", data);
+                // Handle the data received from the server
+                // You can pass this data to the Output component to show the results
+            });
+
+            // Create run submission
+            const result = await createRunSubmission({ problem_id, uid });
+            console.log("Run Submission Result:", result);
+        } catch (error) {
+            console.error("Error in handleOnRun:", error);
+        }
+
         // const inputFiles = ['input_0.txt', 'input_1.txt', 'input_2.txt'];  // Add your input file names here
         // const outputFiles = ['output_0.txt', 'output_1.txt', 'output_2.txt'];
         // //axios call to fetch psURLs from the server

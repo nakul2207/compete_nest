@@ -1,11 +1,52 @@
 import { Response, Request } from "express";
 
+import {Server} from "socket.io"
 import {Prisma, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
-
 import { SubmissionStatus } from '@prisma/client';
 
 const ongoingUpdates = new Set<string>();
+
+const handleRunCallback = async (req: Request, res: Response) => {
+    const problem_id = req.params.id;
+    const uid = req.body.uid;
+
+    try {
+        const io = (req as any).io as Server | undefined;
+
+        if (!io) {
+            console.error('Socket.IO not attached to request');
+            return res.status(500).json({
+                success: false,
+                message: "Socket.IO not initialized"
+            });
+        }
+
+        if (uid) {
+            console.log('Attempting to emit with io:', !!io);
+            io.to(uid).emit("update", {
+                success: true,
+                message: "Testcase updated successfully",
+                problem_id,
+                uid
+            });
+            console.log(`Emitted to room ${uid}`);
+        } else {
+            console.log("UID not found in callback");
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "callback called properly"
+        });
+    } catch (error) {
+        console.error('Error in handleRunCallback:', error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+};
 
 const handleSubmissionCallback = async (req: Request, res: Response) => {
     const subTestcaseId = req.params.id;
@@ -99,7 +140,6 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
         ongoingUpdates.delete(subTestcaseId);
     }
 };
-
 
 // const handleSubmissionCallback = async (req: Request, res: Response) => {
 //     try {
@@ -208,4 +248,4 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
 //     }
 // };
 
-export { handleSubmissionCallback };
+export { handleSubmissionCallback, handleRunCallback };
