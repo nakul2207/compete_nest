@@ -66,7 +66,6 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
     }
 
     ongoingUpdates.add(subTestcaseId);
-
     try {
         const { stdout, status } = req.body;
 
@@ -111,12 +110,26 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
                             : SubmissionStatus.Rejected;
                 }
 
-                await tx.submission.update({
+                const updatedSubmission = await tx.submission.update({
                     where: { id: updatedTestcase.submissionId },
                     data: {
                         evaluatedTestcases: { increment: 1 },
                         status: overallStatus,
                     },
+                });
+
+                //sending the updated submission data to the client
+                const io = (req as any).io as Server | undefined;
+                if (!io) {
+                    console.error('Socket.IO not attached to request');
+                    throw new Error("IO object not found");
+                }
+
+                console.log('Attempting to emit with io:', !!io);
+                io.to(updatedTestcase.submissionId).emit("update", {
+                    success: true,
+                    message: "Testcase updated successfully",
+                    updatedSubmission
                 });
             },
             {

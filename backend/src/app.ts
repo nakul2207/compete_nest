@@ -38,7 +38,6 @@ const socketMiddleware = (ioInstance: Server) => {
     };
 };
 
-
 // Middleware and route setup
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))

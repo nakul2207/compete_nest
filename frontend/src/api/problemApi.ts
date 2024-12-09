@@ -41,6 +41,7 @@ export const createRunSubmission = async ({ problem_id, uid }: {problem_id: stri
         return { success: false, message: "An error occurred while running the problem." };
     }
 }
+
 export const getBatchSubmission = async (tokens: string) => {
     const {data} = await axios.get(`${judge0_base_url}/submissions/batch/`,{
         headers,

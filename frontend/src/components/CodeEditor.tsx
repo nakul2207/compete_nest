@@ -49,7 +49,6 @@ export const CodeEditor = () => {
         };
     }, []);
 
-
     const onMount = (editor: any) => {
         editorRef.current = editor;
         editor.focus();
@@ -166,7 +165,7 @@ export const CodeEditor = () => {
             const output: string[] = await Promise.all(exp_output_urls.map((url: string) => getFileData(url)));
 
             // Verify that submissions array is populated
-            const base_url: string = "https://d661-2409-40d2-102a-4185-2c70-e125-bf30-b171.ngrok-free.app";
+            const base_url: string = "https://ad8c-2409-40d2-5b-59f2-9154-60b1-c39a-9980.ngrok-free.app";
             const submissions = input.map((inputValue, index) => ({
                 source_code: btoa(code),
                 language_id: LANGUAGE_VERSIONS[language].id,
@@ -181,6 +180,16 @@ export const CodeEditor = () => {
                 return;
             }
 
+            // Join the socket room with the UID
+            socket.emit("join", submission_id);
+
+            // Set up the listener for the 'update' event
+            socket.on("update", (data) => {
+                console.log("UpdatedSubmission:", data);
+                // Handle the data received from the server
+                // You can pass this data to the Output component to show the results
+            });
+
             // Make a batch submission only if submissions array is not empty
             const result = await createBatchSubmission({ submissions });
             console.log(result);
@@ -194,7 +203,6 @@ export const CodeEditor = () => {
             console.error("Error in handleOnSubmit:", error);
         }
     };
-
 
     return (
         <Box>
