@@ -4,7 +4,6 @@ import { useRef, useState } from 'react';
 import { LangSelector } from './LangSelector';
 import { CODE_SNIPPETS, LANGUAGE_VERSIONS} from '../constants';
 import {Output} from "./Output.tsx";
-type Language = keyof typeof CODE_SNIPPETS;
 import {
     createSubmission,
     getSubmission,
@@ -14,6 +13,7 @@ import {
     submitProblem, getFileData,
     runProblem
 } from "../api/problemApi.ts";
+type Language = keyof typeof CODE_SNIPPETS;
 
 import {io} from "socket.io-client";
 import {useEffect} from "react"
