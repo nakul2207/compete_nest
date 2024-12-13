@@ -4,23 +4,27 @@ import { Maximize2, Minimize2 } from 'lucide-react'
 import {Editor} from "@monaco-editor/react";
 import {languages } from "../assets/mapping.ts";
 import {LangSelector} from "./LangSelector.tsx";
+import { useAppSelector, useAppDispatch } from '../redux/hook.ts'
+import {setCode, setLanguage} from '../redux/slice/problemSlice.tsx'
 
 interface CodeEditorProps {
-  code: string
-  setCode: (code: string) => void
   runCode: () => void
   submitCode: () => void
   isFullScreen: boolean
   handleFullScreen: (isFullScreen: boolean) => void
 }
 
-export function CodeEditor({ code, setCode, runCode, submitCode, isFullScreen, handleFullScreen }: CodeEditorProps) {
+export function CodeEditor({ runCode, submitCode, isFullScreen, handleFullScreen }: CodeEditorProps) {
+    const code = useAppSelector((state) => state.problem.code);
+    const languageId =  useAppSelector((state) => state.problem.languageId);
+    const dispatch = useAppDispatch()
+
+    // const [code, setCode] = useState("")
     const editorRef = useRef<any>(null);
-    const [language, setLanguage] = useState("54");
 
     const onSelect = (language_id: string) => {
-        setLanguage(language_id);
-        setCode(atob(languages[language_id].boilerplate) as string || "");
+        dispatch(setLanguage(language_id));
+        dispatch(setCode(atob(languages[language_id].boilerplate) as string || ""));
     };
 
     const onMount = (editor: any) => {
@@ -29,13 +33,13 @@ export function CodeEditor({ code, setCode, runCode, submitCode, isFullScreen, h
     };
 
     useEffect(() =>{
-        setCode(atob(languages[language].boilerplate) as string || "");
+        dispatch(setCode(atob(languages[languageId].boilerplate) as string || ""));
     }, [])
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center p-4 border-b">
-        <LangSelector language_id={language} onSelect={onSelect} />
+        <LangSelector language_id={languageId} onSelect={onSelect} />
           
         <Button
           variant="outline"
@@ -53,7 +57,7 @@ export function CodeEditor({ code, setCode, runCode, submitCode, isFullScreen, h
             language={"cpp"}
             value={code}
             onMount={onMount}
-            onChange={(code) => setCode(code || "")}
+            onChange={(code) => dispatch(setCode(code || ""))}
         />
 
       <div className="flex justify-end items-center gap-2 p-4 border-t">

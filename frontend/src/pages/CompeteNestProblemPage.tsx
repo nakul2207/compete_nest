@@ -9,13 +9,14 @@ import { CustomTestCases } from "../components/CustomTestCases"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../components/ui/resizable"
 
 export function CompeteNestProblemPage() {
-  const [code, setCode] = useState("")
   const [results, setResults] = useState<{
     status: string;
     runtime: string;
     memory: string;
   } | null>(null)
   const [isFullScreen, setIsFullScreen] = useState(false)
+
+  console.log("Problem page re render");
 
   const runCode = () => {
     setResults({
@@ -26,7 +27,6 @@ export function CompeteNestProblemPage() {
   }
 
   const submitCode = () => {
-    console.log("Code submitted:", code)
   }
 
   return (
@@ -65,8 +65,6 @@ export function CompeteNestProblemPage() {
           <div className="relative h-full">
             <div className={`${isFullScreen ? 'fixed inset-0 z-50 bg-background' : 'h-full'}`}>
               <CodeEditor
-                code={code}
-                setCode={setCode}
                 runCode={runCode}
                 submitCode={submitCode}
                 isFullScreen={isFullScreen}

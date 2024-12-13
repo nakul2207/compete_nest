@@ -1,13 +1,15 @@
 import axios from "axios"
 const judge0_base_url = import.meta.env.VITE_BASE_JUDGE0;
 const server_url = import.meta.env.VITE_SERVER_URL;
+const hosted_judge0_base_url = import.meta.env.VITE_BASE_JUDGE0_HOSTED
 
 const headers = {
     'Content-Type': 'application/json'
 }
 
 const params = {
-    base64_encoded: true
+    base64_encoded: true,
+    wait: true
 };
 
 export const createBatchSubmission = async (inputData: { submissions: any[] }) => {
@@ -55,7 +57,8 @@ export const getBatchSubmission = async (tokens: string) => {
 }
 
 export const createSubmission = async (inputData: object) =>{
-    const {data} = await axios.post(`${judge0_base_url}/submissions`, inputData, {
+    // const {data} = await axios.post(`${judge0_base_url}/submissions`, inputData, {
+    const {data} = await axios.post(`${hosted_judge0_base_url}/submissions`, inputData, {
         headers,
         params
     });
@@ -64,7 +67,7 @@ export const createSubmission = async (inputData: object) =>{
 }
 
 export const getSubmission = async (token: string) => {
-    const {data} = await axios.get(`${judge0_base_url}/submissions/${token}`,{
+    const {data} = await axios.get(`${hosted_judge0_base_url}/submissions/${token}`,{
         headers,
         params
     })

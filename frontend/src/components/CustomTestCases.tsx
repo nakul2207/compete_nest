@@ -1,17 +1,55 @@
 import { useState } from "react"
 import { Button } from "./ui/button"
 import { Textarea } from "./ui/textarea"
+import {useAppSelector} from "../redux/hook.ts";
+import {createSubmission, getSubmission} from "../api/problemApi.ts";
 
 export function CustomTestCases() {
+    const code =  useAppSelector((state) => state.problem.code);
+    const languageId = useAppSelector((state) => state.problem.languageId)
   const [testCase, setTestCase] = useState("")
   const [output, setOutput] = useState("")
 
-  const runTestCase = () => {
-    // This is a mock function. In a real application, you'd send the test case to a backend for execution.
-    setOutput("Output for the custom test case will be shown here.")
-  }
+    const runTestCase = async () => {
+        if (code === "") {
+            setOutput("Please provide code");
+            return;
+        }
 
-  return (
+        if (testCase === "") {
+            setOutput("Please provide input first");
+            return;
+        }
+
+        // Set output to indicate the code is running
+        setOutput("Running code...");
+
+        // Prepare the data for submission
+        const data = {
+            source_code: btoa(code),
+            language_id: languageId,
+            stdin: btoa(testCase)
+        };
+
+        try {
+            // Create a submission and wait for the result
+            const result = await createSubmission(data);
+
+            // Display the output from the submission result
+            if(result.status.id === 3){
+                setOutput(atob(result.stdout));
+            }else{
+                setOutput(result.status.description);
+            }
+
+        } catch (error) {
+            // Handle errors, if any
+            setOutput("Error running code: " + error.message);
+        }
+    };
+
+
+    return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Custom Test Cases</h2>
       <div>
