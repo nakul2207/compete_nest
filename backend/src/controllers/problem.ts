@@ -94,4 +94,16 @@ const handleSubmitProblem = async (req:Request, res:Response) => {
     }
 };
 
-export { handleSubmitProblem };
+const handleRunProblem = async (req: Request, res: Response) => {
+    const problem_id = req.params.id;
+
+    //creating a random unique id for websocket connection
+    const uid = problem_id + Date.now();
+
+    return res.status(200).json({
+        success: true,
+        uid
+    })
+}
+
+export { handleSubmitProblem, handleRunProblem };

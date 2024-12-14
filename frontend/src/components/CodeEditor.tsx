@@ -4,20 +4,50 @@ import { useRef, useState } from 'react';
 import { LangSelector } from './LangSelector';
 import { CODE_SNIPPETS, LANGUAGE_VERSIONS} from '../constants';
 import {Output} from "./Output.tsx";
-type Language = keyof typeof CODE_SNIPPETS;
 import {
     createSubmission,
     getSubmission,
     createBatchSubmission,
+    createRunSubmission,
     getBatchSubmission,
     submitProblem, getFileData,
+    runProblem
 } from "../api/problemApi.ts";
+type Language = keyof typeof CODE_SNIPPETS;
+
+import {io} from "socket.io-client";
+import {useEffect} from "react"
+const server_url = import.meta.env.VITE_SERVER_URL;
+const socket = io(server_url, { transports: ["websocket"] });
 
 export const CodeEditor = () => {
     const [code, setCode] = useState<string>(CODE_SNIPPETS["cpp"]);
     const [language, setLanguage] = useState<Language>("cpp");
     const editorRef = useRef<any>(null);
     const problem_id: string = "234";
+
+    useEffect(() => {
+        // Socket connection setup
+        socket.on("connect", () => {
+            console.log("Connected to Socket.IO server with id:", socket.id);
+        });
+
+        socket.on("join", (uid) => {
+            console.log(`Socket joined room with UID: ${uid}`);
+        });
+
+        socket.on("disconnect", () => {
+            console.log("Disconnected from Socket.IO server");
+        });
+
+        // Clean up socket listeners on component unmount
+        return () => {
+            socket.off("connect");
+            socket.off("join");
+            socket.off("disconnect");
+            socket.off("update");
+        };
+    }, []);
 
     const onMount = (editor: any) => {
         editorRef.current = editor;
@@ -44,6 +74,27 @@ export const CodeEditor = () => {
     };
 
     const handleOnRun = async () =>{
+        try {
+            const { uid } = await runProblem({ problem_id });
+            console.log("UID for submission:", uid);
+
+            // Join the socket room with the UID
+            socket.emit("join", uid);
+
+            // Set up the listener for the 'update' event
+            socket.on("update", (data) => {
+                console.log("UpdatedSubmission:", data);
+                // Handle the data received from the server
+                // You can pass this data to the Output component to show the results
+            });
+
+            // Create run submission
+            const result = await createRunSubmission({ problem_id, uid });
+            console.log("Run Submission Result:", result);
+        } catch (error) {
+            console.error("Error in handleOnRun:", error);
+        }
+
         // const inputFiles = ['input_0.txt', 'input_1.txt', 'input_2.txt'];  // Add your input file names here
         // const outputFiles = ['output_0.txt', 'output_1.txt', 'output_2.txt'];
         // //axios call to fetch psURLs from the server
@@ -114,7 +165,7 @@ export const CodeEditor = () => {
             const output: string[] = await Promise.all(exp_output_urls.map((url: string) => getFileData(url)));
 
             // Verify that submissions array is populated
-            const base_url: string = "https://d661-2409-40d2-102a-4185-2c70-e125-bf30-b171.ngrok-free.app";
+            const base_url: string = "https://ad8c-2409-40d2-5b-59f2-9154-60b1-c39a-9980.ngrok-free.app";
             const submissions = input.map((inputValue, index) => ({
                 source_code: btoa(code),
                 language_id: LANGUAGE_VERSIONS[language].id,
@@ -129,6 +180,16 @@ export const CodeEditor = () => {
                 return;
             }
 
+            // Join the socket room with the UID
+            socket.emit("join", submission_id);
+
+            // Set up the listener for the 'update' event
+            socket.on("update", (data) => {
+                console.log("UpdatedSubmission:", data);
+                // Handle the data received from the server
+                // You can pass this data to the Output component to show the results
+            });
+
             // Make a batch submission only if submissions array is not empty
             const result = await createBatchSubmission({ submissions });
             console.log(result);
@@ -142,7 +203,6 @@ export const CodeEditor = () => {
             console.error("Error in handleOnSubmit:", error);
         }
     };
-
 
     return (
         <Box>
