@@ -3,12 +3,18 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 // Define the initial state for code
 interface ProblemState {
     code: string;
-    languageId: string
+    languageId: string,
+    example_inputs: Array<string>,
+    example_exp_outputs: Array<string>,
+    code_outputs: Array<Object>,
 }
 
 const initialState: ProblemState = {
     code: "",
-    languageId: "54"
+    languageId: "54",
+    example_inputs: ["1 2", "0 0", "3 4"],
+    example_exp_outputs: ["3", "0", "7"],
+    code_outputs: []
 };
 
 export const problemSlice = createSlice({
@@ -23,9 +29,12 @@ export const problemSlice = createSlice({
         },
         setLanguage: (state, action: PayloadAction<string>) =>{
             state.languageId = action.payload;
+        },
+        setCodeOutputs: (state, action: PayloadAction<Array<Object>>) =>{
+            state.code_outputs = action.payload;
         }
     },
 });
 
-export const { setCode, clearCode, setLanguage } = problemSlice.actions;
+export const { setCode, clearCode, setLanguage, setCodeOutputs } = problemSlice.actions;
 export default problemSlice.reducer;

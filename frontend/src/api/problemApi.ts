@@ -89,16 +89,19 @@ export const submitProblem = async ({ problem_id, code, language_id }: { problem
     }
 };
 
-export const runProblem = async ({ problem_id }: {problem_id: string}) =>{
+export const runProblem = async (inputData: { submissions: any[] }) =>{
     try {
-        const { data } = await axios.post(`${server_url}/api/problem/${problem_id}/run`, {}, {
-            headers,
-        });
+        console.log(inputData.submissions);
+        const { data } = await axios.post(
+            `${hosted_judge0_base_url}/submissions/batch?base64_encoded=true&wait=true`,
+            inputData,
+            { headers }
+        );
 
         return data;
     } catch (error) {
-        console.error("Error run problem:", error);
-        return { success: false, message: "An error occurred while running the problem." };
+        console.error("Error making submission:", error);
+        return { success: false, message: "An error occurred while making a batch submission" };
     }
 }
 
