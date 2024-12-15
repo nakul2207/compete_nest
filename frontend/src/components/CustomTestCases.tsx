@@ -19,7 +19,7 @@ export function CustomTestCases() {
     const problem = useAppSelector((state) => state.problem)
 
     useEffect(() => {
-        console.log("Testcase tab is triggered")
+        // console.log("Testcase tab is triggered")
     }, [])
 
     const runTestCase = async () => {
