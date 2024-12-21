@@ -1,9 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
-import { useAppSelector } from "../redux/hook.ts"
-import { Button } from "./ui/button"
-import { Check, X, Clock, Copy } from 'lucide-react'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { useAppSelector } from "../redux/hook.ts";
+import { Button } from "./ui/button";
+import { Check, X, Clock, Copy } from "lucide-react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { languages } from "../assets/mapping.ts";
 
 // Define the type for results
@@ -18,7 +18,7 @@ interface ResultsState {
 }
 
 export function Results() {
-    const results = useAppSelector((state: { problem: { recent_submission: ResultsState | null } }) => state.problem.recent_submission);
+    const results: ResultsState | null = useAppSelector((state: any) => state.problem.recent_submission);
 
     if (!results) {
         return (
@@ -27,37 +27,37 @@ export function Results() {
                     <div className="text-muted-foreground text-center">No results yet. Run your code to see the results.</div>
                 </CardContent>
             </Card>
-        )
+        );
     }
 
     const getStatusIcon = (status: "Accepted" | "Rejected" | "Pending") => {
         switch (status) {
             case "Accepted":
-                return <Check className="w-6 h-6 text-green-500" />
+                return <Check className="w-6 h-6 text-green-500" />;
             case "Rejected":
-                return <X className="w-6 h-6 text-red-500" />
+                return <X className="w-6 h-6 text-red-500" />;
             default:
-                return <Clock className="w-6 h-6 text-yellow-500 animate-spin" />
+                return <Clock className="w-6 h-6 text-yellow-500 animate-spin" />;
         }
-    }
+    };
 
     const getStatusClass = (status: "Accepted" | "Rejected" | "Pending") => {
         switch (status) {
             case "Accepted":
-                return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
             case "Rejected":
-                return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
             default:
-                return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
         }
-    }
+    };
 
     const copyCode = () => {
         if (results.userCode) {
             navigator.clipboard.writeText(atob(results.userCode));
             // You might want to add a toast notification here
         }
-    }
+    };
 
     return (
         <Card className="w-full">
@@ -78,16 +78,12 @@ export function Results() {
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Language</p>
-                        <p className="text-lg font-semibold">{languages[results.language as string].name || "Unknown"}</p>
+                        <p className="text-lg font-semibold">{languages[results.language]?.name || "Unknown"}</p>
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Submission Time</p>
-                        <p className="text-lg font-semibold">{new Date(results.createdAt).toTimeString()}</p>
+                        <p className="text-lg font-semibold">{new Date(results.createdAt).toLocaleTimeString()}</p>
                     </div>
-                    {/*<div>*/}
-                    {/*    <p className="text-sm text-muted-foreground">Last Updated</p>*/}
-                    {/*    <p className="text-lg font-semibold">{new Date(results.updatedAt).toLocaleString()}</p>*/}
-                    {/*</div>*/}
                 </div>
                 {
                     results.userCode && (
@@ -97,9 +93,9 @@ export function Results() {
                                 style={vscDarkPlus}
                                 customStyle={{
                                     margin: 0,
-                                    borderRadius: '0.5rem',
-                                    maxHeight: '300px',
-                                    overflow: 'auto'
+                                    borderRadius: "0.5rem",
+                                    maxHeight: "300px",
+                                    overflow: "auto",
                                 }}
                             >
                                 {atob(results.userCode)}
@@ -117,5 +113,5 @@ export function Results() {
                 }
             </CardContent>
         </Card>
-    )
+    );
 }

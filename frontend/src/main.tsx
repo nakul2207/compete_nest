@@ -11,11 +11,11 @@ import {store} from "./redux/store.tsx"
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
       <Provider store={store}>
-        <ChakraProvider theme={theme}>
+        {/*<ChakraProvider theme={theme}>*/}
             <ThemeProvider>
                 <App />
             </ThemeProvider>
-        </ChakraProvider>
+        {/*</ChakraProvider>*/}
       </Provider>
-  </StrictMode>,
+  </StrictMode>
 )

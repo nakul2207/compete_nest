@@ -4,6 +4,11 @@ import { Header } from "./components/Header"
 import { CompeteNestProblemPage } from "./pages/CompeteNestProblemPage"
 import { ProblemsPage } from "./pages/ProblemsPage"
 import { ContestsPage } from "./pages/ContestsPage"
+import {AdminPortal} from "../src/components/AdminPortal.tsx"
+import {ManageUsers} from "./components/admin/ManageUsers.tsx";
+import {AddProblem} from "./components/admin/AddProblem.tsx";
+import {ManageProblems} from "./components/admin/ManageProblems.tsx"
+import {ManageContests} from "@/components/admin/ManageContests.tsx";
 
 function App() {
   return (
@@ -16,7 +21,13 @@ function App() {
                 <Route path="/" element={<CompeteNestProblemPage />} />
                 <Route path="/problems" element={<ProblemsPage />} />
                 <Route path="/contests" element={<ContestsPage/>} />
-                {/* Add more routes as needed */}
+                  <Route path="/admin" element={<AdminPortal />}>
+                      <Route path="users" element={<ManageUsers />} />
+                      <Route path="problems" element={<ManageProblems />} />
+                      <Route path="problems/add" element={<AddProblem />} />
+                      <Route path="problems/edit/:id" element={<AddProblem />} />
+                      <Route path="contests" element={<ManageContests />} />
+                  </Route>
               </Routes>
             </main>
           </div>
