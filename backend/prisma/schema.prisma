@@ -14,12 +14,14 @@ model User {
   email     String   @unique
   token     String?  // Optional field for user token
   password  String
-  role      Role
+  role      Role     @default(User)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   problems   Problem[]    @relation("UserProblems")
+  contests   Contest[]    @relation("UserContests")
   submissions Submission[] @relation("UserSubmissions")
+  contestParticipants ContestParticipants[]
 }
 
 model Problem {
@@ -27,10 +29,13 @@ model Problem {
   userId          String
   title           String
   description     String
+  inputFormat     String
+  outputFormat    String
   resourcesPath   String[] // Array of resource paths
   constraints     String
   difficulty      Difficulty
   ownerCode       String
+  ownerCodeLanguage Int
   contestId       String?  // Optional field for contest ID
   topics          String[] // Array of topics
   companies       String[] // Array of companies
@@ -41,6 +46,7 @@ model Problem {
   submissions   Submission[]
   testcases     Testcase[]
   queries       QueryTable[]
+  contestProblems ContestProblem[]
 }
 
 model Topic {
@@ -79,6 +85,9 @@ model Submission {
   status           SubmissionStatus @default(Pending)
   totalTestcases    Int
   evaluatedTestcases Int @default(0)
+  AcceptedTestcases Int @default(0)
+  time              Float @default(0)
+  memory            Float @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -93,8 +102,8 @@ model SubmittedTestcase {
   submissionId   String
   status         Int      @default(1)// Status can be represented as integer
   output         String?  // Optional output field
-  time           Int?     // Optional time field
-  memory         Int?     // Optional memory field
+  time           Float?
+  memory         Float?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -116,6 +125,48 @@ model QueryTable {
   company     Company @relation(fields: [companyId], references: [id])
 }
 
+model Contest {
+  id      String @id @default(cuid())
+  title   String
+  description String
+  status ContestStatus @default(Upcoming)
+  problems String[] // Array of problem ids
+  startTime  DateTime @default(now())
+  duration Int @default(0)
+  userId  String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  createdBy      User  @relation("UserContests", fields: [userId], references: [id])
+  contestProblems    ContestProblem[]
+  contestParticipants ContestParticipants[]
+}
+
+model ContestProblem {
+  id         String   @id @default(uuid())
+  contestId  String
+  problemId  String
+  score      Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  contest    Contest  @relation(fields: [contestId], references: [id])
+  problem    Problem  @relation(fields: [problemId], references: [id])
+}
+
+model ContestParticipants {
+  id        String   @id @default(uuid())
+  contestId String
+  userId    String
+  score     Float    @default(0)
+  rank      Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contest   Contest  @relation(fields: [contestId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
 // Enum Definitions
 enum Role {
   Admin
@@ -133,4 +184,10 @@ enum SubmissionStatus {
   Pending
   Accepted
   Rejected
+}
+
+enum ContestStatus{
+  Upcoming
+  Ongoing
+  Ended
 }

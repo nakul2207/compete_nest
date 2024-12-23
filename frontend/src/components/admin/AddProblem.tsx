@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from '../ui/switch'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { PlusCircle, MinusCircle, Upload } from 'lucide-react'
-import MDEditor from '@uiw/react-md-editor'
 import { MultiSelect } from "@/components/ui/multi-select"
+import { MarkdownEditor } from '../ui/mdx-editor'
 
 type FormData = {
     title: string
@@ -129,6 +129,8 @@ export function AddProblem() {
         e.preventDefault()
         console.log(formData)
         // Here you would typically send the data to your backend
+
+
         navigate('/admin/problems')
     }
 
@@ -188,13 +190,30 @@ export function AddProblem() {
                     <div className="space-y-4">
                         {['description', 'inputFormat', 'constraints', 'outputFormat'].map((field) => (
                             <div key={field}>
-                                <Label htmlFor={field} className="capitalize mb-2 block">{field.replace(/([A-Z])/g, ' $1').trim()}</Label>
-                                <MDEditor
+                                <Label htmlFor={field} className="capitalize mb-2 block">
+                                    {field.replace(/([A-Z])/g, ' $1').trim()}
+                                </Label>
+                                <MarkdownEditor
                                     value={formData[field as keyof FormData] as string}
-                                    onChange={(value) => handleChange(field as keyof FormData, value || '')}
+                                    onChange={(value) => handleChange(field as keyof FormData, value)}
+                                    placeholder={`Enter ${field.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}...`}
                                 />
                             </div>
                         ))}
+
+                        {/*<div key={"xxxxx"} className="space-y-2">*/}
+                        {/*    <label*/}
+                        {/*        htmlFor={"xxxxx"}*/}
+                        {/*        className="block text-sm font-medium capitalize text-gray-300"*/}
+                        {/*    >*/}
+
+                        {/*    </label>*/}
+                        {/*    <MDEditor*/}
+                        {/*        id={"xxxxxx"}*/}
+                        {/*        preview="edit"*/}
+                        {/*        className="bg-gray-900 text-gray-100 rounded-md border border-gray-700"*/}
+                        {/*    />*/}
+                        {/*</div>*/}
                     </div>
                     <div className="space-y-4">
                         <div>
@@ -210,7 +229,7 @@ export function AddProblem() {
                             <Label htmlFor="ownerCodeLanguage">Owner Code Language</Label>
                             <Select onValueChange={(value) => handleChange('ownerCodeLanguage', value)}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select language" />
+                                    <SelectValue placeholder="Select language"/>
                                 </SelectTrigger>
                                 <SelectContent>
                                     {languages.map(lang => (
