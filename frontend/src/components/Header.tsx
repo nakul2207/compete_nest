@@ -13,7 +13,7 @@ export function Header() {
       <div className="container flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
           <Link to="/" className="mr-6 flex items-center space-x-2">
-            <img src="/logo.svg" alt="Compete Nest Logo" className="h-6 w-6" />
+            {/*<img src="/logo.svg" alt="Compete Nest Logo" className="h-6 w-6" />*/}
             <span className="hidden font-bold sm:inline-block">
               Compete Nest
             </span>

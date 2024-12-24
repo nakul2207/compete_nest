@@ -21,6 +21,9 @@ export function AdminPortal() {
         return () => window.removeEventListener('resize', handleResize)
     }, [])
 
+
+    console.log("Portal Updated");
+
     if (location.pathname === '/admin') {
         return <Navigate to="/admin/users" replace />
     }

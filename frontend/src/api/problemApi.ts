@@ -3,6 +3,8 @@ const judge0_base_url = import.meta.env.VITE_BASE_JUDGE0;
 const server_url = import.meta.env.VITE_SERVER_URL;
 const hosted_judge0_base_url = import.meta.env.VITE_BASE_JUDGE0_HOSTED
 
+import {ProblemFormData} from "../schemas/problemSchema.tsx"
+
 const headers = {
     'Content-Type': 'application/json'
 }
@@ -116,3 +118,17 @@ export const getFileData = async (url: string)=>{
     }
 }
 
+export const saveProblem = async (formData: ProblemFormData) => {
+    try {
+        // Send the data to the backend API
+        const {data} = await axios.post(`${server_url}/api/problem/create`, {
+            ...formData,
+        }, {headers}
+    );
+        // console.log('Problem saved successfully:', data);
+        return data;  // You can use the ID or any other response data here
+    } catch (error) {
+        console.error('Error saving problem:', error);
+        throw new Error('Failed to save problem');
+    }
+};

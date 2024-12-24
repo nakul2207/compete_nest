@@ -1,5 +1,7 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
@@ -10,31 +12,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { PlusCircle, MinusCircle, Upload } from 'lucide-react'
 import { MultiSelect } from "@/components/ui/multi-select"
 import { MarkdownEditor } from '../ui/mdx-editor'
-
-type FormData = {
-    title: string
-    difficulty: string
-    topics: string[]
-    companies: string[]
-    description: string
-    inputFormat: string
-    constraints: string
-    outputFormat: string
-    ownerCode: string
-    ownerCodeLanguage: string
-    testCases: {
-        input: File | null
-        output: File | null
-        isExample: boolean
-    }[]
-    images: {
-        file: File | null
-        caption: string
-    }[]
-}
+import { problemSchema, ProblemFormData } from '../../schemas/problemSchema'
+import {saveProblem} from "@/api/problemApi.ts";
+import {languages} from "@/assets/mapping.ts";
 
 const difficulties = ['Easy', 'Medium', 'Hard']
-const languages = ['JavaScript', 'Python', 'Java', 'C++']
 const topicsMap = {
     '1': 'Array',
     '2': 'String',
@@ -52,87 +34,117 @@ const companiesMap = {
 
 export function AddProblem() {
     const navigate = useNavigate()
-    const [formData, setFormData] = useState<FormData>({
-        title: '',
-        difficulty: '',
-        topics: [],
-        companies: [],
-        description: '',
-        inputFormat: '',
-        constraints: '',
-        outputFormat: '',
-        ownerCode: '',
-        ownerCodeLanguage: '',
-        testCases: [{ input: null, output: null, isExample: false }],
-        images: [{ file: null, caption: '' }]
+    const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<ProblemFormData>({
+        resolver: zodResolver(problemSchema),
+        defaultValues: {
+            title: '',
+            difficulty: '',
+            topics: [],
+            companies: [],
+            description: '',
+            inputFormat: '',
+            constraints: '',
+            outputFormat: '',
+            ownerCode: '',
+            ownerCodeLanguage: '',
+            testCases: [{ input: null, output: null, isExample: false }],
+            resources: [{ file: null, caption: '' }]
+        }
     })
 
-    const handleChange = (field: keyof FormData, value: any) => {
-        setFormData(prev => ({ ...prev, [field]: value }))
+    console.log("re rendered")
+
+    const onSubmit = async (data: ProblemFormData) => {
+        console.log(data)
+        const formData = {
+            ...data,
+            testCases: data.testCases.map((testCase: any) => testCase.isExample),
+            resourcePath: data.resources.map((resource: any) => resource.caption),
+        };
+        console.log(formData);
+        // testcase: [true, false, false];
+        //resources: ["caption1","caption2"]
+        // create record in problem table -> problem_id;
+        // loop over this testcase file:
+        // getPsURl(`problem_id/input/input_${index}.txt`}
+        // getPsURl(`problem_id/input/input_${index}.txt`}
+
+        const results = await saveProblem(formData);
+        console.log(results);
+        
+        await Promise.all(
+            data.testCases.map(async (testCase, index) => {
+                const urls = results.results[index];
+                const uploads = [];
+
+                // Upload input file
+                if (testCase.input && urls.inputUrl) {
+                    uploads.push(
+                        fetch(urls.inputUrl, {
+                            method: "PUT",
+                            body: testCase.input,
+                            headers: {
+                                "Content-Type": testCase.input.type || "text/plain", // Default to plain text
+                            },
+                        })
+                    );
+                }
+
+                // Upload output file
+                if (testCase.output && urls.outputUrl) {
+                    uploads.push(
+                        fetch(urls.outputUrl, {
+                            method: "PUT",
+                            body: testCase.output,
+                            headers: {
+                                "Content-Type": testCase.output.type || "text/plain", // Default to plain text
+                            },
+                        })
+                    );
+                }
+
+                // Wait for uploads to finish
+                await Promise.all(uploads);
+            })
+        );
+
+        // navigate('/admin/problems')
     }
 
-    const handleMultiSelect = useCallback((field: 'topics' | 'companies', value: string) => {
-        setFormData(prev => {
-            const currentValues = prev[field]
-            const updatedValues = currentValues.includes(value)
-                ? currentValues.filter(v => v !== value)
-                : [...currentValues, value]
-            return { ...prev, [field]: updatedValues }
-        })
-    }, [])
+    const handleMultiSelect = useCallback((field: 'topics' | 'companies', value: string[]) => {
+        setValue(field, value)
+    }, [setValue])
 
-    const handleTestCaseChange = (index: number, field: 'input' | 'output' | 'isExample', value: any) => {
-        setFormData(prev => {
-            const updatedTestCases = [...prev.testCases]
-            updatedTestCases[index] = { ...updatedTestCases[index], [field]: value }
-            return { ...prev, testCases: updatedTestCases }
-        })
-    }
+    const handleTestCaseChange = useCallback((index: number, field: 'input' | 'output' | 'isExample', value: any) => {
+        setValue(`testCases.${index}.${field}`, value)
+    }, [setValue])
 
-    const handleImageChange = (index: number, field: 'file' | 'caption', value: any) => {
-        setFormData(prev => {
-            const updatedImages = [...prev.images]
-            updatedImages[index] = { ...updatedImages[index], [field]: value }
-            return { ...prev, images: updatedImages }
-        })
-    }
+    const handleResourceChange = useCallback((index: number, field: 'file' | 'caption', value: any) => {
+        setValue(`resources.${index}.${field}`, value)
+    }, [setValue])
 
-    const addTestCase = () => {
-        setFormData(prev => ({
-            ...prev,
-            testCases: [...prev.testCases, { input: null, output: null, isExample: false }]
-        }))
-    }
+    const addTestCase = useCallback(() => {
+        const currentTestCases = watch('testCases')
+        setValue('testCases', [...currentTestCases, { input: null, output: null, isExample: false }])
+    }, [setValue, watch])
 
-    const removeTestCase = (index: number) => {
-        setFormData(prev => ({
-            ...prev,
-            testCases: prev.testCases.filter((_, i) => i !== index)
-        }))
-    }
+    const removeTestCase = useCallback((index: number) => {
+        const currentTestCases = watch('testCases')
+        setValue('testCases', currentTestCases.filter((_, i) => i !== index))
+    }, [setValue, watch])
 
-    const addImage = () => {
-        setFormData(prev => ({
-            ...prev,
-            images: [...prev.images, { file: null, caption: '' }]
-        }))
-    }
+    const addResource = useCallback(() => {
+        const currentImages = watch('resources')
+        setValue('resources', [...currentImages, { file: null, caption: '' }])
+    }, [setValue, watch])
 
-    const removeImage = (index: number) => {
-        setFormData(prev => ({
-            ...prev,
-            images: prev.images.filter((_, i) => i !== index)
-        }))
-    }
+    const removeResource = useCallback((index: number) => {
+        const currentImages = watch('resources')
+        setValue('resources', currentImages.filter((_, i) => i !== index))
+    }, [setValue, watch])
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        console.log(formData)
-        // Here you would typically send the data to your backend
-
-
-        navigate('/admin/problems')
-    }
+    const testCases = watch('testCases')
+    const resources = watch('resources')
 
     return (
         <Card>
@@ -140,50 +152,77 @@ export function AddProblem() {
                 <CardTitle>Add New Problem</CardTitle>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                     <div className="space-y-4">
                         <div>
                             <Label htmlFor="title">Title</Label>
-                            <Input
-                                id="title"
-                                value={formData.title}
-                                onChange={(e) => handleChange('title', e.target.value)}
-                                className="max-w-md"
+                            <Controller
+                                name="title"
+                                control={control}
+                                render={({ field }) => (
+                                    <Input
+                                        id="title"
+                                        {...field}
+                                        className="max-w-md"
+                                    />
+                                )}
                             />
+                            {errors.title && <p className="text-red-500">{errors.title.message}</p>}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <Label htmlFor="difficulty">Difficulty</Label>
-                                <Select onValueChange={(value) => handleChange('difficulty', value)}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select difficulty" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {difficulties.map(diff => (
-                                            <SelectItem key={diff} value={diff}>{diff}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Controller
+                                    name="difficulty"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select difficulty" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {difficulties.map(diff => (
+                                                    <SelectItem key={diff} value={diff}>{diff}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                                {errors.difficulty && <p className="text-red-500">{errors.difficulty.message}</p>}
                             </div>
                             <div>
                                 <Label htmlFor="topics">Topics</Label>
-                                <MultiSelect
-                                    options={Object.entries(topicsMap).map(([id, name]) => ({ id, name }))}
-                                    selected={formData.topics}
-                                    onChange={(values) => handleChange('topics', values)}
-                                    placeholder="Select topics"
-                                    label="Available Topics"
+                                <Controller
+                                    name="topics"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <MultiSelect
+                                            options={Object.entries(topicsMap).map(([id, name]) => ({ id, name }))}
+                                            selected={field.value}
+                                            onChange={(values) => handleMultiSelect('topics', values)}
+                                            placeholder="Select topics"
+                                            label="Available Topics"
+                                        />
+                                    )}
                                 />
+                                {errors.topics && <p className="text-red-500">{errors.topics.message}</p>}
                             </div>
                             <div>
                                 <Label htmlFor="companies">Companies</Label>
-                                <MultiSelect
-                                    options={Object.entries(companiesMap).map(([id, name]) => ({ id, name }))}
-                                    selected={formData.companies}
-                                    onChange={(values) => handleChange('companies', values)}
-                                    placeholder="Select companies"
-                                    label="Available Companies"
+                                <Controller
+                                    name="companies"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <MultiSelect
+                                            options={Object.entries(companiesMap).map(([id, name]) => ({ id, name }))}
+                                            selected={field.value}
+                                            onChange={(values) => handleMultiSelect('companies', values)}
+                                            placeholder="Select companies"
+                                            label="Available Companies"
+                                        />
+                                    )}
                                 />
+                                {errors.companies && <p className="text-red-500">{errors.companies.message}</p>}
                             </div>
                         </div>
                     </div>
@@ -193,55 +232,66 @@ export function AddProblem() {
                                 <Label htmlFor={field} className="capitalize mb-2 block">
                                     {field.replace(/([A-Z])/g, ' $1').trim()}
                                 </Label>
-                                <MarkdownEditor
-                                    value={formData[field as keyof FormData] as string}
-                                    onChange={(value) => handleChange(field as keyof FormData, value)}
-                                    placeholder={`Enter ${field.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}...`}
+                                <Controller
+                                    name={field as keyof ProblemFormData}
+                                    control={control}
+                                    render={({ field: { onChange, value } }) => (
+                                        <MarkdownEditor
+                                            value={value}
+                                            onChange={onChange}
+                                            placeholder={`Enter ${field.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}...`}
+                                        />
+                                    )}
                                 />
+                                {errors[field as keyof ProblemFormData] && (
+                                    <p className="text-red-500">{errors[field as keyof ProblemFormData]?.message}</p>
+                                )}
                             </div>
                         ))}
-
-                        {/*<div key={"xxxxx"} className="space-y-2">*/}
-                        {/*    <label*/}
-                        {/*        htmlFor={"xxxxx"}*/}
-                        {/*        className="block text-sm font-medium capitalize text-gray-300"*/}
-                        {/*    >*/}
-
-                        {/*    </label>*/}
-                        {/*    <MDEditor*/}
-                        {/*        id={"xxxxxx"}*/}
-                        {/*        preview="edit"*/}
-                        {/*        className="bg-gray-900 text-gray-100 rounded-md border border-gray-700"*/}
-                        {/*    />*/}
-                        {/*</div>*/}
                     </div>
                     <div className="space-y-4">
                         <div>
                             <Label htmlFor="ownerCode">Owner Code</Label>
-                            <Textarea
-                                id="ownerCode"
-                                value={formData.ownerCode}
-                                onChange={(e) => handleChange('ownerCode', e.target.value)}
-                                rows={10}
+                            <Controller
+                                name="ownerCode"
+                                control={control}
+                                render={({ field }) => (
+                                    <Textarea
+                                        id="ownerCode"
+                                        {...field}
+                                        rows={10}
+                                    />
+                                )}
                             />
+                            {errors.ownerCode && <p className="text-red-500">{errors.ownerCode.message}</p>}
                         </div>
                         <div>
                             <Label htmlFor="ownerCodeLanguage">Owner Code Language</Label>
-                            <Select onValueChange={(value) => handleChange('ownerCodeLanguage', value)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select language"/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {languages.map(lang => (
-                                        <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Controller
+                                name="ownerCodeLanguage"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select language"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {
+
+                                                Object.entries(languages).map(([id, language]) => (
+                                                    <SelectItem key={id} value={id}>{language.name}</SelectItem>)
+                                                )
+                                            }
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                            {errors.ownerCodeLanguage && <p className="text-red-500">{errors.ownerCodeLanguage.message}</p>}
                         </div>
                     </div>
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Test Cases</h3>
-                        {formData.testCases.map((testCase, index) => (
+                        {testCases.map((testCase, index) => (
                             <Card key={index}>
                                 <CardContent className="pt-6">
                                     <div className="flex justify-between items-center mb-4">
@@ -274,10 +324,16 @@ export function AddProblem() {
                                             </div>
                                         ))}
                                         <div className="flex items-center space-x-2">
-                                            <Switch
-                                                id={`example-${index}`}
-                                                checked={testCase.isExample}
-                                                onCheckedChange={(checked) => handleTestCaseChange(index, 'isExample', checked)}
+                                            <Controller
+                                                name={`testCases.${index}.isExample`}
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <Switch
+                                                        id={`example-${index}`}
+                                                        checked={field.value}
+                                                        onCheckedChange={field.onChange}
+                                                    />
+                                                )}
                                             />
                                             <Label htmlFor={`example-${index}`}>Use as example test case</Label>
                                         </div>
@@ -292,12 +348,12 @@ export function AddProblem() {
                     </div>
                     <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Images (Optional)</h3>
-                        {formData.images.map((image, index) => (
+                        {resources.map((image, index) => (
                             <Card key={index}>
                                 <CardContent className="pt-6">
                                     <div className="flex justify-between items-center mb-4">
                                         <h4 className="font-medium">Image {index + 1}</h4>
-                                        <Button type="button" variant="ghost" size="sm" onClick={() => removeImage(index)}>
+                                        <Button type="button" variant="ghost" size="sm" onClick={() => removeResource(index)}>
                                             <MinusCircle className="h-4 w-4" />
                                         </Button>
                                     </div>
@@ -308,7 +364,7 @@ export function AddProblem() {
                                                 <input
                                                     type="file"
                                                     id={`image-${index}`}
-                                                    onChange={(e) => handleImageChange(index, 'file', e.target.files?.[0] || null)}
+                                                    onChange={(e) => handleResourceChange(index, 'file', e.target.files?.[0] || null)}
                                                     className="hidden"
                                                     accept="image/*"
                                                 />
@@ -325,17 +381,22 @@ export function AddProblem() {
                                         </div>
                                         <div>
                                             <Label htmlFor={`caption-${index}`}>Caption</Label>
-                                            <Input
-                                                id={`caption-${index}`}
-                                                value={image.caption}
-                                                onChange={(e) => handleImageChange(index, 'caption', e.target.value)}
+                                            <Controller
+                                                name={`resources.${index}.caption`}
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <Input
+                                                        id={`caption-${index}`}
+                                                        {...field}
+                                                    />
+                                                )}
                                             />
                                         </div>
                                     </div>
                                 </CardContent>
                             </Card>
                         ))}
-                        <Button type="button" variant="outline" onClick={addImage}>
+                        <Button type="button" variant="outline" onClick={addResource}>
                             <PlusCircle className="h-4 w-4 mr-2" />
                             Add Image
                         </Button>

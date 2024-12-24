@@ -1,8 +1,8 @@
 import { Response, Request } from "express";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
-import { PrismaClient } from "@prisma/client";
+import {Difficulty, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const s3client = new S3Client({
@@ -13,14 +13,40 @@ const s3client = new S3Client({
     }
 });
 
+interface SaveProblemRequest {
+    userId: string;
+    title: string;
+    description: string;
+    inputFormat: string;
+    outputFormat: string;
+    resourcesPath: string[];
+    constraints: string;
+    difficulty: Difficulty;
+    ownerCode: string;
+    ownerCodeLanguage: string;
+    contestId?: string | null;
+    topics: string[];
+    companies: string[];
+    testCases: boolean[]
+}
+
 async function getObjectURL(key: string){
     const command = new GetObjectCommand({
         Bucket: 'compete-nest',
         Key: key,
     });
 
-    const url = getSignedUrl(s3client, command);
-    return url;
+    return getSignedUrl(s3client, command)
+}
+
+async function putObjectURL(key: string){
+    const command = new PutObjectCommand({
+        Bucket: 'compete-nest',
+        Key: key,
+        ContentType: "text/plain",
+    })
+
+    return getSignedUrl(s3client, command, { expiresIn: 3600 })
 }
 
 const handleSubmitProblem = async (req:Request, res:Response) => {
@@ -106,4 +132,86 @@ const handleRunProblem = async (req: Request, res: Response) => {
     })
 }
 
-export { handleSubmitProblem, handleRunProblem };
+const handleCreateProblem  = async (req: Request, res:Response) =>{
+    // console.log(req.body);
+    const userId = "123";
+    const {
+        title,
+        description,
+        inputFormat,
+        outputFormat,
+        resourcesPath,
+        constraints,
+        difficulty,
+        ownerCode,
+        ownerCodeLanguage,
+        contestId = null,
+        topics = [],
+        companies = [],
+        testCases = []
+    }: SaveProblemRequest = req.body;
+
+    // Validate required fields
+    if (!userId || !title || !description || !inputFormat || !outputFormat || !difficulty || !ownerCode || ownerCodeLanguage == null || testCases.length <= 0) {
+        return res.status(400).json({ error: 'Missing required fields.' });
+    }
+
+    try {
+        // Save the problem to the database
+        const problemId = await prisma.problem.create({
+            data: {
+                userId,
+                title,
+                description,
+                inputFormat,
+                outputFormat,
+                resourcesPath,
+                constraints,
+                difficulty,
+                ownerCode,
+                ownerCodeLanguage: parseInt(ownerCodeLanguage),
+                contestId,
+                topics,
+                companies,
+            },
+            select: {
+                id: true
+            }
+        });
+
+        //create records in testcases table & generate psURLs
+        console.log(problemId);
+
+        const results = await Promise.all(
+            testCases.map(async (isExample, index) => {
+                const inputKey = `Problems/${problemId.id}/input/input_${index}.txt`;
+                const outputKey = `Problems/${problemId.id}/output/output_${index}.txt`;
+
+                const inputUrl = await putObjectURL(inputKey);
+                const outputUrl = await putObjectURL(outputKey);
+
+                //create a record in the testcase table
+                await prisma.testcase.create({
+                    data:{
+                        problemId: problemId.id,
+                        inputPath: inputKey,
+                        expOutputPath: outputKey,
+                        isExample
+                    }
+                })
+
+                return {
+                    inputUrl,
+                    outputUrl
+                };
+            })
+        );
+
+        res.status(201).json({ id: problemId, results });
+    } catch (error) {
+        console.error('Error saving problem:', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+}
+
+export { handleSubmitProblem, handleRunProblem, handleCreateProblem };
