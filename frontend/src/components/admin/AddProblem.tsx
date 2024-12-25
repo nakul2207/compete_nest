@@ -13,7 +13,7 @@ import { PlusCircle, MinusCircle, Upload } from 'lucide-react'
 import { MultiSelect } from "@/components/ui/multi-select"
 import { MarkdownEditor } from '../ui/mdx-editor'
 import { problemSchema, ProblemFormData } from '../../schemas/problemSchema'
-import {saveProblem} from "@/api/problemApi.ts";
+import {saveProblem, uploadToS3} from "@/api/problemApi.ts";
 import {languages} from "@/assets/mapping.ts";
 
 const difficulties = ['Easy', 'Medium', 'Hard']
@@ -55,56 +55,42 @@ export function AddProblem() {
     console.log("re rendered")
 
     const onSubmit = async (data: ProblemFormData) => {
-        console.log(data)
+        // console.log(data)
         const formData = {
             ...data,
             testCases: data.testCases.map((testCase: any) => testCase.isExample),
-            resourcePath: data.resources.map((resource: any) => resource.caption),
+            resources: data.resources.map((resource: any) => resource.caption),
         };
-        console.log(formData);
-        // testcase: [true, false, false];
-        //resources: ["caption1","caption2"]
-        // create record in problem table -> problem_id;
-        // loop over this testcase file:
-        // getPsURl(`problem_id/input/input_${index}.txt`}
-        // getPsURl(`problem_id/input/input_${index}.txt`}
+        // console.log(formData);
 
         const results = await saveProblem(formData);
         console.log(results);
         
         await Promise.all(
+            //uploading all testcases files
             data.testCases.map(async (testCase, index) => {
-                const urls = results.results[index];
-                const uploads = [];
+                const urls = results.testcasesURLs[index];
 
                 // Upload input file
                 if (testCase.input && urls.inputUrl) {
-                    uploads.push(
-                        fetch(urls.inputUrl, {
-                            method: "PUT",
-                            body: testCase.input,
-                            headers: {
-                                "Content-Type": testCase.input.type || "text/plain", // Default to plain text
-                            },
-                        })
-                    );
+                    await uploadToS3(urls.inputUrl, testCase.input, testCase.input.type);
                 }
 
                 // Upload output file
                 if (testCase.output && urls.outputUrl) {
-                    uploads.push(
-                        fetch(urls.outputUrl, {
-                            method: "PUT",
-                            body: testCase.output,
-                            headers: {
-                                "Content-Type": testCase.output.type || "text/plain", // Default to plain text
-                            },
-                        })
-                    );
+                    await uploadToS3(urls.outputUrl, testCase.output, testCase.output.type);
                 }
+            })
+        );
 
-                // Wait for uploads to finish
-                await Promise.all(uploads);
+        await Promise.all(
+            //uploading all resource files
+            data.resources.map(async (resource, index) =>{
+                const url = results.resourceURLs[index];
+
+                if(resource.file && url){
+                    await uploadToS3(url, resource.file, resource.file.type);
+                }
             })
         );
 

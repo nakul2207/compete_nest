@@ -125,10 +125,22 @@ export const saveProblem = async (formData: ProblemFormData) => {
             ...formData,
         }, {headers}
     );
-        // console.log('Problem saved successfully:', data);
-        return data;  // You can use the ID or any other response data here
+        return data;
     } catch (error) {
         console.error('Error saving problem:', error);
         throw new Error('Failed to save problem');
     }
 };
+
+export const uploadToS3 = async (url: string, file: File, fileType: string)=> {
+    try{
+        await axios.put(url, file, {
+            headers: {
+                "Content-Type": fileType || "text/plain",
+            },
+        })
+    }catch (error) {
+        console.error('Error uploading the file to s3', error);
+        throw new Error('Failed to upload file on s3');
+    }
+}

@@ -3,6 +3,7 @@ import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
 import {Difficulty, PrismaClient } from "@prisma/client";
+
 const prisma = new PrismaClient();
 
 const s3client = new S3Client({
@@ -19,7 +20,7 @@ interface SaveProblemRequest {
     description: string;
     inputFormat: string;
     outputFormat: string;
-    resourcesPath: string[];
+    resources: string[];
     constraints: string;
     difficulty: Difficulty;
     ownerCode: string;
@@ -133,14 +134,13 @@ const handleRunProblem = async (req: Request, res: Response) => {
 }
 
 const handleCreateProblem  = async (req: Request, res:Response) =>{
-    // console.log(req.body);
     const userId = "123";
     const {
         title,
         description,
         inputFormat,
         outputFormat,
-        resourcesPath,
+        resources,
         constraints,
         difficulty,
         ownerCode,
@@ -165,7 +165,7 @@ const handleCreateProblem  = async (req: Request, res:Response) =>{
                 description,
                 inputFormat,
                 outputFormat,
-                resourcesPath,
+                resourcesPath: resources,
                 constraints,
                 difficulty,
                 ownerCode,
@@ -179,10 +179,18 @@ const handleCreateProblem  = async (req: Request, res:Response) =>{
             }
         });
 
-        //create records in testcases table & generate psURLs
-        console.log(problemId);
+        //generating psURLs for resources
+        const resourceURLs = await Promise.all(
+            resources.map(async (caption, index) => {
+                const resourceKey = `Problems/${problemId.id}/resource/resource_${index}`;
 
-        const results = await Promise.all(
+                //generating psURL and returning it
+                return await putObjectURL(resourceKey);
+            })
+        )
+
+        //create records in testcases table & generate psURLs
+        const testcasesURLs = await Promise.all(
             testCases.map(async (isExample, index) => {
                 const inputKey = `Problems/${problemId.id}/input/input_${index}.txt`;
                 const outputKey = `Problems/${problemId.id}/output/output_${index}.txt`;
@@ -198,7 +206,7 @@ const handleCreateProblem  = async (req: Request, res:Response) =>{
                         expOutputPath: outputKey,
                         isExample
                     }
-                })
+                });
 
                 return {
                     inputUrl,
@@ -207,7 +215,7 @@ const handleCreateProblem  = async (req: Request, res:Response) =>{
             })
         );
 
-        res.status(201).json({ id: problemId, results });
+        res.status(201).json({ id: problemId, testcasesURLs, resourceURLs });
     } catch (error) {
         console.error('Error saving problem:', error);
         res.status(500).json({ error: 'Internal server error.' });
