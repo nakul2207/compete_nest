@@ -222,4 +222,16 @@ const handleCreateProblem  = async (req: Request, res:Response) =>{
     }
 }
 
-export { handleSubmitProblem, handleRunProblem, handleCreateProblem };
+const handleGetAllProblem =  async (req: Request, res:Response) => {
+    try{
+        const problems = await prisma.problem.findMany({});
+        // console.log(problems);
+
+        res.status(200).json({ problems });
+    }catch (error) {
+        console.error('Error saving problem:', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+}
+
+export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleGetAllProblem };

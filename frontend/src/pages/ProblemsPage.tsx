@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import {useEffect, useState} from 'react'
 import { Input } from "../components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import {getAllProblems} from "@/api/problemApi.ts";
 
 const dummyProblems = [
   { id: 1, title: "Two Sum", difficulty: "Easy", acceptance: "45%", status: "Solved", topic: "Array", company: "Amazon" },
@@ -16,19 +17,34 @@ const topics = ["Array", "String", "Linked List", "Tree", "Dynamic Programming"]
 const companies = ["Amazon", "Google", "Microsoft", "Apple", "Facebook"]
 
 export function ProblemsPage() {
+  const [problems, setProblems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("")
   const [difficultyFilter, setDifficultyFilter] = useState("All")
   const [statusFilter, setStatusFilter] = useState("All")
   const [topicFilter, setTopicFilter] = useState("All")
   const [companyFilter, setCompanyFilter] = useState("All")
 
-  const filteredProblems = dummyProblems.filter(problem => 
+  const filteredProblems = dummyProblems.filter(problem =>
     problem.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
     (difficultyFilter === "All" || problem.difficulty === difficultyFilter) &&
     (statusFilter === "All" || problem.status === statusFilter) &&
     (topicFilter === "All" || problem.topic === topicFilter) &&
     (companyFilter === "All" || problem.company === companyFilter)
   )
+
+  useEffect(() => {
+    const fetchProblems = async () => {
+      try {
+        const allProblems = await getAllProblems();
+        console.log(allProblems);
+        setProblems(allProblems);
+      } catch (error) {
+        console.error("Error fetching problems:", error);
+      }
+    };
+
+    fetchProblems();
+  }, []);
 
   return (
     <div className="container mx-auto py-8">
@@ -98,7 +114,7 @@ export function ProblemsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProblems.map((problem) => (
+                {problems.map((problem) => (
                   <TableRow key={problem.id} className="hover:bg-muted/50 transition-colors">
                     <TableCell className="font-medium">{problem.title}</TableCell>
                     <TableCell>
@@ -109,14 +125,15 @@ export function ProblemsPage() {
                         {problem.difficulty}
                       </span>
                     </TableCell>
-                    <TableCell>{problem.acceptance}</TableCell>
+                    <TableCell>{20}</TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold
-                        ${problem.status === 'Solved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                          problem.status === 'Attempted' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'}`}>
-                        {problem.status}
-                      </span>
+                      {/*<span className={`px-2 py-1 rounded-full text-xs font-semibold*/}
+                      {/*   ${problem.status === 'Solved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :*/}
+                      {/*     problem.status === 'Attempted' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :*/}
+                      {/*     'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'}`}>*/}
+                      {/*  {problem.status}*/}
+                      {/*</span>*/}
+                      <span>unsolved</span>
                     </TableCell>
                   </TableRow>
                 ))}

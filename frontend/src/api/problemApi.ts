@@ -144,3 +144,13 @@ export const uploadToS3 = async (url: string, file: File, fileType: string)=> {
         throw new Error('Failed to upload file on s3');
     }
 }
+
+export const getAllProblems = async() =>{
+    try {
+        const {data} = await axios.get(`${server_url}/api/problem/all`);
+        return data.problems;
+    }catch(error){
+        console.error('Error fetching all the problems', error);
+        throw new Error('Failed to get the problems');
+    }
+}
