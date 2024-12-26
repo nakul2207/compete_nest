@@ -20,6 +20,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<CompeteNestProblemPage />} />
                 <Route path="/problems" element={<ProblemsPage />} />
+                  <Route path="/problems/:problem_id" element={<CompeteNestProblemPage />} />
                 <Route path="/contests" element={<ContestsPage/>} />
                   <Route path="/admin" element={<AdminPortal />}>
                       <Route path="users" element={<ManageUsers />} />

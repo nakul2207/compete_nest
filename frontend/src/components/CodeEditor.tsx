@@ -24,7 +24,8 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
     const dispatch = useAppDispatch();
     const languageId =  useAppSelector((state) => state.problem.languageId);
 
-    // const [code, setCode] = useState("")
+    // console.log("editor render");
+        // const [code, setCode] = useState("")
     const editorRef = useRef<any>(null);
 
     const onSelect = (language_id: string) => {

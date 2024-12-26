@@ -234,4 +234,23 @@ const handleGetAllProblem =  async (req: Request, res:Response) => {
     }
 }
 
-export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleGetAllProblem };
+const handleGetProblemById = async (req: Request, res: Response) => {
+    try {
+        const problem = await prisma.problem.findUnique({
+            where: {
+                id: req.params.id,
+            },
+        });
+
+        if (!problem) {
+            return res.status(404).json({ error: 'Problem not found.' });
+        }
+
+        res.status(200).json({ problem });
+    } catch (error) {
+        console.error('Error fetching problem:', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+};
+
+export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleGetAllProblem, handleGetProblemById };

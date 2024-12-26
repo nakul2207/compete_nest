@@ -154,3 +154,13 @@ export const getAllProblems = async() =>{
         throw new Error('Failed to get the problems');
     }
 }
+
+export const getProblemById = async(problem_id: string) => {
+    try {
+        const {data} = await axios.get(`${server_url}/api/problem/${problem_id}`);
+        return data.problem;
+    }catch(error){
+        console.error('Error fetching all the problems', error);
+        throw new Error('Failed to get the problems');
+    }
+}

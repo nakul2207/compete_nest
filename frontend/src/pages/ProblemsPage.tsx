@@ -3,6 +3,7 @@ import { Input } from "../components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
+import { useNavigate } from "react-router-dom";
 import {getAllProblems} from "@/api/problemApi.ts";
 
 const dummyProblems = [
@@ -17,6 +18,7 @@ const topics = ["Array", "String", "Linked List", "Tree", "Dynamic Programming"]
 const companies = ["Amazon", "Google", "Microsoft", "Apple", "Facebook"]
 
 export function ProblemsPage() {
+  const navigate = useNavigate();
   const [problems, setProblems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("")
   const [difficultyFilter, setDifficultyFilter] = useState("All")
@@ -36,7 +38,6 @@ export function ProblemsPage() {
     const fetchProblems = async () => {
       try {
         const allProblems = await getAllProblems();
-        console.log(allProblems);
         setProblems(allProblems);
       } catch (error) {
         console.error("Error fetching problems:", error);
@@ -116,7 +117,7 @@ export function ProblemsPage() {
               <TableBody>
                 {problems.map((problem) => (
                   <TableRow key={problem.id} className="hover:bg-muted/50 transition-colors">
-                    <TableCell className="font-medium">{problem.title}</TableCell>
+                    <TableCell className="font-medium cursor-pointer" onClick={() => navigate(`/problems/${problem.id}`)}>{problem.title}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold
                         ${problem.difficulty === 'Easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
