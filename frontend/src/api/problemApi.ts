@@ -20,7 +20,7 @@ export const createBatchSubmission = async (inputData: { submissions: any[] }) =
 
         // Append params directly in the URL instead of using the params object
         const { data } = await axios.post(
-            `${judge0_base_url}/submissions/batch?base64_encoded=true`,
+            `${hosted_judge0_base_url}/submissions/batch?base64_encoded=true`,
             inputData,
             { headers }
         );
@@ -107,11 +107,21 @@ export const runProblem = async (inputData: { submissions: any[] }) =>{
     }
 }
 
+export const getProblemSubmissions = async(problem_id: string) => {
+    try {
+        const {data} = await axios.get(`${server_url}/api/problem/${problem_id}/submissions`);
+        return data.submissions;
+    }catch(error){
+        console.error('Error fetching all the problems', error);
+        throw new Error('Failed to get the problems');
+    }
+}
+
 export const getFileData = async (url: string)=>{
     try {
         const { data } = await axios.get(url);
 
-        return data;
+        return data.toString();
     } catch (error) {
         console.error("Error Fetching Data:", error);
         return { success: false, message: "An error occurred while fetching data." };
@@ -159,6 +169,16 @@ export const getProblemById = async(problem_id: string) => {
     try {
         const {data} = await axios.get(`${server_url}/api/problem/${problem_id}`);
         return data.problem;
+    }catch(error){
+        console.error('Error fetching all the problems', error);
+        throw new Error('Failed to get the problems');
+    }
+}
+
+export const getAllExampleTestcases = async(problem_id: string) => {
+    try {
+        const {data} = await axios.get(`${server_url}/api/problem/${problem_id}/example_testcases`);
+        return data.testcasesURls;
     }catch(error){
         console.error('Error fetching all the problems', error);
         throw new Error('Failed to get the problems');

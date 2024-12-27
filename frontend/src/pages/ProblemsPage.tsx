@@ -44,7 +44,7 @@ export function ProblemsPage() {
       }
     };
 
-    fetchProblems();
+    fetchProblems().then();
   }, []);
 
   return (

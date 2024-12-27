@@ -23,7 +23,13 @@ interface ProblemState extends Problem {
     example_inputs: Array<string>;
     example_exp_outputs: Array<string>;
     code_outputs: Array<Object>;
-    recent_submission: Object;
+    submissions: Array<Object>
+    recent_submission: Object | null;
+}
+
+interface Testcase {
+    input: Array<string>,
+    exp_output: Array<string>
 }
 
 const initialState: ProblemState = {
@@ -45,6 +51,7 @@ const initialState: ProblemState = {
     example_inputs: ["1 2", "0 0", "3 4"],
     example_exp_outputs: ["3", "0", "7"],
     code_outputs: [],
+    submissions: [],
     recent_submission: {},
 };
 
@@ -83,9 +90,17 @@ export const problemSlice = createSlice({
             state.topics = problem.topics;
             state.companies = problem.companies;
         },
+        setExampleTestcases: (state, action: PayloadAction<Testcase>) => {
+            state.example_inputs = action.payload.input;
+            state.example_exp_outputs = action.payload.exp_output;
+        },
+        setSubmissions: (state, action: PayloadAction<Array<Object>>) => {
+            state.submissions = action.payload;
+            state.recent_submission = action.payload?.at(0) || null;
+        }
     },
 });
 
-export const { setCode, clearCode, setLanguage, setCodeOutputs, setRecentSubmission, setProblem } =
+export const { setCode, clearCode, setLanguage, setCodeOutputs, setRecentSubmission, setProblem, setExampleTestcases, setSubmissions } =
     problemSlice.actions;
 export default problemSlice.reducer;

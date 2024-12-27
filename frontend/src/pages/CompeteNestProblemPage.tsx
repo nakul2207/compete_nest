@@ -8,9 +8,9 @@ import { Submissions } from "../components/Submissions"
 import { CustomTestCases } from "../components/CustomTestCases"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../components/ui/resizable"
 import {useParams} from "react-router-dom";
-import {getProblemById} from "@/api/problemApi.ts";
+import {getProblemById, getAllExampleTestcases, getFileData, getProblemSubmissions} from "@/api/problemApi.ts";
 import {useAppDispatch} from "@/redux/hook.ts";
-import {setProblem} from "@/redux/slice/problemSlice.tsx";
+import {setProblem, setExampleTestcases, setSubmissions} from "@/redux/slice/problemSlice.tsx";
 
 export function CompeteNestProblemPage() {
   const [isFullScreen, setIsFullScreen] = useState(false)
@@ -24,12 +24,23 @@ export function CompeteNestProblemPage() {
       try {
         const problemData = await getProblemById(problem_id as string);
         dispatch(setProblem(problemData));
+
+        //fetch example testcases psURLs from database
+        const testcaseURLs = await getAllExampleTestcases(problem_id as string);
+        const input: string[] = await Promise.all(testcaseURLs.input_urls.map((url: string) => getFileData(url)));
+        const exp_output: string[] = await Promise.all(testcaseURLs.output_urls.map((url: string) => getFileData(url)));
+        dispatch(setExampleTestcases({input, exp_output}));
+
+        //fetching all the submissions of the problem
+        const submissions = await getProblemSubmissions(problem_id as string);
+        console.log(submissions);
+        dispatch(setSubmissions(submissions));
       } catch (error) {
         console.error("Error fetching problems:", error);
       }
     };
 
-    fetchProblem();
+    fetchProblem().then();
   }, [])
 
   return (

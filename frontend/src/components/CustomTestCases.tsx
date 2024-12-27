@@ -6,6 +6,7 @@ import { createSubmission, getSubmission } from "../api/problemApi.ts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
+import { ScrollArea } from "./ui/scroll-area"
 
 // Define the type for codeOutput
 type CodeOutput = {
@@ -56,19 +57,16 @@ export function CustomTestCases() {
     }
 
     const getStatusIcon = (codeOutput: CodeOutput | null, expectedOutput: string) => {
-        if (!codeOutput) return null; // Handle null/undefined codeOutput gracefully
+        if (!codeOutput) return null;
 
         const trimmedOutput = codeOutput.output?.trim();
         const trimmedExpected = expectedOutput.trim();
 
         if (trimmedOutput === trimmedExpected) {
-            // Output matches expected output
             return <CheckCircle2 className="text-green-500" />;
         } else if (codeOutput.status === "Time Limit Exceeded") {
-            // Time limit exceeded
             return <AlertCircle className="text-yellow-500" />;
         } else {
-            // Output mismatch or other error
             return <XCircle className="text-red-500" />;
         }
     };
@@ -81,35 +79,53 @@ export function CustomTestCases() {
                 </CardHeader>
                 <CardContent>
                     <Tabs defaultValue="example0" className="w-full">
-                        <TabsList className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {problem.example_inputs.map((_, index) => (
-                                <TabsTrigger key={index} value={`example${index}`}>
-                                    Example {index + 1}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
+                        <ScrollArea className="h-[60px]">
+                            <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+                                {problem.example_inputs.map((_, index) => (
+                                    <TabsTrigger
+                                        key={index}
+                                        value={`example${index}`}
+                                        className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                                    >
+                                        Example {index + 1}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
+                        </ScrollArea>
                         {problem.example_inputs.map((input, index) => (
-                            <TabsContent key={index} value={`example${index}`}>
+                            <TabsContent key={index} value={`example${index}`} className="mt-4">
                                 <div className="grid gap-4 md:grid-cols-2">
-                                    <div>
-                                        <h3 className="font-semibold mb-2">Input:</h3>
-                                        <pre className="bg-muted p-2 rounded-md overflow-x-auto">{input}</pre>
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold mb-2">Expected Output:</h3>
-                                        <pre className="bg-muted p-2 rounded-md overflow-x-auto">{problem.example_exp_outputs[index]}</pre>
-                                    </div>
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>Input:</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <pre className="bg-muted p-2 rounded-md overflow-x-auto">{input}</pre>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>Expected Output:</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <pre className="bg-muted p-2 rounded-md overflow-x-auto">{problem.example_exp_outputs[index]}</pre>
+                                        </CardContent>
+                                    </Card>
                                 </div>
                                 {problem.code_outputs[index] && (
-                                    <div className="mt-4">
-                                        <h3 className="font-semibold mb-2 flex items-center gap-2">
-                                            Code Output:
-                                            {getStatusIcon(problem.code_outputs[index], problem.example_exp_outputs[index])}
-                                        </h3>
-                                        <pre className="bg-muted p-2 rounded-md overflow-x-auto">
-                                            {problem.code_outputs[index].output || problem.code_outputs[index].status}
-                                        </pre>
-                                    </div>
+                                    <Card className="mt-4">
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2">
+                                                Code Output:
+                                                {getStatusIcon(problem.code_outputs[index], problem.example_exp_outputs[index])}
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <pre className="bg-muted p-2 rounded-md overflow-x-auto">
+                                                {problem.code_outputs[index].output || problem.code_outputs[index].status}
+                                            </pre>
+                                        </CardContent>
+                                    </Card>
                                 )}
                             </TabsContent>
                         ))}
@@ -133,12 +149,13 @@ export function CustomTestCases() {
                                 onChange={(e) => setTestCase(e.target.value)}
                                 placeholder="Enter your test case here..."
                                 rows={4}
+                                className="w-full resize-none"
                             />
                         </div>
                         <Button onClick={runTestCase}>Run Test Case</Button>
                         <div>
                             <h3 className="text-lg font-medium mb-2">Output:</h3>
-                            <pre className="bg-muted p-2 rounded-md overflow-x-auto">{output}</pre>
+                            <pre className="bg-muted p-2 rounded-md overflow-x-auto min-h-[100px]">{output}</pre>
                         </div>
                     </div>
                 </CardContent>

@@ -17,14 +17,24 @@ interface ResultsState {
     updatedAt?: string; // Optional if last updated is not always available
 }
 
+type Language = {
+    name: string;
+    is_archived: boolean;
+    boilerplate: string;
+};
+
+type LanguageMap = {
+    [key: string]: Language;
+};
+
 export function Results() {
     const results: ResultsState | null = useAppSelector((state: any) => state.problem.recent_submission);
 
-    if (!results) {
+    if (results === null || Object.keys(results).length === 0) {
         return (
             <Card className="w-full">
                 <CardContent className="pt-6">
-                    <div className="text-muted-foreground text-center">No results yet. Run your code to see the results.</div>
+                    <div className="text-muted-foreground text-center">No results yet. Make a submission first.</div>
                 </CardContent>
             </Card>
         );
@@ -54,9 +64,13 @@ export function Results() {
 
     const copyCode = () => {
         if (results.userCode) {
-            navigator.clipboard.writeText(atob(results.userCode));
-            // You might want to add a toast notification here
+            navigator.clipboard.writeText(atob(results.userCode)).then();
         }
+    };
+
+    const getLanguageName = (languageId: string): string => {
+        const languageMap: LanguageMap = languages;
+        return languageMap[languageId]?.name || "Unknown Language";
     };
 
     return (
@@ -78,7 +92,7 @@ export function Results() {
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Language</p>
-                        <p className="text-lg font-semibold">{languages[results.language]?.name || "Unknown"}</p>
+                        <p className="text-lg font-semibold">{getLanguageName(results.language)}</p>
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Submission Time</p>

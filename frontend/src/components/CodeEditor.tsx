@@ -18,6 +18,16 @@ interface CodeEditorProps {
   handleFullScreen: (isFullScreen: boolean) => void
 }
 
+type Language = {
+    name: string;
+    is_archived: boolean;
+    boilerplate: string;
+};
+
+type LanguageMap = {
+    [key: string]: Language;
+};
+
 export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEditorProps) {
     const code = useAppSelector((state) => state.problem.code);
     const problem  = useAppSelector((state) => state.problem);
@@ -30,7 +40,7 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
 
     const onSelect = (language_id: string) => {
         dispatch(setLanguage(language_id));
-        dispatch(setCode(atob(languages[language_id].boilerplate) as string || ""));
+        dispatch(setCode(atob(getLanguageBoilerplate(languageId)) as string || ""));
     };
 
     const onMount = (editor: any) => {
@@ -39,40 +49,63 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
     };
 
     useEffect(() =>{
-        dispatch(setCode(atob(languages[languageId].boilerplate) as string || ""));
+        dispatch(setCode(atob(getLanguageBoilerplate(languageId))));
     }, [])
+
+    const getLanguageBoilerplate = (languageId: string): string => {
+        const languageMap: LanguageMap = languages;
+        return languageMap[languageId]?.boilerplate || "Unknown Language";
+    };
 
     const runCode = async () => {
         try {
-            // Prepare a new array for storing results
-            const updatedOutputs = [...problem.code_outputs];
+            // Initialize outputs as a new array
+            let updatedOutputs = problem.example_inputs.map(() => ({
+                status: "Code Running...",
+                output: null,
+            }));
 
-            await Promise.all(
+            dispatch(setCodeOutputs([...updatedOutputs])); // Dispatch initial state update
+
+            // Process each input asynchronously
+            const results = await Promise.all(
                 problem.example_inputs.map(async (inputValue, index) => {
-                    // Prepare the data for submission
-                    const data = {
-                        source_code: btoa(problem.code), // Encode source code in Base64
-                        language_id: problem.languageId,
-                        stdin: btoa(inputValue), // Encode stdin in Base64
-                        expected_output: btoa(problem.example_exp_outputs[index]), // Encode expected output
-                    };
+                    try {
+                        // Prepare the data for submission
+                        const data = {
+                            source_code: btoa(problem.code), // Encode source code in Base64
+                            language_id: problem.languageId,
+                            stdin: btoa(inputValue), // Encode stdin in Base64
+                            expected_output: btoa(problem.example_exp_outputs[index]), // Encode expected output
+                        };
 
-                    // Create submission and await the result
-                    const result = await createSubmission(data);
+                        // Create submission and await the result
+                        const result = await createSubmission(data);
 
-                    // Parse the result and update output
-                    if (result.status.id === 3 || result.stdout) {
-                        // Success: Decode stdout and store
-                        updatedOutputs[index] = { status: result.status.description, output: atob(result.stdout) };
-                    } else {
-                        // Failure: Store error description
-                        updatedOutputs[index] = { status: result.status.description, output: null };
+                        // Return the result for the current input
+                        if (result.status.id === 3 || result.stdout) {
+                            return {
+                                status: result.status.description,
+                                output: atob(result.stdout),
+                            };
+                        } else {
+                            return {
+                                status: result.status.description,
+                                output: null,
+                            };
+                        }
+                    } catch (submissionError) {
+                        console.error(`Error processing submission for input ${index}:`, submissionError);
+                        return {
+                            status: "Error in Submission",
+                            output: null,
+                        };
                     }
                 })
             );
 
             // Update the outputs in state after processing all submissions
-            dispatch(setCodeOutputs(updatedOutputs));
+            dispatch(setCodeOutputs([...results])); // Use a new array reference
             handleTab("testcases"); // Change tab after all submissions are processed
         } catch (error) {
             console.error("Error processing submissions:", error);
@@ -81,7 +114,7 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
 
     const submitCode = async () => {
         try {
-            const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id: problem.problem_id, code: btoa(code),  language_id: parseInt(problem.languageId)});
+            const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id: problem.id, code: btoa(code),  language_id: parseInt(problem.languageId)});
 
             // Use Promise.all to fetch data concurrently for input and output
             const input: string[] = await Promise.all(input_urls.map((url: string) => getFileData(url)));
@@ -91,7 +124,7 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
             handleTab("results");
 
             // Verify that submissions array is populated
-            const base_url: string = "https://2e1d-2409-40d2-12ed-1453-3875-d455-f223-4014.ngrok-free.app";
+            const base_url: string = "https://98e6-2409-40d2-4f-3155-39a2-73c7-5a38-1ed9.ngrok-free.app";
             const submissions = input.map((inputValue, index) => ({
                 source_code: btoa(code),
                 language_id: problem.languageId,

@@ -253,4 +253,57 @@ const handleGetProblemById = async (req: Request, res: Response) => {
     }
 };
 
-export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleGetAllProblem, handleGetProblemById };
+const handleGetAllExampleTestcases = async (req: Request, res: Response) => {
+    try{
+        const testcases = await prisma.testcase.findMany({
+            where: {
+                problemId: req.params.id,
+                isExample: true
+            }
+        });
+
+        const input_urls: string[] = [];
+        const output_urls: string[] = [];
+        await Promise.all(
+            testcases.map(async (testcase, index) => {
+                const inputUrl = await getObjectURL(testcase.inputPath);
+                const outputUrl = await getObjectURL(testcase.expOutputPath);
+
+                input_urls.push(inputUrl);
+                output_urls.push(outputUrl);
+            })
+        );
+
+        res.status(200).json({
+            success: true,
+            testcasesURls: {input_urls, output_urls}
+        })
+    } catch (error) {
+        console.error('Error fetching problem:', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+}
+
+const handleGetSubmissions = async (req: Request, res: Response) => {
+    try{
+        const userId = "123";
+        const problemId = req.params.id;
+
+        const submissions = await prisma.submission.findMany({
+            where:{
+                userId,
+                problemId
+            }
+        })
+
+        res.status(200).json({
+            success: true,
+            submissions
+        })
+    } catch (error) {
+        console.error('Error fetching problem:', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+}
+
+export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleGetAllProblem, handleGetProblemById, handleGetAllExampleTestcases, handleGetSubmissions };
