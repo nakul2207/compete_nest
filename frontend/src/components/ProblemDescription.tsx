@@ -1,11 +1,13 @@
-import React from "react";
+import React from 'react'
 import { useAppSelector } from "@/redux/hook.ts"
 import ReactMarkdown from 'react-markdown'
 import { Badge } from "@/components/ui/badge"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import {Separator} from "@/components/ui/separator.tsx";
+import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-type BadgeVariant = "success" | "warning" | "danger" | "destructive";
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning"
 
 export function ProblemDescription() {
     const problem = useAppSelector((state) => state.problem)
@@ -25,72 +27,81 @@ export function ProblemDescription() {
     )
 
     const getBadgeVariant = (difficulty: string): BadgeVariant => {
-        switch (difficulty) {
-            case "Easy":
-                return "success";
-            case "Medium":
-                return "warning";
-            case "Hard":
-                return "danger";
+        switch (difficulty.toLowerCase()) {
+            case "easy":
+                return "success"
+            case "medium":
+                return "warning"
+            case "hard":
+                return "destructive"
             default:
-                return "destructive";
+                return "default"
         }
-    };
+    }
 
     return (
-        <>
-        {/*// <ScrollArea className="h-[calc(100vh-4rem)] w-full max-w-4xl mx-auto">*/}
-            <div className="p-2 space-y-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h1 className="text-2xl font-bold">{problem.title}</h1>
-                    <Badge className="text-sm" variant={getBadgeVariant(problem.difficulty)}>
-                        {problem.difficulty}
-                    </Badge>
-                </div>
-                <Separator className="my-4" />
+        <ScrollArea className="h-[calc(100vh-4rem)] w-full">
+            <div className="max-w-4xl mx-auto p-6 space-y-6">
+                <Card>
+                    <CardHeader>
+                        <div className="flex justify-between items-center">
+                            <CardTitle className="text-2xl font-bold">{problem.title}</CardTitle>
+                            <Badge variant={getBadgeVariant(problem.difficulty)}>
+                                {problem.difficulty}
+                            </Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <Section title="Description" content={problem.description} renderContent={renderMarkdown} />
+                    </CardContent>
+                </Card>
 
-                <Section title="Description" content={problem.description} renderContent={renderMarkdown} />
-                <Section title="Input" content={problem.inputFormat} renderContent={renderMarkdown} />
-                <Section title="Output" content={problem.outputFormat} renderContent={renderMarkdown} />
-                <Section title="Constraints" content={problem.constraints} renderContent={renderMarkdown} />
+                <Card>
+                    <CardContent className="pt-6">
+                        <Section title="Input" content={problem.inputFormat} renderContent={renderMarkdown} />
+                        <Separator className="my-4" />
+                        <Section title="Output" content={problem.outputFormat} renderContent={renderMarkdown} />
+                        <Separator className="my-4" />
+                        <Section title="Constraints" content={problem.constraints} renderContent={renderMarkdown} />
+                    </CardContent>
+                </Card>
 
-                <Accordion type="single" collapsible className="w-full">
-                    <AccordionItem value="topics">
-                        <AccordionTrigger className="hover:no-underline">Topics</AccordionTrigger>
-                        <AccordionContent>
-                            <div className="flex flex-wrap gap-2">
-                                {problem.topics.map((topic, index) => (
-                                    <Badge key={index} variant="outline">{topic}</Badge>
-                                ))}
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="companies">
-                        <AccordionTrigger className="hover:no-underline">Companies</AccordionTrigger>
-                        <AccordionContent>
-                            <div className="flex flex-wrap gap-2">
-                                {problem.companies.map((company, index) => (
-                                    <Badge key={index} variant="outline">{company}</Badge>
-                                ))}
-                            </div>
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
+                <Card>
+                    <CardContent className="pt-6">
+                        <Accordion type="single" collapsible className="w-full">
+                            <AccordionItem value="topics">
+                                <AccordionTrigger>Topics</AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="flex flex-wrap gap-2">
+                                        {problem.topics.map((topic, index) => (
+                                            <Badge key={index} variant="outline">{topic}</Badge>
+                                        ))}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                            <AccordionItem value="companies">
+                                <AccordionTrigger>Companies</AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="flex flex-wrap gap-2">
+                                        {problem.companies.map((company, index) => (
+                                            <Badge key={index} variant="outline">{company}</Badge>
+                                        ))}
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+                    </CardContent>
+                </Card>
             </div>
-        {/*</ScrollArea>*/}
-        </>
+        </ScrollArea>
     )
 }
 
 function Section({ title, content, renderContent }: { title: string; content: string; renderContent: (content: string) => React.ReactNode }) {
     return (
-        <div>
-            <h3 className="text-lg font-semibold mb-2">
-                {title}
-            </h3>
-            <div className="pl-6">
-                {renderContent(content)}
-            </div>
+        <div className="mb-6 last:mb-0">
+            <h3 className="text-lg font-semibold mb-2">{title}</h3>
+            <div className="pl-4">{renderContent(content)}</div>
         </div>
     )
 }

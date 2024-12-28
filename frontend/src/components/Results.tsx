@@ -1,21 +1,30 @@
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { useAppSelector } from "../redux/hook.ts";
-import { Button } from "./ui/button";
-import { Check, X, Clock, Copy } from "lucide-react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { languages } from "../assets/mapping.ts";
+import { useState, useEffect } from 'react'
+import { useAppSelector } from "@/redux/hook"
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
+import { Button } from "./ui/button"
+import { Badge } from "./ui/badge"
+import { Check, X, Clock, Copy } from 'lucide-react'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { formatDistanceToNow, format } from 'date-fns'
+import { languages } from "@/assets/mapping"
+import { cn } from "@/lib/utils"
 
-// Define the type for results
-interface ResultsState {
-    status: "Accepted" | "Rejected" | "Pending";
-    evaluatedTestcases: number;
-    totalTestcases: number;
-    language: string;
-    userCode?: string; // Optional since it might not be present
+type Submission = {
+    AcceptedTestcases: number;
     createdAt: string;
-    updatedAt?: string; // Optional if last updated is not always available
-}
+    evaluatedTestcases: number;
+    id: string;
+    language: number;
+    memory: number;
+    problemId: string;
+    status: string;
+    time: number;
+    totalTestcases: number;
+    updatedAt: string;
+    userCode: string;
+    userId: string;
+};
 
 type Language = {
     name: string;
@@ -28,104 +37,130 @@ type LanguageMap = {
 };
 
 export function Results() {
-    const results: ResultsState | null = useAppSelector((state: any) => state.problem.recent_submission);
+    const submission: Submission | null = useAppSelector((state) => state.problem.recent_submission)
+    const [copied, setCopied] = useState(false)
 
-    if (results === null || Object.keys(results).length === 0) {
+    useEffect(() => {
+        if (copied) {
+            const timer = setTimeout(() => setCopied(false), 2000)
+            return () => clearTimeout(timer)
+        }
+    }, [copied])
+
+    if (!submission) {
         return (
             <Card className="w-full">
                 <CardContent className="pt-6">
-                    <div className="text-muted-foreground text-center">No results yet. Make a submission first.</div>
+                    <div className="text-muted-foreground text-center">No results yet. Run your code to see the results.</div>
                 </CardContent>
             </Card>
-        );
+        )
     }
 
-    const getStatusIcon = (status: "Accepted" | "Rejected" | "Pending") => {
+    const getStatusBadge = (status: string) => {
         switch (status) {
             case "Accepted":
-                return <Check className="w-6 h-6 text-green-500" />;
+                return <Badge variant="success">{status}</Badge>;
             case "Rejected":
-                return <X className="w-6 h-6 text-red-500" />;
+                return <Badge variant="destructive">{status}</Badge>;
+            case "Time Limit Exceeded":
+                return <Badge variant="warning">{status}</Badge>;
             default:
-                return <Clock className="w-6 h-6 text-yellow-500 animate-spin" />;
+                return <Badge variant="secondary">{status}</Badge>;
         }
     };
 
-    const getStatusClass = (status: "Accepted" | "Rejected" | "Pending") => {
-        switch (status) {
-            case "Accepted":
-                return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-            case "Rejected":
-                return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-            default:
-                return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-        }
-    };
+    const formatSubmissionTime = (createdAt: string) => {
+        const submissionDate = new Date(createdAt)
+        const now = new Date()
 
-    const copyCode = () => {
-        if (results.userCode) {
-            navigator.clipboard.writeText(atob(results.userCode)).then();
+        if (submissionDate.toDateString() === now.toDateString()) {
+            return format(submissionDate, 'HH:mm')
+        } else {
+            return formatDistanceToNow(submissionDate, { addSuffix: true })
         }
-    };
+    }
 
-    const getLanguageName = (languageId: string): string => {
+    const getLanguageName = (languageId: number): string => {
         const languageMap: LanguageMap = languages;
         return languageMap[languageId]?.name || "Unknown Language";
     };
+
+    const copyCode = () => {
+        navigator.clipboard.writeText(atob(submission.userCode)).then(() => {
+            setCopied(true)
+        })
+    }
 
     return (
         <Card className="w-full">
             <CardHeader>
                 <CardTitle className="flex justify-between items-center">
-                    <span>Results</span>
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold flex items-center ${getStatusClass(results.status)}`}>
-                        {getStatusIcon(results.status)}
-                        <span className="ml-2">{results.status}</span>
-                    </span>
+                    <span>Submission Results</span>
+                    {getStatusBadge(submission.status)}
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                         <p className="text-sm text-muted-foreground">Testcases</p>
-                        <p className="text-lg font-semibold">{results.evaluatedTestcases} / {results.totalTestcases}</p>
+                        <p className="text-lg font-semibold">{submission.AcceptedTestcases} / {submission.totalTestcases}</p>
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Language</p>
-                        <p className="text-lg font-semibold">{getLanguageName(results.language)}</p>
+                        <p className="text-lg font-semibold">{getLanguageName(submission.language)}</p>
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground">Submission Time</p>
-                        <p className="text-lg font-semibold">{new Date(results.createdAt).toLocaleTimeString()}</p>
+                        <p className="text-sm text-muted-foreground">Runtime</p>
+                        <p className="text-lg font-semibold">{submission.time} ms</p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-muted-foreground">Memory</p>
+                        <p className="text-lg font-semibold">{submission.memory} KB</p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-muted-foreground">Submitted</p>
+                        <p className="text-lg font-semibold">{formatSubmissionTime(submission.createdAt)}</p>
                     </div>
                 </div>
-                {
-                    results.userCode && (
-                        <div className="relative">
-                            <SyntaxHighlighter
-                                language="cpp"
-                                style={vscDarkPlus}
-                                customStyle={{
-                                    margin: 0,
-                                    borderRadius: "0.5rem",
-                                    maxHeight: "300px",
-                                    overflow: "auto",
-                                }}
-                            >
-                                {atob(results.userCode)}
-                            </SyntaxHighlighter>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="absolute top-2 right-2"
-                                onClick={copyCode}
-                            >
-                                <Copy className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    )
-                }
+                <div className="relative mt-6">
+                    <SyntaxHighlighter
+                        language={getLanguageName(submission.language).toLowerCase()}
+                        style={vscDarkPlus}
+                        customStyle={{
+                            margin: 0,
+                            borderRadius: '0.5rem',
+                            maxHeight: '300px',
+                            overflow: 'auto'
+                        }}
+                        showLineNumbers
+                    >
+                        {atob(submission.userCode)}
+                    </SyntaxHighlighter>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                            "absolute top-2 right-2 transition-all",
+                            copied && "bg-green-500 text-white hover:bg-green-600"
+                        )}
+                        onClick={copyCode}
+                    >
+                        {copied ? (
+                            <>
+                                <Check className="h-4 w-4 mr-2" />
+                                Copied
+                            </>
+                        ) : (
+                            <>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copy Code
+                            </>
+                        )}
+                    </Button>
+                </div>
             </CardContent>
         </Card>
-    );
+    )
 }
+
