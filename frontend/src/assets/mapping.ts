@@ -1,5 +1,5 @@
 // testcases status mapping
-export const testcaseStatus = {
+export const statuses = {
     1: "In Queue",
     2: "Processing",
     3: "Accepted",

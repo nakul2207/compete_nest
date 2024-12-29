@@ -74,6 +74,12 @@ export const problemSlice = createSlice({
         setRecentSubmission: (state, action: PayloadAction<Object>) => {
             state.recent_submission = action.payload;
         },
+        updateRecentSubmission: (state, action: PayloadAction<Object>) => {
+            state.submissions[0] = action.payload;
+        },
+        pushSubmission: (state, action: PayloadAction<Object>) =>{
+            state.submissions.unshift(action.payload);
+        },
         setProblem: (state, action: PayloadAction<Problem>) => {
             const problem = action.payload;
 
@@ -101,6 +107,6 @@ export const problemSlice = createSlice({
     },
 });
 
-export const { setCode, clearCode, setLanguage, setCodeOutputs, setRecentSubmission, setProblem, setExampleTestcases, setSubmissions } =
+export const { setCode, clearCode, setLanguage, setCodeOutputs, setRecentSubmission, setProblem, setExampleTestcases, setSubmissions, pushSubmission, updateRecentSubmission } =
     problemSlice.actions;
 export default problemSlice.reducer;

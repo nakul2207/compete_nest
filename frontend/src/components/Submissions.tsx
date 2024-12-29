@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { ScrollArea } from "./ui/scroll-area";
 import { formatDistanceToNow, format } from "date-fns";
-import { languages } from "@/assets/mapping";
+import { languages, statuses } from "@/assets/mapping";
 import { setRecentSubmission } from "@/redux/slice/problemSlice.tsx";
 
 type Language = {
@@ -25,14 +25,14 @@ type LanguageMap = {
 };
 
 type Submission = {
-  AcceptedTestcases: number;
+  acceptedTestcases: number;
   createdAt: string;
   evaluatedTestcases: number;
   id: string;
   language: number;
   memory: number;
   problemId: string;
-  status: string;
+  status: number;
   time: number;
   totalTestcases: number;
   updatedAt: string;
@@ -50,16 +50,13 @@ export function Submissions({ handleTab }: SubmissionsProps) {
   );
   const dispatch = useAppDispatch();
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Accepted":
-        return <Badge variant="success">{status}</Badge>;
-      case "Rejected":
-        return <Badge variant="destructive">{status}</Badge>;
-      case "Time Limit Exceeded":
-        return <Badge variant="warning">{status}</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
+  const getStatusBadge = (status: number) => {
+    if (status <= 2) {
+      return <Badge variant="secondary">{statuses[status]}</Badge>;
+    } else if (status === 3) {
+      return <Badge variant="success">{statuses[status]}</Badge>;
+    } else {
+      return <Badge variant="destructive">{statuses[status]}</Badge>;
     }
   };
 
@@ -110,7 +107,7 @@ export function Submissions({ handleTab }: SubmissionsProps) {
                     >
                       <TableCell>{getStatusBadge(submission.status)}</TableCell>
                       <TableCell>
-                        {submission.time ? `${submission.time} ms` : "N/A"}
+                        {submission.time ? `${submission.time}s` : "N/A"}
                       </TableCell>
                       <TableCell>
                         {submission.memory ? `${submission.memory} KB` : "N/A"}
@@ -128,3 +125,4 @@ export function Submissions({ handleTab }: SubmissionsProps) {
       </Card>
   );
 }
+

@@ -5,7 +5,14 @@ import {Editor} from "@monaco-editor/react";
 import {languages } from "../assets/mapping.ts";
 import {LangSelector} from "./LangSelector.tsx";
 import { useAppSelector, useAppDispatch } from '../redux/hook.ts'
-import {setCode, setCodeOutputs, setLanguage, setRecentSubmission} from '../redux/slice/problemSlice.tsx'
+import {
+    pushSubmission,
+    setCode,
+    setCodeOutputs,
+    setLanguage,
+    setRecentSubmission,
+    updateRecentSubmission
+} from '../redux/slice/problemSlice.tsx'
 import {createBatchSubmission, createSubmission, getFileData, submitProblem} from "../api/problemApi.ts";
 
 import {io} from "socket.io-client";
@@ -119,12 +126,29 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
             // Use Promise.all to fetch data concurrently for input and output
             const input: string[] = await Promise.all(input_urls.map((url: string) => getFileData(url)));
             const output: string[] = await Promise.all(exp_output_urls.map((url: string) => getFileData(url)));
+            const sub = {
+                id: submission_id,
+                acceptedTestcases: 0,
+                status: 2,
+                evaluated_testcase: 0,
+                totalTestcases: input_urls.length,
+                memory: 0,
+                time: 0,
+                problemId: problem.id,
+                language: problem.languageId,
+                userCode: btoa(code),
+                userId: "123",
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            }
 
-            dispatch(setRecentSubmission({status: "Pending", evaluated_testcase: 0, totalTestcases: input_urls.length, language: problem.languageId, createdAt: Date.now()}));
+            //updating redux state
+            dispatch(pushSubmission(sub));
+            dispatch(setRecentSubmission(sub));
             handleTab("results");
 
             // Verify that submissions array is populated
-            const base_url: string = "https://98e6-2409-40d2-4f-3155-39a2-73c7-5a38-1ed9.ngrok-free.app";
+            const base_url: string = "https://c0e7-2409-40d2-10-6766-a5e6-5a26-7d04-4bc1.ngrok-free.app";
             const submissions = input.map((inputValue, index) => ({
                 source_code: btoa(code),
                 language_id: problem.languageId,
@@ -145,10 +169,10 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
             // Set up the listener for the 'update' event
             socket.on("update", (data) => {
                 // console.log("UpdatedSubmission:", data);
-                dispatch(setRecentSubmission(data.updatedSubmission));
 
-                // Handle the data received from the server
-                // You can pass this data to the Output component to show the results
+                //updating redux state
+                dispatch(updateRecentSubmission(data.updatedSubmission));
+                dispatch(setRecentSubmission(data.updatedSubmission));
             });
 
             // Make a batch submission only if submissions array is not empty

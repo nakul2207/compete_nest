@@ -82,10 +82,10 @@ model Submission {
   userId           String
   userCode         String
   language         Int
-  status           SubmissionStatus @default(Pending)
+  status           Int @default(2)
   totalTestcases    Int
   evaluatedTestcases Int @default(0)
-  AcceptedTestcases Int @default(0)
+  acceptedTestcases Int @default(0)
   time              Float @default(0)
   memory            Float @default(0)
   createdAt        DateTime @default(now())
@@ -178,12 +178,6 @@ enum Difficulty {
   Easy
   Medium
   Hard
-}
-
-enum SubmissionStatus {
-  Pending
-  Accepted
-  Rejected
 }
 
 enum ContestStatus{

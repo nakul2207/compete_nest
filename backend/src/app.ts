@@ -57,4 +57,9 @@ app.get("/", async (req:Request, res: Response) =>{
     res.send("Server is running");
 })
 
+app.put("/callback", async (req:Request, res: Response) =>{
+    console.log(req.body);
+    res.status(200).json({message: "done"});
+})
+
 export {server, io};

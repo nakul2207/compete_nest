@@ -33,6 +33,7 @@ export function CompeteNestProblemPage() {
 
         //fetching all the submissions of the problem
         const submissions = await getProblemSubmissions(problem_id as string);
+        // console.log(submissions);
         dispatch(setSubmissions(submissions));
       } catch (error) {
         console.error("Error fetching problems:", error);

@@ -7,18 +7,18 @@ import { Check, X, Clock, Copy } from 'lucide-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { formatDistanceToNow, format } from 'date-fns'
-import { languages } from "@/assets/mapping"
+import {languages, statuses} from "@/assets/mapping"
 import { cn } from "@/lib/utils"
 
 type Submission = {
-    AcceptedTestcases: number;
+    acceptedTestcases: number;
     createdAt: string;
     evaluatedTestcases: number;
     id: string;
     language: number;
     memory: number;
     problemId: string;
-    status: string;
+    status: number;
     time: number;
     totalTestcases: number;
     updatedAt: string;
@@ -57,16 +57,13 @@ export function Results() {
         )
     }
 
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case "Accepted":
-                return <Badge variant="success">{status}</Badge>;
-            case "Rejected":
-                return <Badge variant="destructive">{status}</Badge>;
-            case "Time Limit Exceeded":
-                return <Badge variant="warning">{status}</Badge>;
-            default:
-                return <Badge variant="secondary">{status}</Badge>;
+    const getStatusBadge = (status: number) => {
+        if (status <= 2) {
+            return <Badge variant="secondary">{statuses[status]}</Badge>;
+        } else if (status === 3) {
+            return <Badge variant="success">{statuses[status]}</Badge>;
+        } else {
+            return <Badge variant="destructive">{statuses[status]}</Badge>;
         }
     };
 
@@ -103,8 +100,8 @@ export function Results() {
             <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
-                        <p className="text-sm text-muted-foreground">Testcases</p>
-                        <p className="text-lg font-semibold">{submission.AcceptedTestcases} / {submission.totalTestcases}</p>
+                        <p className="text-sm text-muted-foreground">Testcases Passed</p>
+                        <p className="text-lg font-semibold">{submission.acceptedTestcases} / {submission.totalTestcases}</p>
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Language</p>
@@ -112,7 +109,7 @@ export function Results() {
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Runtime</p>
-                        <p className="text-lg font-semibold">{submission.time} ms</p>
+                        <p className="text-lg font-semibold">{submission.time}s</p>
                     </div>
                     <div>
                         <p className="text-sm text-muted-foreground">Memory</p>
