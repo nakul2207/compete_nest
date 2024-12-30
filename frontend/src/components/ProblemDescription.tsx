@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown'
 import { Badge } from "@/components/ui/badge"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Separator } from "@/components/ui/separator"
+import { Building, Tag } from 'lucide-react'
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning"
 
@@ -57,7 +58,12 @@ export function ProblemDescription() {
 
             <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="topics">
-                    <AccordionTrigger>Topics</AccordionTrigger>
+                    <AccordionTrigger>
+                        <div className="flex justify-center gap-2 items-center">
+                            <Tag className="h-4 w-4"/>
+                            Topics
+                        </div>
+                    </AccordionTrigger>
                     <AccordionContent>
                         <div className="flex flex-wrap gap-2">
                             {problem.topics.map((topic, index) => (
@@ -67,9 +73,14 @@ export function ProblemDescription() {
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="companies">
-                    <AccordionTrigger>Companies</AccordionTrigger>
+                    <AccordionTrigger>
+                        <div className="flex justify-center gap-2 items-center">
+                            <Building className="h-4 w-4"/>
+                            Companies
+                        </div>
+                    </AccordionTrigger>
                     <AccordionContent>
-                        <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2">
                             {problem.companies.map((company, index) => (
                                 <Badge key={index} variant="outline">{company}</Badge>
                             ))}

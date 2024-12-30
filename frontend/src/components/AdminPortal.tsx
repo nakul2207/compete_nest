@@ -3,12 +3,14 @@ import { Link, Outlet, useLocation, Navigate } from 'react-router-dom'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Users, FileText, Trophy, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Users, FileText, Trophy, Building, Tag, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const menuItems = [
     { icon: Users, label: 'Manage Users', path: '/admin/users' },
     { icon: FileText, label: 'Manage Problems', path: '/admin/problems' },
     { icon: Trophy, label: 'Manage Contests', path: '/admin/contests' },
+    { icon: Building, label: 'Manage Companies', path: '/admin/companies' },
+    { icon: Tag, label: 'Manage Topics', path: '/admin/topics' },
 ]
 
 export function AdminPortal() {

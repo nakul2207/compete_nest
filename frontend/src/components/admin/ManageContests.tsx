@@ -110,13 +110,11 @@ export function ManageContests() {
                                         <div className="flex space-x-2">
                                             <Button variant="outline" size="sm" asChild>
                                                 <Link to={`/admin/contests/edit/${contest.id}`}>
-                                                    <Pencil className="h-4 w-4 mr-2" />
-                                                    Edit
+                                                    <Pencil className="h-4 w-4 text-yellow-500"/>
                                                 </Link>
                                             </Button>
                                             <Button variant="outline" size="sm" onClick={() => handleDelete(contest.id)}>
-                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                Delete
+                                                <Trash2 className="h-4 w-4 text-red-500"/>
                                             </Button>
                                         </div>
                                     </TableCell>

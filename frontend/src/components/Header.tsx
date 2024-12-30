@@ -23,6 +23,7 @@ export function Header() {
             <Link to="/problems" className="transition-colors hover:text-foreground/80 text-foreground">Problems</Link>
             <Link to="/contests" className="transition-colors hover:text-foreground/80 text-foreground">Contests</Link>
             <Link to="/discuss" className="transition-colors hover:text-foreground/80 text-foreground">Discuss</Link>
+            <Link to="/admin" className="transition-colors hover:text-foreground/80 text-foreground">Admin</Link>
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
