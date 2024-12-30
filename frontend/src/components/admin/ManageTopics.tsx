@@ -1,27 +1,37 @@
-import { useState } from 'react'
+import {useEffect, useState} from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Pencil, Trash2, Plus, X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
+import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle} from '../ui/dialog'
 import { Label } from '../ui/label'
 import { ScrollArea } from '../ui/scroll-area'
+import {useAppDispatch, useAppSelector} from "@/redux/hook.ts";
+import {createTopics, deleteTopic, getAllTopics, updateTopic} from "@/api/topicApi.ts";
+import {editTopic, setTopics, removeTopic} from "@/redux/slice/topicSlice.tsx";
 
-const initialTopics = [
-    { id: 1, name: 'Array' },
-    { id: 2, name: 'String' },
-    { id: 3, name: 'Linked List' },
-    { id: 4, name: 'Tree' },
-    { id: 5, name: 'Dynamic Programming' },
-]
+interface Topic {
+    id: string;
+    name: string;
+}
 
 export function ManageTopics() {
-    const [topics, setTopics] = useState(initialTopics)
+    const topics: Topic[]  = useAppSelector((state) => state.topics);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [newTopics, setNewTopics] = useState([''])
-    const [editingTopic, setEditingTopic] = useState<{ id: number, name: string } | null>(null)
+    const [editingTopic, setEditingTopic] = useState<{ id: string, name: string } | null>(null)
+    const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        getAllTopics().then((topics) => {
+            // console.log(topics);
+            dispatch(setTopics(topics));
+        }).catch((error)=>{
+            console.log(error);
+        })
+    }, []);
 
     const handleAddTopic = () => {
         setNewTopics([...newTopics, ''])
@@ -37,30 +47,39 @@ export function ManageTopics() {
         setNewTopics(updatedTopics)
     }
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
         const validTopics = newTopics.filter(name => name.trim() !== '')
         if (validTopics.length > 0) {
-            const newTopicObjects = validTopics.map((name, index) => ({
-                id: topics.length + index + 1,
+            const newTopicObjects = validTopics.map((name) => ({
                 name: name.trim()
             }))
-            setTopics([...topics, ...newTopicObjects])
+            //updating the database
+            await createTopics(newTopicObjects);
+
+            //updating the redux state after creating topics
+            getAllTopics().then((topics) => {
+                // console.log(topics);
+                dispatch(setTopics(topics));
+            }).catch((error)=>{
+                console.log(error);
+            })
+
             setNewTopics([''])
             setIsAddModalOpen(false)
         }
     }
 
-    const handleEdit = () => {
+    const handleEdit = async () => {
         if (editingTopic && editingTopic.name.trim()) {
-            setTopics(topics.map(topic =>
-                topic.id === editingTopic.id ? { ...topic, name: editingTopic.name.trim() } : topic
-            ))
+            await updateTopic(editingTopic.id, editingTopic.name);
+            dispatch(editTopic(editingTopic));
             setIsEditModalOpen(false)
         }
     }
 
-    const handleDelete = (id: number) => {
-        setTopics(topics.filter(topic => topic.id !== id))
+    const handleDelete = async (id: string) => {
+        await deleteTopic(id);
+        dispatch(removeTopic(id));
     }
 
     return (
@@ -107,6 +126,9 @@ export function ManageTopics() {
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle>Add New Topics</DialogTitle>
+                            <DialogDescription>
+                                Dialog for adding topics
+                            </DialogDescription>
                         </DialogHeader>
                         <ScrollArea className="max-h-[60vh] pr-4">
                             {newTopics.map((topic, index) => (
@@ -136,6 +158,9 @@ export function ManageTopics() {
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle>Edit Topic</DialogTitle>
+                            <DialogDescription>
+                                Dialog for editing a topic name
+                            </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-4">

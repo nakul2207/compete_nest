@@ -1,9 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import problemReducer from "./slice/problemSlice.tsx"; // Adjust the path to your slice file
+import companyReducer from "./slice/companySlice.tsx"
+import topicReducer from "./slice/topicSlice.tsx"
 
 export const store = configureStore({
     reducer: {
         problem: problemReducer,
+        companies: companyReducer,
+        topics: topicReducer
     },
 });
 

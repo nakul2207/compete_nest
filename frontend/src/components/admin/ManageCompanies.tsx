@@ -1,27 +1,37 @@
-import { useState } from 'react'
+import {useEffect, useState} from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Pencil, Trash2, Plus, X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog'
 import { Label } from '../ui/label'
 import { ScrollArea } from '../ui/scroll-area'
+import {createCompanies, deleteCompany, getAllCompanies, updateCompany} from '@/api/companyApi.ts'
+import {useAppDispatch, useAppSelector} from "@/redux/hook.ts";
+import {editCompany, setCompanies, removeCompany} from "@/redux/slice/companySlice.tsx";
 
-const initialCompanies = [
-    { id: 1, name: 'Google' },
-    { id: 2, name: 'Amazon' },
-    { id: 3, name: 'Microsoft' },
-    { id: 4, name: 'Apple' },
-    { id: 5, name: 'Facebook' },
-]
+interface Company {
+    id: string;
+    name: string;
+}
 
 export function ManageCompanies() {
-    const [companies, setCompanies] = useState(initialCompanies)
+    const companies: Company[]  = useAppSelector((state) => state.companies);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [newCompanies, setNewCompanies] = useState([''])
-    const [editingCompany, setEditingCompany] = useState<{ id: number, name: string } | null>(null)
+    const [editingCompany, setEditingCompany] = useState<{ id: string, name: string } | null>(null)
+    const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        getAllCompanies().then((companies) => {
+            // console.log(companies);
+            dispatch(setCompanies(companies));
+        }).catch((error)=>{
+            console.log(error);
+        })
+    }, []);
 
     const handleAddCompany = () => {
         setNewCompanies([...newCompanies, ''])
@@ -37,30 +47,40 @@ export function ManageCompanies() {
         setNewCompanies(updatedCompanies)
     }
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
         const validCompanies = newCompanies.filter(name => name.trim() !== '')
         if (validCompanies.length > 0) {
-            const newCompanyObjects = validCompanies.map((name, index) => ({
-                id: companies.length + index + 1,
+            const newCompanyObjects = validCompanies.map((name) => ({
                 name: name.trim()
             }))
-            setCompanies([...companies, ...newCompanyObjects])
+
+            //updating the database
+            await createCompanies(newCompanyObjects);
+
+            //updating the redux state after creating companies
+            getAllCompanies().then((companies) => {
+                // console.log(companies);
+                dispatch(setCompanies(companies));
+            }).catch((error)=>{
+                console.log(error);
+            })
+
             setNewCompanies([''])
             setIsAddModalOpen(false)
         }
     }
 
-    const handleEdit = () => {
+    const handleEdit = async () => {
         if (editingCompany && editingCompany.name.trim()) {
-            setCompanies(companies.map(company =>
-                company.id === editingCompany.id ? { ...company, name: editingCompany.name.trim() } : company
-            ))
+            await updateCompany(editingCompany.id, editingCompany.name);
+            dispatch(editCompany(editingCompany));
             setIsEditModalOpen(false);
         }
     }
 
-    const handleDelete = (id: number) => {
-        setCompanies(companies.filter(company => company.id !== id));
+    const handleDelete = async (id: string) => {
+        await deleteCompany(id);
+        dispatch(removeCompany(id));
     }
 
     return (
@@ -107,6 +127,9 @@ export function ManageCompanies() {
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle>Add New Companies</DialogTitle>
+                            <DialogDescription>
+                                Dialog for adding companies
+                            </DialogDescription>
                         </DialogHeader>
                         <ScrollArea className="max-h-[60vh] pr-4">
                             {newCompanies.map((company, index) => (
@@ -136,6 +159,9 @@ export function ManageCompanies() {
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle>Edit Company</DialogTitle>
+                            <DialogDescription>
+                                Dialog for editing a company name
+                            </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-4">
