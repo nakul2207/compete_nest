@@ -1,7 +1,7 @@
-import {useEffect, useRef} from "react"
+import {useEffect, useRef, useCallback, useMemo, useState} from "react"
 import { Button } from "./ui/button"
-import { Maximize2, Minimize2 } from 'lucide-react'
-import {Editor} from "@monaco-editor/react";
+import { Maximize2, Minimize2, Sun, Moon } from 'lucide-react'
+import { Editor, useMonaco } from "@monaco-editor/react"
 import {languages } from "../assets/mapping.ts";
 import {LangSelector} from "./LangSelector.tsx";
 import { useAppSelector, useAppDispatch } from '../redux/hook.ts'
@@ -21,8 +21,8 @@ const socket = io(server_url, { transports: ["websocket"] });
 
 interface CodeEditorProps {
     handleTab: (currentTab:string) => void
-  isFullScreen: boolean
-  handleFullScreen: (isFullScreen: boolean) => void
+    isFullScreen: boolean
+    handleFullScreen: (isFullScreen: boolean) => void
 }
 
 type Language = {
@@ -35,34 +35,62 @@ type LanguageMap = {
     [key: string]: Language;
 };
 
+const monacoLanguageMap: { [key: string]: string } = {
+    "50": "c",
+    "54": "cpp",
+    "62": "java",
+    "63": "javascript",
+    "35": "python"
+}
+
 export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEditorProps) {
     const code = useAppSelector((state) => state.problem.code);
     const problem  = useAppSelector((state) => state.problem);
-    const dispatch = useAppDispatch();
     const languageId =  useAppSelector((state) => state.problem.languageId);
-
-    // console.log("editor render");
-        // const [code, setCode] = useState("")
+    const [theme, setTheme] = useState<'vs-dark' | 'light'>('vs-dark')
     const editorRef = useRef<any>(null);
+    const monaco = useMonaco()
+    const dispatch = useAppDispatch();
 
     const onSelect = (language_id: string) => {
         dispatch(setLanguage(language_id));
-        dispatch(setCode(atob(getLanguageBoilerplate(languageId)) as string || ""));
-    };
+        dispatch(setCode(atob(getLanguageBoilerplate(language_id)) as string || ""));
+    }
 
-    const onMount = (editor: any) => {
+    const onMount = useCallback((editor: any) => {
         editorRef.current = editor;
         editor.focus();
-    };
+    }, []);
 
     useEffect(() =>{
         dispatch(setCode(atob(getLanguageBoilerplate(languageId))));
-    }, [])
+    }, [dispatch, languageId]);
 
-    const getLanguageBoilerplate = (languageId: string): string => {
+    const getLanguageBoilerplate = useCallback((languageId: string): string => {
         const languageMap: LanguageMap = languages;
         return languageMap[languageId]?.boilerplate || "Unknown Language";
-    };
+    }, []);
+
+    const editorOptions = useMemo(() => ({
+        fontSize: 14,
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        lineNumbers: "on",
+        roundedSelection: false,
+        padding: { top: 10 },
+        cursorStyle: "line",
+        automaticLayout: true,
+        wordWrap: "on",
+        tabSize: 4,
+        insertSpaces: true,
+        fontFamily: "monospace"
+    }), []);
+
+    useEffect(() => {
+        if (monaco) {
+            monaco.editor.setTheme(theme)
+        }
+    }, [monaco, theme])
 
     const runCode = async () => {
         try {
@@ -190,34 +218,47 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
     }
 
     return (
-    <div className="flex flex-col h-full">
-      <div className="flex justify-between items-center p-4 border-b">
-        <LangSelector language_id={languageId} onSelect={onSelect} />
-          
-        <Button
-          variant="outline"
-          size="icon"
-          className="top-2 right-2 z-50"
-          onClick={() => handleFullScreen(!isFullScreen)}
-        >
-          {isFullScreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-        </Button>
-      </div>
+        <div className="flex flex-col h-full">
+            <div className="flex justify-between items-center p-4 border-b">
+                <LangSelector language_id={languageId} onSelect={onSelect} />
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setTheme(theme === 'vs-dark' ? 'light' : 'vs-dark')}
+                    >
+                        {theme === 'vs-dark' ? (
+                            <Sun className="h-4 w-4" />
+                        ) : (
+                            <Moon className="h-4 w-4" />
+                        )}
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="top-2 right-2 z-50"
+                        onClick={() => handleFullScreen(!isFullScreen)}
+                    >
+                        {isFullScreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                    </Button>
+                </div>
+            </div>
 
-        <Editor
-            height="80vh"
-            theme="vs-dark"
-            language={"cpp"}
-            value={code}
-            onMount={onMount}
-            onChange={(code) => dispatch(setCode(code || ""))}
-        />
+            <Editor
+                height="80vh"
+                theme={theme}
+                language={monacoLanguageMap[languageId]}
+                value={code}
+                onMount={onMount}
+                onChange={(value) => dispatch(setCode(value || ""))}
+                options={editorOptions}
+            />
 
-      <div className="flex justify-end items-center gap-2 p-4 border-t">
-        <Button variant="outline" onClick={runCode}>Run Code</Button>
-        <Button onClick={submitCode}>Submit</Button>
-      </div>
-    </div>
-  )
+            <div className="flex justify-end items-center gap-2 p-4 border-t">
+                <Button variant="outline" onClick={runCode}>Run Code</Button>
+                <Button onClick={submitCode}>Submit</Button>
+            </div>
+        </div>
+    )
 }
 

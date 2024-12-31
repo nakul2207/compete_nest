@@ -23,14 +23,11 @@ export const LangSelector = ({ language_id, onSelect }: LangSelectorProps) => {
             </SelectTrigger>
             <SelectContent>
                 {Object.entries(languages).map(([id, language]) => {
-                    // if (!language.is_archived) {
                         return (
                             <SelectItem key={id} value={id}>
                                 {language.name}
                             </SelectItem>
                         );
-                    // }
-                    // return null; // Skip archived languages
                 })}
             </SelectContent>
         </Select>
