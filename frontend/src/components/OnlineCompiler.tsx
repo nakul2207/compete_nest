@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
@@ -9,6 +7,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { Moon, Sun, RotateCcw, Maximize2, Minimize2, Play } from 'lucide-react'
 import { Editor, useMonaco } from "@monaco-editor/react"
 import { languages } from "@/assets/mapping"
+import {createSubmission} from "@/api/problemApi.ts";
 
 type Language = {
     name: string;
@@ -55,10 +54,30 @@ export function OnlineCompiler() {
         setOutput("")
     }, [languageId])
 
-    const handleRunCode = useCallback(() => {
-        // Mock execution - in a real app, this would call your backend
-        setOutput(`Executing ${languages[languageId]?.name} code...\n\nInput:\n${input || 'No input provided'}\n\nOutput:\nHello from the compiler!`)
-    }, [languageId, input])
+    const handleRunCode = async () => {
+        try {
+            setOutput("Code is running...");
+
+            // Process each input asynchronously
+            const data = {
+                source_code: btoa(code), // Encode source code in Base64
+                language_id: languageId,
+                stdin: btoa(input), // Encode stdin in Base64
+            };
+
+            // Create submission and await the result
+            const result = await createSubmission(data);
+
+            // Return the result for the current input
+            if (result.status.id === 3 || result.stdout) {
+                setOutput(atob(result.stdout));
+            } else {
+                setOutput(result.status.description)
+            }
+        } catch (error) {
+            console.error("Error running the code", error);
+        }
+    }
 
     const onMount = useCallback((editor: any) => {
         editorRef.current = editor
@@ -76,10 +95,10 @@ export function OnlineCompiler() {
     const editorOptions = useMemo(() => ({
         fontSize: 14,
         minimap: { enabled: false },
-        scrollBeyondLastLine: false,
+        scrollBeyondLastLine: true,
         lineNumbers: "on",
         roundedSelection: false,
-        padding: { top: 10 },
+        padding: { top: 10, bottom: 10 },
         cursorStyle: "line",
         automaticLayout: true,
         wordWrap: "on",
@@ -156,7 +175,7 @@ export function OnlineCompiler() {
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="p-0 h-full">
+                        <CardContent className="p-0 h-[calc(100vh-4rem)]">
                             <Editor
                                 height="100%"
                                 theme={theme}
