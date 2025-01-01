@@ -1,9 +1,14 @@
-import React, { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, Outlet, useLocation, Navigate } from 'react-router-dom'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Users, FileText, Trophy, Building, Tag, ChevronLeft, ChevronRight } from 'lucide-react'
+import {getAllTopics} from "@/api/topicApi.ts";
+import {setTopics} from "@/redux/slice/topicSlice.tsx";
+import {getAllCompanies} from "@/api/companyApi.ts";
+import {setCompanies} from "@/redux/slice/companySlice.tsx";
+import {useAppDispatch} from "@/redux/hook.ts";
 
 const menuItems = [
     { icon: Users, label: 'Manage Users', path: '/admin/users' },
@@ -16,15 +21,33 @@ const menuItems = [
 export function AdminPortal() {
     const [expanded, setExpanded] = useState(() => window.innerWidth > 768)
     const location = useLocation()
+    const dispatch = useAppDispatch();
 
-    React.useEffect(() => {
+    useEffect(() => {
         const handleResize = () => setExpanded(window.innerWidth > 768)
         window.addEventListener('resize', handleResize)
         return () => window.removeEventListener('resize', handleResize)
     }, [])
 
+    useEffect(() => {
+        getAllTopics().then((topics) => {
+            // console.log(topics);
+            dispatch(setTopics(topics));
+        }).catch((error)=>{
+            console.log(error);
+        })
+    }, []);
 
-    console.log("Portal Updated");
+    useEffect(() => {
+        getAllCompanies().then((companies) => {
+            // console.log(companies);
+            dispatch(setCompanies(companies));
+        }).catch((error)=>{
+            console.log(error);
+        })
+    }, []);
+
+    // console.log("Portal Updated");
 
     if (location.pathname === '/admin') {
         return <Navigate to="/admin/users" replace />

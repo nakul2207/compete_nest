@@ -24,3 +24,11 @@ export const problemSchema = z.object({
 
 export type ProblemFormData = z.infer<typeof problemSchema>
 
+// topics: z.array(z.object({
+//     id: z.string(),
+//     name: z.string()
+// })).min(1, "At least one topic is required"),
+//     companies: z.array(z.object({
+//     id: z.string(),
+//     name: z.string()
+// })),

@@ -24,14 +24,14 @@ export function ManageCompanies() {
     const [editingCompany, setEditingCompany] = useState<{ id: string, name: string } | null>(null)
     const dispatch = useAppDispatch();
 
-    useEffect(() => {
-        getAllCompanies().then((companies) => {
-            // console.log(companies);
-            dispatch(setCompanies(companies));
-        }).catch((error)=>{
-            console.log(error);
-        })
-    }, []);
+    // useEffect(() => {
+    //     getAllCompanies().then((companies) => {
+    //         // console.log(companies);
+    //         dispatch(setCompanies(companies));
+    //     }).catch((error)=>{
+    //         console.log(error);
+    //     })
+    // }, []);
 
     const handleAddCompany = () => {
         setNewCompanies([...newCompanies, ''])

@@ -24,14 +24,14 @@ export function ManageTopics() {
     const [editingTopic, setEditingTopic] = useState<{ id: string, name: string } | null>(null)
     const dispatch = useAppDispatch();
 
-    useEffect(() => {
-        getAllTopics().then((topics) => {
-            // console.log(topics);
-            dispatch(setTopics(topics));
-        }).catch((error)=>{
-            console.log(error);
-        })
-    }, []);
+    // useEffect(() => {
+    //     getAllTopics().then((topics) => {
+    //         // console.log(topics);
+    //         dispatch(setTopics(topics));
+    //     }).catch((error)=>{
+    //         console.log(error);
+    //     })
+    // }, []);
 
     const handleAddTopic = () => {
         setNewTopics([...newTopics, ''])

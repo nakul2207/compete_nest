@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useCallback, useEffect, useState} from 'react'
 import { Input } from "../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
@@ -6,28 +6,35 @@ import { Button } from '@/components/ui/button'
 import { useNavigate } from "react-router-dom"
 import {getAllProblems, fetchProblems} from "@/api/problemApi.ts"
 import { useAppSelector} from "@/redux/hook.ts"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from 'lucide-react'
+import {MultiSelect} from "@/components/ui/multi-select.tsx";
 
 interface Company {
   id: string;
   name: string;
 }
+
 interface Topic {
   id: string;
   name: string;
 }
 
-// const topics = ["Array", "String", "Linked List", "Tree", "Dynamic Programming"]
-// const companies = ["Amazon", "Google", "Microsoft", "Apple", "Facebook"]
+interface Problem {
+  id: string;
+  problemId: string,
+  title: string;
+  difficulty: string;
+  topics: Topic[];
+  companies: Company[];
+  submissions: number;
+}
 
 export function ProblemsPage() {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [problems, setProblems] = useState([]);
+  const [problems, setProblems] = useState<Problem[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("")
   const [difficultyFilter, setDifficultyFilter] = useState("All")
@@ -55,7 +62,7 @@ export function ProblemsPage() {
     fetchProblems().then();
   }, []);
 
-  const handlefilter = async() => {
+  const handleFilter = async() => {
     const topicIds = topicFilter.map(topic => topic.id);
     const companyIds = companyFilter.map(company => company.id);
     const data = await fetchProblems(searchTerm, difficultyFilter, topicIds, companyIds, currentPage);
@@ -64,35 +71,24 @@ export function ProblemsPage() {
     setTotalPages(data.totalPages);
   }
 
-  const handleFilterChange = (
+  const handleMultiSelectChange = (
       filterType: "topic" | "company",
-      value: { id: string; name: string }
+      values: (Topic | Company)[]
   ) => {
-    const setFilter = {
-      topic: setTopicFilter,
-      company: setCompanyFilter,
-    }[filterType];
-
-    // Toggle the object in the filter array
-    setFilter(prev =>
-        prev.some(item => item.id === value.id)
-            ? prev.filter(item => item.id !== value.id) // Remove if already in the filter
-            : [...prev, value] // Add the new object if not present
-    );
+    if (filterType === "topic") {
+      setTopicFilter(values as Topic[]);
+    } else {
+      setCompanyFilter(values as Company[]);
+    }
   };
 
-  const removeFilter = (
-      filterType: "topic" | "company",
-      value: { id: string; name: string }
-  ) => {
-    const setFilter = {
-      topic: setTopicFilter,
-      company: setCompanyFilter,
-    }[filterType];
-
-    // Remove the object with the matching id from the filter array
-    setFilter(prev => prev.filter(item => item.id !== value.id));
-  };
+  const removeFilter = useCallback((filterType: "topic" | "company", value: Topic | Company) => {
+    if (filterType === "topic") {
+      setTopicFilter(prev => prev.filter(item => item.id !== value.id));
+    } else {
+      setCompanyFilter(prev => prev.filter(item => item.id !== value.id));
+    }
+  }, []);
 
   return (
       <div className="container mx-auto py-8">
@@ -108,7 +104,7 @@ export function ProblemsPage() {
               />
               <Select onValueChange={(value) => setDifficultyFilter(value)}>
                 <SelectTrigger className="md:w-1/5">
-                  <SelectValue placeholder="Difficulty" />
+                  <SelectValue placeholder="Difficulty"/>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All Difficulties</SelectItem>
@@ -128,41 +124,25 @@ export function ProblemsPage() {
                 <SelectItem value="Unsolved">Unsolved</SelectItem>
               </SelectContent>
             </Select> */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="md:w-1/5">Topic</Button>
-                </PopoverTrigger>
-                <PopoverContent>
-                  {topics.map(topic=> (
-                      <div key={topic.name} className="flex items-center space-x-2">
-                        <Checkbox
-                            id={`topic-${topic.name}`}
-                            checked={topicFilter.includes(topic)}
-                            onCheckedChange={() => handleFilterChange('topic', topic)}
-                        />
-                        <label htmlFor={`topic-${topic.name}`}>{topic.name}</label>
-                      </div>
-                  ))}
-                </PopoverContent>
-              </Popover>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="md:w-1/5">Company</Button>
-                </PopoverTrigger>
-                <PopoverContent>
-                  {companies.map(company => (
-                      <div key={company.name} className="flex items-center space-x-2">
-                        <Checkbox
-                            id={`company-${company.name}`}
-                            checked={companyFilter.includes(company)}
-                            onCheckedChange={() => handleFilterChange('company', company)}
-                        />
-                        <label htmlFor={`company-${company.name}`}>{company.name}</label>
-                      </div>
-                  ))}
-                </PopoverContent>
-              </Popover>
-              <Button onClick={handlefilter}>Filter</Button>
+              <div className="md:w-1/5">
+                <MultiSelect
+                    options={topics.map(topic => ({id: topic.id, name: topic.name}))}
+                    selected={topicFilter.map(topic => topic.id)}
+                    onChange={(values) => handleMultiSelectChange('topic', topics.filter(topic => values.includes(topic.id)))}
+                    placeholder="Select topics"
+                    label="Topics"
+                />
+              </div>
+              <div className="md:w-1/5">
+                <MultiSelect
+                    options={companies.map(company => ({id: company.id, name: company.name}))}
+                    selected={companyFilter.map(company => company.id)}
+                    onChange={(values) => handleMultiSelectChange('company', companies.filter(company => values.includes(company.id)))}
+                    placeholder="Select companies"
+                    label="Companies"
+                />
+              </div>
+              <Button onClick={handleFilter}>Filter</Button>
             </div>
             <div className="border rounded-lg p-4 mb-4">
               <div className="flex flex-wrap gap-2">
@@ -172,7 +152,7 @@ export function ProblemsPage() {
                           onClick={() => removeFilter('topic', topic)}
                           className="absolute -top-1 -left-1 bg-red-500 rounded-full w-4 h-4 flex items-center justify-center text-white text-xs"
                       >
-                        <X className="h-3 w-3" />
+                        <X className="h-3 w-3"/>
                       </button>
                       <span className="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-1 rounded-full">
                     {topic.name}
@@ -201,7 +181,7 @@ export function ProblemsPage() {
                     <TableHead className="font-semibold">Title</TableHead>
                     <TableHead className="font-semibold">Difficulty</TableHead>
                     <TableHead className="font-semibold">Acceptance</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
+                    {/*<TableHead className="font-semibold">Status</TableHead>*/}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -224,9 +204,9 @@ export function ProblemsPage() {
                       </span>
                             </TableCell>
                             <TableCell>{20}</TableCell>
-                            <TableCell>
-                              <span>unsolved</span>
-                            </TableCell>
+                            {/*<TableCell>*/}
+                            {/*  <span>unsolved</span>*/}
+                            {/*</TableCell>*/}
                           </TableRow>
                       ))
                   )}
@@ -259,6 +239,7 @@ export function ProblemsPage() {
               )}
             </div>
           </div>
+
           <div className="lg:w-1/4">
             <Card>
               <CardHeader>

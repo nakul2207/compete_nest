@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -15,25 +15,25 @@ import { MarkdownEditor } from '../ui/mdx-editor'
 import { problemSchema, ProblemFormData } from '../../schemas/problemSchema'
 import {saveProblem, uploadToS3} from "@/api/problemApi.ts";
 import {languages} from "@/assets/mapping.ts";
+import { useAppSelector} from "@/redux/hook.ts"
+
+interface Company {
+    id: string;
+    name: string;
+}
+
+interface Topic {
+    id: string;
+    name: string;
+}
 
 const difficulties = ['Easy', 'Medium', 'Hard']
-const topicsMap = {
-    '1': 'Array',
-    '2': 'String',
-    '3': 'Linked List',
-    '4': 'Tree',
-    '5': 'Dynamic Programming'
-}
-const companiesMap = {
-    '1': 'Google',
-    '2': 'Amazon',
-    '3': 'Facebook',
-    '4': 'Microsoft',
-    '5': 'Apple'
-}
 
 export function AddProblem() {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const topics: Topic[]  = useAppSelector((state) => state.topics);
+    const companies: Company[]  = useAppSelector((state) => state.companies);
+
     const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<ProblemFormData>({
         resolver: zodResolver(problemSchema),
         defaultValues: {
@@ -65,7 +65,7 @@ export function AddProblem() {
 
         const results = await saveProblem(formData);
         console.log(results);
-        
+
         await Promise.all(
             //uploading all testcases files
             data.testCases.map(async (testCase, index) => {
@@ -183,7 +183,7 @@ export function AddProblem() {
                                     control={control}
                                     render={({ field }) => (
                                         <MultiSelect
-                                            options={Object.entries(topicsMap).map(([id, name]) => ({ id, name }))}
+                                            options={topics.map(topic => ({ id: topic.id, name: topic.name }))}
                                             selected={field.value}
                                             onChange={(values) => handleMultiSelect('topics', values)}
                                             placeholder="Select topics"
@@ -200,7 +200,7 @@ export function AddProblem() {
                                     control={control}
                                     render={({ field }) => (
                                         <MultiSelect
-                                            options={Object.entries(companiesMap).map(([id, name]) => ({ id, name }))}
+                                            options={companies.map(company => ({ id: company.id, name: company.name }))}
                                             selected={field.value}
                                             onChange={(values) => handleMultiSelect('companies', values)}
                                             placeholder="Select companies"
