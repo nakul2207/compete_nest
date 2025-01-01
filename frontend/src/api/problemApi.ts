@@ -155,15 +155,36 @@ export const uploadToS3 = async (url: string, file: File, fileType: string)=> {
     }
 }
 
-export const getAllProblems = async() =>{
+const LIMIT =10;
+export const getAllProblems = async(page:number) =>{
     try {
-        const {data} = await axios.get(`${server_url}/api/problem/all`);
-        return data.problems;
+        const {data} = await axios.get(`${server_url}/api/problem/all`,{
+            params:{page,LIMIT}
+        });
+        return data;
     }catch(error){
         console.error('Error fetching all the problems', error);
         throw new Error('Failed to get the problems');
     }
 }
+
+export const fetchProblems = async (searchTerm:string,difficultyFilter:string,topicFilter:string[],companyFilter:string[],currentPage:number) => {
+    try {
+        const {data} = await axios.get(`${server_url}/api/problem/filter`,{
+            params: {
+                searchTerm,
+                difficulty: difficultyFilter === "All" ? null : difficultyFilter,
+                topic:  topicFilter,
+                company:companyFilter,
+                page: currentPage,
+                pageSize: LIMIT,
+            },
+        });
+        return data;
+    } catch (error) {
+        console.error("Error fetching problems:", error);
+    }
+};
 
 export const getProblemById = async(problem_id: string) => {
     try {

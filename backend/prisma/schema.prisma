@@ -1,157 +1,147 @@
-// schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql" // Change to your database provider
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  token     String?  // Optional field for user token
-  password  String
-  role      Role     @default(User)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  problems   Problem[]    @relation("UserProblems")
-  contests   Contest[]    @relation("UserContests")
-  submissions Submission[] @relation("UserSubmissions")
+  id                  String                @id @default(cuid())
+  name                String
+  email               String                @unique
+  token               String?
+  password            String
+  role                Role                  @default(User)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  contests            Contest[]             @relation("UserContests")
   contestParticipants ContestParticipants[]
+  problems            Problem[]             @relation("UserProblems")
+  submissions         Submission[]          @relation("UserSubmissions")
 }
 
 model Problem {
-  id              String   @id @default(cuid())
-  userId          String
-  title           String
-  description     String
-  inputFormat     String
-  outputFormat    String
-  resourcesPath   String[] // Array of resource paths
-  constraints     String
-  difficulty      Difficulty
-  ownerCode       String
+  id                String           @id @default(cuid())
+  userId            String
+  title             String
+  description       String
+  resourcesPath     String[]
+  constraints       String
+  difficulty        Difficulty
+  ownerCode         String
+  contestId         String?
+  topics            String[]
+  companies         String[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  inputFormat       String
+  outputFormat      String
   ownerCodeLanguage Int
-  contestId       String?  // Optional field for contest ID
-  topics          String[] // Array of topics
-  companies       String[] // Array of companies
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  user          User       @relation("UserProblems", fields: [userId], references: [id])
-  submissions   Submission[]
-  testcases     Testcase[]
-  queries       QueryTable[]
-  contestProblems ContestProblem[]
+  contestProblems   ContestProblem[]
+  user              User             @relation("UserProblems", fields: [userId], references: [id])
+  queries           QueryTable[]
+  submissions       Submission[]
+  testcases         Testcase[]
 }
 
 model Topic {
-  id   String @id @default(cuid())
-  name String
-
-  queryTopic         QueryTable[]
+  id         String       @id @default(cuid())
+  name       String
+  queryTopic QueryTable[]
 }
 
 model Company {
-  id   String @id @default(cuid())
-  name String
-
-  queryCompany         QueryTable[]
+  id           String       @id @default(cuid())
+  name         String
+  queryCompany QueryTable[]
 }
 
 model Testcase {
-  id             String   @id @default(cuid())
+  id             String              @id @default(cuid())
   problemId      String
   inputPath      String
   expOutputPath  String
-  isExample      Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  problem        Problem @relation(fields: [problemId], references: [id])
+  isExample      Boolean             @default(false)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
   submittedTests SubmittedTestcase[]
+  problem        Problem             @relation(fields: [problemId], references: [id])
 }
 
 model Submission {
-  id                String   @id @default(cuid())
-  problemId        String
-  userId           String
-  userCode         String
-  language         Int
-  status           Int @default(2)
-  totalTestcases    Int
-  evaluatedTestcases Int @default(0)
-  acceptedTestcases Int @default(0)
-  time              Float @default(0)
-  memory            Float @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  problem          Problem @relation(fields: [problemId], references: [id])
-  user             User    @relation("UserSubmissions", fields: [userId], references: [id])
-  submittedTests   SubmittedTestcase[]
+  id                 String              @id @default(cuid())
+  problemId          String
+  userId             String
+  userCode           String
+  language           Int
+  totalTestcases     Int
+  evaluatedTestcases Int                 @default(0)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  memory             Float               @default(0)
+  time               Float               @default(0)
+  acceptedTestcases  Int                 @default(0)
+  status             Int                 @default(2)
+  problem            Problem             @relation(fields: [problemId], references: [id])
+  user               User                @relation("UserSubmissions", fields: [userId], references: [id])
+  submittedTests     SubmittedTestcase[]
 }
 
 model SubmittedTestcase {
-  id             String   @id @default(cuid())
-  testcaseId    String
-  submissionId   String
-  status         Int      @default(1)// Status can be represented as integer
-  output         String?  // Optional output field
-  time           Float?
-  memory         Float?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  testcase       Testcase @relation(fields: [testcaseId], references: [id])
-  submission     Submission @relation(fields: [submissionId], references: [id])
+  id           String     @id @default(cuid())
+  testcaseId   String
+  submissionId String
+  status       Int        @default(1)
+  output       String?
+  time         Float?
+  memory       Float?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  submission   Submission @relation(fields: [submissionId], references: [id])
+  testcase     Testcase   @relation(fields: [testcaseId], references: [id])
 }
 
 model QueryTable {
-  id          String   @id @default(cuid())
-  problemId   String
-  topicId     String
-  companyId   String
-  difficulty  Difficulty
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  problem     Problem @relation(fields: [problemId], references: [id])
-  topic       Topic   @relation(fields: [topicId], references: [id])
-  company     Company @relation(fields: [companyId], references: [id])
+  id         String     @id @default(cuid())
+  problemId  String
+  topicId    String
+  companyId  String
+  difficulty Difficulty
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  title      String
+  company    Company    @relation(fields: [companyId], references: [id])
+  problem    Problem    @relation(fields: [problemId], references: [id])
+  topic      Topic      @relation(fields: [topicId], references: [id])
 }
 
 model Contest {
-  id      String @id @default(cuid())
-  title   String
-  description String
-  status ContestStatus @default(Upcoming)
-  problems String[] // Array of problem ids
-  startTime  DateTime @default(now())
-  duration Int @default(0)
-  userId  String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  createdBy      User  @relation("UserContests", fields: [userId], references: [id])
-  contestProblems    ContestProblem[]
+  id                  String                @id @default(cuid())
+  title               String
+  description         String
+  status              ContestStatus         @default(Upcoming)
+  problems            String[]
+  startTime           DateTime              @default(now())
+  duration            Int                   @default(0)
+  userId              String
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  createdBy           User                  @relation("UserContests", fields: [userId], references: [id])
   contestParticipants ContestParticipants[]
+  contestProblems     ContestProblem[]
 }
 
 model ContestProblem {
-  id         String   @id @default(uuid())
-  contestId  String
-  problemId  String
-  score      Float
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  contest    Contest  @relation(fields: [contestId], references: [id])
-  problem    Problem  @relation(fields: [problemId], references: [id])
+  id        String   @id @default(uuid())
+  contestId String
+  problemId String
+  score     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  contest   Contest  @relation(fields: [contestId], references: [id])
+  problem   Problem  @relation(fields: [problemId], references: [id])
 }
 
 model ContestParticipants {
@@ -162,12 +152,10 @@ model ContestParticipants {
   rank      Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   contest   Contest  @relation(fields: [contestId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
 }
 
-// Enum Definitions
 enum Role {
   Admin
   User
@@ -180,7 +168,7 @@ enum Difficulty {
   Hard
 }
 
-enum ContestStatus{
+enum ContestStatus {
   Upcoming
   Ongoing
   Ended

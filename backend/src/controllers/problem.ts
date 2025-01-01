@@ -223,16 +223,92 @@ const handleCreateProblem  = async (req: Request, res:Response) =>{
 }
 
 const handleGetAllProblem =  async (req: Request, res:Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
     try{
-        const problems = await prisma.problem.findMany({});
+        const problems = await prisma.queryTable.findMany({
+            skip,
+            take: limit,
+            distinct: ['problemId'],
+        });
         // console.log(problems);
-
-        res.status(200).json({ problems });
+        const totalPages = Math.ceil(problems.length / limit);
+        res.status(200).json({ problems,totalPages });
     }catch (error) {
         console.error('Error saving problem:', error);
         res.status(500).json({ error: 'Internal server error.' });
     }
 }
+
+const handleGetFilterProblems = async (req: Request, res: Response) => {
+    try {
+        const {
+            searchTerm,
+            difficulty,
+            topic,
+            company,
+            page,
+            pageSize,
+        } = req.query;
+
+        const pageNum = parseInt(page as string, 10) || 1;
+        const limit = parseInt(pageSize as string, 10) || 10;
+        const offset = (pageNum - 1) * limit;
+
+        const filter: any = {};
+
+        if (searchTerm) {
+            filter.title = { contains: searchTerm, mode: "insensitive" };
+        }
+
+        if (difficulty) {
+            filter.difficulty = difficulty as string; // Assuming difficulty is an enum
+        }
+
+        if (topic) {
+            const topics = Array.isArray(topic) ? topic : [topic];
+            filter.topicId = { in: topics };
+        }
+
+        if (company) {
+            const companies = Array.isArray(company) ? company : [company];
+            filter.companyId = { in: companies };
+        }
+
+        if (
+            !searchTerm &&
+            !difficulty &&
+            !topic &&
+            !company
+        ) {
+            return res.status(200).json({
+                problems: [],
+                totalPages: 0,
+                currentPage: pageNum,
+            });
+        }
+
+        // Fetch filtered problems with pagination
+        const problems = await prisma.queryTable.findMany({
+            where: filter,
+            skip: offset,
+            take: limit,
+            distinct: ['problemId'],
+        });
+
+        const totalPages = Math.ceil(problems.length / limit);
+
+        res.status(200).json({
+            problems,
+            totalPages,
+            currentPage: pageNum,
+        });
+    } catch (error) {
+        console.error("Error fetching problems:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
 
 const handleGetProblemById = async (req: Request, res: Response) => {
     try {
@@ -306,4 +382,4 @@ const handleGetSubmissions = async (req: Request, res: Response) => {
     }
 }
 
-export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleGetAllProblem, handleGetProblemById, handleGetAllExampleTestcases, handleGetSubmissions };
+export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleGetAllProblem, handleGetProblemById, handleGetAllExampleTestcases, handleGetSubmissions, handleGetFilterProblems };
