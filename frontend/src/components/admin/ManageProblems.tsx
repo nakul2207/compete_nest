@@ -114,8 +114,8 @@ export function ManageProblems() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="md:w-1/3"
                     />
-                    <Select onValueChange={setDifficultyFilter} defaultValue="All" className="md:w-1/5">
-                        <SelectTrigger>
+                    <Select onValueChange={setDifficultyFilter} defaultValue="All">
+                        <SelectTrigger className="md:w-1/5">
                             <SelectValue placeholder="Difficulty" />
                         </SelectTrigger>
                         <SelectContent>

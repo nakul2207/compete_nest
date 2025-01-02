@@ -17,12 +17,13 @@ import {saveProblem, uploadToS3} from "@/api/problemApi.ts";
 import {languages} from "@/assets/mapping.ts";
 import { useAppSelector} from "@/redux/hook.ts"
 
-interface Company {
+// Define Topic and Company interfaces here for clarity and type safety
+export interface Topic {
     id: string;
     name: string;
 }
 
-interface Topic {
+export interface Company {
     id: string;
     name: string;
 }
@@ -31,8 +32,8 @@ const difficulties = ['Easy', 'Medium', 'Hard']
 
 export function AddProblem() {
     const navigate = useNavigate();
-    const topics: Topic[]  = useAppSelector((state) => state.topics);
-    const companies: Company[]  = useAppSelector((state) => state.companies);
+    const topics: Topic[] = useAppSelector((state) => state.topics);
+    const companies: Company[] = useAppSelector((state) => state.companies);
 
     const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<ProblemFormData>({
         resolver: zodResolver(problemSchema),
@@ -50,9 +51,7 @@ export function AddProblem() {
             testCases: [{ input: null, output: null, isExample: false }],
             resources: [{ file: null, caption: '' }]
         }
-    })
-
-    console.log("re rendered")
+    });
 
     const onSubmit = async (data: ProblemFormData) => {
         // console.log(data)
@@ -67,16 +66,11 @@ export function AddProblem() {
         console.log(results);
 
         await Promise.all(
-            //uploading all testcases files
             data.testCases.map(async (testCase, index) => {
                 const urls = results.testcasesURLs[index];
-
-                // Upload input file
                 if (testCase.input && urls.inputUrl) {
                     await uploadToS3(urls.inputUrl, testCase.input, testCase.input.type);
                 }
-
-                // Upload output file
                 if (testCase.output && urls.outputUrl) {
                     await uploadToS3(urls.outputUrl, testCase.output, testCase.output.type);
                 }
@@ -84,50 +78,45 @@ export function AddProblem() {
         );
 
         await Promise.all(
-            //uploading all resource files
-            data.resources.map(async (resource, index) =>{
+            data.resources.map(async (resource, index) => {
                 const url = results.resourceURLs[index];
-
-                if(resource.file && url){
+                if (resource.file && url) {
                     await uploadToS3(url, resource.file, resource.file.type);
                 }
             })
         );
 
         // navigate('/admin/problems')
-    }
+    };
 
-    const handleMultiSelect = useCallback((field: 'topics' | 'companies', value: string[]) => {
-        setValue(field, value)
-    }, [setValue])
+    const handleMultiSelectChange = useCallback((field: 'topics' | 'companies', value: (Topic | Company)[]) => {
+        console.log(field, value);
+        setValue(field, value);
+    }, [setValue]);
 
     const handleTestCaseChange = useCallback((index: number, field: 'input' | 'output' | 'isExample', value: any) => {
         setValue(`testCases.${index}.${field}`, value)
-    }, [setValue])
+    }, [setValue]);
 
     const handleResourceChange = useCallback((index: number, field: 'file' | 'caption', value: any) => {
         setValue(`resources.${index}.${field}`, value)
-    }, [setValue])
+    }, [setValue]);
 
     const addTestCase = useCallback(() => {
-        const currentTestCases = watch('testCases')
-        setValue('testCases', [...currentTestCases, { input: null, output: null, isExample: false }])
-    }, [setValue, watch])
+        setValue('testCases', [...watch('testCases'), { input: null, output: null, isExample: false }])
+    }, [setValue, watch]);
 
     const removeTestCase = useCallback((index: number) => {
-        const currentTestCases = watch('testCases')
-        setValue('testCases', currentTestCases.filter((_, i) => i !== index))
-    }, [setValue, watch])
+        setValue('testCases', watch('testCases').filter((_, i) => i !== index))
+    }, [setValue, watch]);
 
     const addResource = useCallback(() => {
-        const currentImages = watch('resources')
-        setValue('resources', [...currentImages, { file: null, caption: '' }])
-    }, [setValue, watch])
+        setValue('resources', [...watch('resources'), { file: null, caption: '' }])
+    }, [setValue, watch]);
 
     const removeResource = useCallback((index: number) => {
-        const currentImages = watch('resources')
-        setValue('resources', currentImages.filter((_, i) => i !== index))
-    }, [setValue, watch])
+        setValue('resources', watch('resources').filter((_, i) => i !== index))
+    }, [setValue, watch]);
 
     const testCases = watch('testCases')
     const resources = watch('resources')
@@ -183,9 +172,9 @@ export function AddProblem() {
                                     control={control}
                                     render={({ field }) => (
                                         <MultiSelect
-                                            options={topics.map(topic => ({ id: topic.id, name: topic.name }))}
-                                            selected={field.value}
-                                            onChange={(values) => handleMultiSelect('topics', values)}
+                                            options={topics}
+                                            selected={field.value.map((topic: Topic) => topic.id)}
+                                            onChange={(values) => handleMultiSelectChange('topics', topics.filter(topic => values.includes(topic.id)))}
                                             placeholder="Select topics"
                                             label="Available Topics"
                                         />
@@ -200,9 +189,9 @@ export function AddProblem() {
                                     control={control}
                                     render={({ field }) => (
                                         <MultiSelect
-                                            options={companies.map(company => ({ id: company.id, name: company.name }))}
-                                            selected={field.value}
-                                            onChange={(values) => handleMultiSelect('companies', values)}
+                                            options={companies}
+                                            selected={field.value.map((company: Company) => company.id)}
+                                            onChange={(values) => handleMultiSelectChange('companies', companies.filter(company => values.includes(company.id)))}
                                             placeholder="Select companies"
                                             label="Available Companies"
                                         />

@@ -14,6 +14,16 @@ const s3client = new S3Client({
     }
 });
 
+interface Topic{
+    id: string;
+    name: string;
+}
+
+interface Company{
+    id: string;
+    name: string;
+}
+
 interface SaveProblemRequest {
     userId: string;
     title: string;
@@ -26,8 +36,8 @@ interface SaveProblemRequest {
     ownerCode: string;
     ownerCodeLanguage: string;
     contestId?: string | null;
-    topics: string[];
-    companies: string[];
+    topics: Topic[];
+    companies: Company[];
     testCases: boolean[]
 }
 
@@ -171,13 +181,28 @@ const handleCreateProblem  = async (req: Request, res:Response) =>{
                 ownerCode,
                 ownerCodeLanguage: parseInt(ownerCodeLanguage),
                 contestId,
-                topics,
-                companies,
+                topics: topics.map(topic => JSON.stringify(topic)),
+                companies: companies.map(company => JSON.stringify(company)),
             },
             select: {
                 id: true
             }
         });
+
+        //creating records in the query table using the problem_id, title, topics and company ids
+        for (const topic of topics) {
+            for (const company of companies) {
+                await prisma.queryTable.create({
+                    data: {
+                        problemId: problemId.id,
+                        topicId: topic.id,
+                        companyId: company.id,
+                        difficulty,
+                        title,
+                    },
+                });
+            }
+        }
 
         //generating psURLs for resources
         const resourceURLs = await Promise.all(
@@ -276,18 +301,18 @@ const handleGetFilterProblems = async (req: Request, res: Response) => {
             filter.companyId = { in: companies };
         }
 
-        if (
-            !searchTerm &&
-            !difficulty &&
-            !topic &&
-            !company
-        ) {
-            return res.status(200).json({
-                problems: [],
-                totalPages: 0,
-                currentPage: pageNum,
-            });
-        }
+        // if (
+        //     !searchTerm &&
+        //     !difficulty &&
+        //     !topic &&
+        //     !company
+        // ) {
+        //     return res.status(200).json({
+        //         problems: [],
+        //         totalPages: 0,
+        //         currentPage: pageNum,
+        //     });
+        // }
 
         // Fetch filtered problems with pagination
         const problems = await prisma.queryTable.findMany({
