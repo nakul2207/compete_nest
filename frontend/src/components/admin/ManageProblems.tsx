@@ -9,6 +9,7 @@ import { MultiSelect } from "@/components/ui/multi-select"
 import { useAppSelector } from "@/redux/hook"
 import { fetchProblems, getAllProblems } from "@/api/problemApi.ts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {ChevronLeftIcon, ChevronRightIcon} from "@radix-ui/react-icons";
 
 interface Company {
     id: string;
@@ -33,7 +34,6 @@ interface Problem {
 export function ManageProblems() {
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
     const [problems, setProblems] = useState<Problem[]>([]);
 
     const [searchTerm, setSearchTerm] = useState("")
@@ -48,26 +48,20 @@ export function ManageProblems() {
         setCurrentPage(page);
     }, []);
 
-    const fetchAllProblems = useCallback(async () => {
-        try {
-            const allProblems = await getAllProblems(currentPage);
-            setProblems(allProblems.problems);
-            setTotalPages(allProblems.totalPages);
-        } catch (error) {
-            console.error("Error fetching problems:", error);
-        }
-    }, [currentPage]);
-
     useEffect(() => {
-        fetchAllProblems().then();
-    }, [fetchAllProblems, currentPage]);
+        getAllProblems(currentPage)
+            .then((data) => {
+                setProblems(data.problems);
+            }).catch((error) => {
+            console.error("Error fetching problems:", error);
+        });
+    }, []);
 
     const handleFilter = useCallback(async () => {
         const topicIds = topicFilter.map((topic) => topic.id);
         const companyIds = companyFilter.map((company) => company.id);
         const data = await fetchProblems(searchTerm, difficultyFilter, topicIds, companyIds, currentPage);
         setProblems(data.problems);
-        setTotalPages(data.totalPages);
     }, [currentPage, companyFilter, difficultyFilter, searchTerm, topicFilter]);
 
     const handleMultiSelectChange = (
@@ -183,12 +177,18 @@ export function ManageProblems() {
                             <TableRow className="bg-muted/50">
                                 <TableHead className="font-semibold">Title</TableHead>
                                 <TableHead className="font-semibold">Difficulty</TableHead>
-                                <TableHead className="font-semibold text-right">Submissions</TableHead>
-                                <TableHead className="font-semibold w-[100px] text-right">Actions</TableHead>
+                                <TableHead className="font-semibold">Submissions</TableHead>
+                                <TableHead className="font-semibold">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {problems.map((problem) => (
+                            {problems.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="text-center py-4 text-gray-500">
+                                        No problems found
+                                    </TableCell>
+                                </TableRow>
+                            ) : (problems.map((problem) => (
                                 <TableRow key={problem.id} className="hover:bg-muted/50 transition-colors">
                                     <TableCell className="font-medium">{problem.title}</TableCell>
                                     <TableCell>
@@ -199,43 +199,42 @@ export function ManageProblems() {
                                             {problem.difficulty}
                                         </span>
                                     </TableCell>
-                                    <TableCell className="text-right">{problem.submissions}</TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end space-x-2">
+                                    <TableCell>{problem.submissions}</TableCell>
+                                    <TableCell>
+                                        <div className="flex justify-items-start gap-2 space-x-2">
                                             <Pencil className="h-4 w-4 cursor-pointer" onClick={() => navigate(`/admin/problems/edit/${problem.problemId}`)} />
                                             <Trash2 className="h-4 w-4 cursor-pointer" onClick={() => handleDelete(problem.problemId)} />
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )))
+                            }
                         </TableBody>
                     </Table>
                 </div>
-                <div className="flex justify-center items-center gap-4 mt-6">
-                    {currentPage > 1 && (
-                        <Button
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            variant="default"
-                            size="default"
-                        >
-                            Previous
-                        </Button>
-                    )}
-
-                    <span>
-                        Page {currentPage} of {totalPages}
-                    </span>
-
-                    {currentPage < totalPages && (
-                        <Button
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            variant="default"
-                            size="default"
-                        >
-                            Next
-                        </Button>
-                    )}
-                </div>
+                { !(problems.length === 0 && currentPage === 1) &&
+                    (
+                        <div className="flex justify-center items-center gap-4 mt-6">
+                            <Button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                variant="outline"
+                                size="sm"
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeftIcon className="h-4 w-4"/>
+                            </Button>
+                            <span className="font-medium text-sm text-muted-foreground"> Page {currentPage} </span>
+                            <Button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                variant="outline"
+                                size="sm"
+                                disabled={problems.length < 10}
+                            >
+                                <ChevronRightIcon className="h-4 w-4"/>
+                            </Button>
+                        </div>
+                    )
+                }
             </CardContent>
         </Card>
     )

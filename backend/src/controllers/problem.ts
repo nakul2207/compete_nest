@@ -258,8 +258,11 @@ const handleGetAllProblem =  async (req: Request, res:Response) => {
             distinct: ['problemId'],
         });
         // console.log(problems);
-        const totalPages = Math.ceil(problems.length / limit);
-        res.status(200).json({ problems,totalPages });
+        // const totalPages = Math.ceil(problems.length / limit);
+        res.status(200).json({
+            problems,
+            // totalPages
+        });
     }catch (error) {
         console.error('Error saving problem:', error);
         res.status(500).json({ error: 'Internal server error.' });
@@ -322,11 +325,11 @@ const handleGetFilterProblems = async (req: Request, res: Response) => {
             distinct: ['problemId'],
         });
 
-        const totalPages = Math.ceil(problems.length / limit);
+        // const totalPages = Math.ceil(problems.length / limit);
 
         res.status(200).json({
             problems,
-            totalPages,
+            // totalPages,
             currentPage: pageNum,
         });
     } catch (error) {

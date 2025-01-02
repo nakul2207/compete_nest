@@ -168,7 +168,7 @@ export const getAllProblems = async(page:number) =>{
     }
 }
 
-export const fetchProblems = async (searchTerm:string,difficultyFilter:string,topicFilter:string[],companyFilter:string[],currentPage:number) => {
+export const fetchProblems = async (searchTerm:string, difficultyFilter:string, topicFilter:string[], companyFilter:string[], currentPage:number) => {
     try {
         const {data} = await axios.get(`${server_url}/api/problem/filter`,{
             params: {

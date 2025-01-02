@@ -9,6 +9,7 @@ import { useAppSelector} from "@/redux/hook.ts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from 'lucide-react'
 import {MultiSelect} from "@/components/ui/multi-select.tsx";
+import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons'
 
 interface Company {
   id: string;
@@ -33,7 +34,7 @@ interface Problem {
 export function ProblemsPage() {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  // const [totalPages, setTotalPages] = useState(1);
   const [problems, setProblems] = useState<Problem[]>([]);
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -49,17 +50,12 @@ export function ProblemsPage() {
   };
 
   useEffect(() => {
-    const fetchProblems = async () => {
-      try {
-        const allProblems = await getAllProblems(currentPage);
-        setProblems(allProblems.problems);
-        setTotalPages(allProblems.totalPages);
-      } catch (error) {
-        console.error("Error fetching problems:", error);
-      }
-    };
-
-    fetchProblems().then();
+    getAllProblems(currentPage)
+        .then((data) => {
+        setProblems(data.problems);
+    }).catch((error) => {
+      console.error("Error fetching problems:", error);
+    });
   }, []);
 
   const handleFilter = async() => {
@@ -68,7 +64,7 @@ export function ProblemsPage() {
     const data = await fetchProblems(searchTerm, difficultyFilter, topicIds, companyIds, currentPage);
     setSearchTerm("");
     setProblems(data.problems);
-    setTotalPages(data.totalPages);
+    // setTotalPages(data.totalPages);
   }
 
   const handleMultiSelectChange = (
@@ -196,12 +192,12 @@ export function ProblemsPage() {
                           <TableRow key={problem.id} className="hover:bg-muted/50 transition-colors">
                             <TableCell className="font-medium cursor-pointer" onClick={() => navigate(`/problems/${problem.problemId}`)}>{problem.title}</TableCell>
                             <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold
-                        ${problem.difficulty === 'Easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                          problem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                              'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
-                        {problem.difficulty}
-                      </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-semibold
+                                ${problem.difficulty === 'Easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                  problem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+                                {problem.difficulty}
+                              </span>
                             </TableCell>
                             <TableCell>{20}</TableCell>
                             {/*<TableCell>*/}
@@ -213,31 +209,30 @@ export function ProblemsPage() {
                 </TableBody>
               </Table>
             </div>
-            <div className="flex justify-center items-center gap-4 mt-6">
-              {currentPage > 1 && (
-                  <Button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      variant="default"
-                      size="default"
-                  >
-                    Previous
-                  </Button>
-              )}
 
-              <span>
-            Page {currentPage} of {totalPages}
-          </span>
-
-              {currentPage < totalPages && (
-                  <Button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      variant="default"
-                      size="default"
-                  >
-                    Next
-                  </Button>
-              )}
-            </div>
+            { !(problems.length === 0 && currentPage === 1) &&
+                (
+                    <div className="flex justify-center items-center gap-4 mt-6">
+                      <Button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          variant="outline"
+                          size="sm"
+                          disabled={currentPage === 1}
+                      >
+                        <ChevronLeftIcon className="h-4 w-4"/>
+                      </Button>
+                      <span className="font-medium text-sm text-muted-foreground"> Page {currentPage} </span>
+                      <Button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          variant="outline"
+                          size="sm"
+                          disabled={problems.length < 10}
+                      >
+                        <ChevronRightIcon className="h-4 w-4"/>
+                      </Button>
+                    </div>
+                )
+            }
           </div>
 
           <div className="lg:w-1/4">
