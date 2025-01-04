@@ -4,6 +4,7 @@ const server_url = import.meta.env.VITE_SERVER_URL;
 const hosted_judge0_base_url = import.meta.env.VITE_BASE_JUDGE0_HOSTED
 
 import {ProblemFormData} from "../schemas/problemSchema.tsx"
+import {EditProblemFormData} from "@/schemas/EditProblemSchema.tsx";
 
 const headers = {
     'Content-Type': 'application/json'
@@ -203,5 +204,28 @@ export const getAllExampleTestcases = async(problem_id: string) => {
     }catch(error){
         console.error('Error fetching all the problems', error);
         throw new Error('Failed to get the problems');
+    }
+}
+
+export const editProblem = async(formData: EditProblemFormData)=>{
+    try {
+        const {data} = await axios.patch(`${server_url}/api/problem/edit`, {
+            ...formData,
+        }, {headers}
+    );
+        return data;
+    } catch (error) {
+        console.error('Error saving problem:', error);
+        throw new Error('Failed to save problem');
+    }
+}
+
+export const deleteProblem = async(problemId: string)=>{
+    try {
+        const {data} = await axios.delete(`${server_url}/api/problem/${problemId}`, {headers});
+        return data;
+    } catch (error) {
+        console.error('Error deleting problem:', error);
+        throw new Error('Failed to delete problem');
     }
 }

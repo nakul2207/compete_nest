@@ -1,5 +1,5 @@
 import { Response, Request } from "express";
-import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand, DeleteObjectsCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
 import {Difficulty, PrismaClient } from "@prisma/client";
@@ -60,6 +60,52 @@ async function putObjectURL(key: string){
     return getSignedUrl(s3client, command, { expiresIn: 3600 })
 }
 
+async function deleteObjectS3(key:string){
+    const command = new DeleteObjectCommand({
+        Bucket: 'compete-nest',
+        Key : key
+    });
+    await s3client.send(command);
+}
+
+async function deleteDirectoryS3(prefix: string) {
+    const bucketName = 'compete-nest';
+
+    // Step 1: List all objects under the prefix
+    const listCommand = new ListObjectsV2Command({
+        Bucket: bucketName,
+        Prefix: prefix,
+    });
+
+    const listedObjects = await s3client.send(listCommand);
+
+    if (!listedObjects.Contents || listedObjects.Contents.length === 0) {
+        console.log(`No objects found under the prefix: ${prefix}`);
+        return;
+    }
+
+    // Step 2: Create delete parameters for all the listed objects
+    const deleteParams = {
+        Bucket: bucketName,
+        Delete: {
+            Objects: listedObjects.Contents.map((object) => ({
+                Key: object.Key!,
+            })),
+        },
+    };
+
+    // Step 3: Delete the objects
+    const deleteCommand = new DeleteObjectsCommand(deleteParams);
+    await s3client.send(deleteCommand);
+
+    console.log(`Deleted all objects under the prefix: ${prefix}`);
+
+    // Optional: Recursively handle paginated results
+    if (listedObjects.IsTruncated) {
+        await deleteDirectoryS3(prefix); // Call recursively to handle more objects
+    }
+}
+
 const handleSubmitProblem = async (req:Request, res:Response) => {
     try {
         const { code, language_id } = req.body;
@@ -97,7 +143,7 @@ const handleSubmitProblem = async (req:Request, res:Response) => {
                 const input_url = await getObjectURL(inputPath);
                 const exp_output_url = await getObjectURL(expOutputPath);
 
-                const sub_testcase_id = await prisma.SubmittedTestcase.create({
+                const sub_testcase_id = await prisma.submittedTestcase.create({
                     data: {
                         testcaseId: id,
                         submissionId: sub_id.id,
@@ -410,4 +456,142 @@ const handleGetSubmissions = async (req: Request, res: Response) => {
     }
 }
 
-export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleGetAllProblem, handleGetProblemById, handleGetAllExampleTestcases, handleGetSubmissions, handleGetFilterProblems };
+const handleEditProblem = async (req: Request, res: Response) => {
+    const userId = "123"; // Replace with actual user authentication logic
+    const {
+        problemId, // Retrieve problem ID from the request body
+        description,
+        inputFormat,
+        outputFormat,
+        constraints,
+        ownerCode,
+        ownerCodeLanguage,
+        testCases = []
+    } = req.body;
+
+    try {
+        if (!problemId) {
+            return res.status(400).json({ error: "Problem ID is required." });
+        }
+
+        // Update the problem in the database
+        await prisma.problem.update({
+            where: { id: problemId },
+            data: {
+                description,
+                inputFormat,
+                outputFormat,
+                constraints,
+                ownerCode,
+                ownerCodeLanguage: parseInt(ownerCodeLanguage),
+            },
+        });
+
+        // Get the current count of test cases for this problem
+        const currentTestCaseCount = await prisma.testcase.count({
+            where: { problemId },
+        });
+
+        let testcasesURLs = [];
+        if (testCases.length > 0) {
+            // Create records in testcases table & generate pre-signed URLs
+            testcasesURLs = await Promise.all(
+                testCases.map(async (isExample:boolean, index: number) => {
+                    const currentIndex = currentTestCaseCount + index; // Start index from the current count
+                    const inputKey = `Problems/${problemId}/input/input_${currentIndex}.txt`;
+                    const outputKey = `Problems/${problemId}/output/output_${currentIndex}.txt`;
+
+                    const inputUrl = await putObjectURL(inputKey);
+                    const outputUrl = await putObjectURL(outputKey);
+
+                    // Create a record in the testcase table
+                    await prisma.testcase.create({
+                        data: {
+                            problemId,
+                            inputPath: inputKey,
+                            expOutputPath: outputKey,
+                            isExample
+                        },
+                    });
+
+                    return {
+                        inputUrl,
+                        outputUrl,
+                    };
+                })
+            );
+        }
+
+        // Respond with the updated data
+        res.status(200).json({ id: problemId, testcasesURLs });
+    } catch (error) {
+        console.error("Error updating problem:", error);
+        res.status(500).json({ error: "Internal server error." });
+    }
+};
+
+const handleDeleteProblem = async (req: Request, res: Response) => {
+    try {
+        // Extract problemId from the request
+        const problemId = req.params.id;
+        console.log("Deleting problem with ID:", problemId);
+
+        // Check if the problem exists
+        const problemExists = await prisma.problem.findUnique({
+            where: { id: problemId },
+        });
+
+        if (!problemExists) {
+            return res.status(404).json({ error: 'Problem not found.' });
+        }
+
+        // Find all testcases associated with the problemId
+        const testcases = await prisma.testcase.findMany({
+            where: { problemId },
+        });
+
+        const testcaseIds = testcases.map(testcase => testcase.id);
+
+        // Delete records from SubmittedTestcase table based on the testcase IDs
+        if (testcaseIds.length > 0) {
+            await prisma.submittedTestcase.deleteMany({
+                where: {
+                    testcaseId: { in: testcaseIds },
+                },
+            });
+        }
+
+        // Delete records from the QueryTable
+        await prisma.queryTable.deleteMany({
+            where: { problemId },
+        });
+
+        // Delete records from the Testcase table
+        await prisma.testcase.deleteMany({
+            where: { problemId },
+        });
+
+        // Delete records from the Submission table
+        await prisma.submission.deleteMany({
+            where: { problemId },
+        });
+
+        // Delete the problem itself
+        await prisma.problem.delete({
+            where: { id: problemId },
+        });
+
+        // Delete resources from S3
+        const key = `Problems/${problemId}/`;
+        await deleteDirectoryS3(key);
+
+        res.status(200).json({
+            message: "Problem deleted successfully",
+        });
+    } catch (error) {
+        console.error("Error deleting problem:", error);
+        res.status(500).json({ error: "Internal server error." });
+    }
+};
+
+export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleEditProblem, handleDeleteProblem, handleGetAllProblem, handleGetProblemById, handleGetAllExampleTestcases, handleGetSubmissions, handleGetFilterProblems };

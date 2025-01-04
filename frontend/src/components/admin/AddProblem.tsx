@@ -63,7 +63,7 @@ export function AddProblem() {
         // console.log(formData);
 
         const results = await saveProblem(formData);
-        console.log(results);
+        // console.log(results);
 
         await Promise.all(
             data.testCases.map(async (testCase, index) => {
@@ -86,7 +86,7 @@ export function AddProblem() {
             })
         );
 
-        // navigate('/admin/problems')
+        navigate('/admin/problems')
     };
 
     const handleMultiSelectChange = useCallback((field: 'topics' | 'companies', value: (Topic | Company)[]) => {
@@ -212,7 +212,7 @@ export function AddProblem() {
                                     control={control}
                                     render={({ field: { onChange, value } }) => (
                                         <MarkdownEditor
-                                            value={value}
+                                            value={value as string}
                                             onChange={onChange}
                                             placeholder={`Enter ${field.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}...`}
                                         />

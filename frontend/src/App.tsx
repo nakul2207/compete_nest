@@ -12,6 +12,7 @@ import {ManageContests} from "@/components/admin/ManageContests.tsx";
 import {ManageCompanies} from "@/components/admin/ManageCompanies.tsx";
 import {ManageTopics} from "@/components/admin/ManageTopics.tsx";
 import {OnlineCompiler} from "@/components/OnlineCompiler.tsx"
+import {EditProblem} from "@/components/admin/EditProblem.tsx";
 
 function App() {
   return (
@@ -30,7 +31,7 @@ function App() {
                       <Route path="users" element={<ManageUsers />} />
                       <Route path="problems" element={<ManageProblems />} />
                       <Route path="problems/add" element={<AddProblem />} />
-                      <Route path="problems/edit/:id" element={<AddProblem />} />
+                      <Route path="problems/edit/:id" element={<EditProblem />} />
                       <Route path="contests" element={<ManageContests />} />
                       <Route path="companies" element={<ManageCompanies />} />
                       <Route path="topics" element={<ManageTopics />} />

@@ -7,7 +7,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { MultiSelect } from "@/components/ui/multi-select"
 import { useAppSelector } from "@/redux/hook"
-import { fetchProblems, getAllProblems } from "@/api/problemApi.ts"
+import {deleteProblem, fetchProblems, getAllProblems} from "@/api/problemApi.ts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {ChevronLeftIcon, ChevronRightIcon} from "@radix-ui/react-icons";
 
@@ -40,6 +40,7 @@ export function ManageProblems() {
     const [difficultyFilter, setDifficultyFilter] = useState("All")
     const [topicFilter, setTopicFilter] = useState<Topic[]>([])
     const [companyFilter, setCompanyFilter] = useState<Company[]>([])
+    const [refresh, setRefresh] = useState<number>(0);
 
     const topics: Topic[] = useAppSelector((state) => state.topics);
     const companies: Company[] = useAppSelector((state) => state.companies);
@@ -62,7 +63,7 @@ export function ManageProblems() {
         const companyIds = companyFilter.map((company) => company.id);
         const data = await fetchProblems(searchTerm, difficultyFilter, topicIds, companyIds, currentPage);
         setProblems(data.problems);
-    }, [currentPage, companyFilter, difficultyFilter, searchTerm, topicFilter]);
+    }, [refresh, currentPage, companyFilter, difficultyFilter, searchTerm, topicFilter]);
 
     const handleMultiSelectChange = (
         filterType: "topic" | "company",
@@ -84,7 +85,14 @@ export function ManageProblems() {
     }, []);
 
     const handleDelete = useCallback((id: string) => {
-        setProblems(problems.filter(problem => problem.id !== id))
+        deleteProblem(id).then((data) => {
+            console.log(data);
+
+            setRefresh((prev) => prev + 1);
+            handleFilter().then();
+        }).catch((error) => {
+            console.log(error);
+        });
     }, [problems]);
 
     return (
@@ -239,4 +247,3 @@ export function ManageProblems() {
         </Card>
     )
 }
-
