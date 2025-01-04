@@ -1,5 +1,5 @@
 import { Box } from '@chakra-ui/react';
-import { CodeEditor } from './CodeEditor';
+import { CodeEditor1 } from './CodeEditor1.tsx';
 import { useState, useEffect } from 'react';
 
 function ProblemWindow() {
@@ -70,7 +70,7 @@ function ProblemWindow() {
                 py={8}
                 overflowY="auto"
             >
-                <CodeEditor />
+                <CodeEditor1 />
             </Box>
         </div>
     );

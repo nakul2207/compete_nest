@@ -1,43 +1,35 @@
-import { Box, Button, Menu, MenuButton, MenuItem, MenuList, Text } from "@chakra-ui/react";
-import { LANGUAGE_VERSIONS } from "../constants";
-import { CODE_SNIPPETS } from '../constants';
-type Language = keyof typeof CODE_SNIPPETS;
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "./ui/select.tsx";
+import { languages } from "../assets/mapping.ts";
 
 interface LangSelectorProps {
-  language: Language;
-  onSelect: (language: Language) => void;
+    language_id: string;
+    onSelect: (language: string) => void;
 }
 
-const languages = Object.entries(LANGUAGE_VERSIONS);
-
-export const LangSelector = ({language, onSelect}: LangSelectorProps) => {
-  return (
-    <Box > 
-      <Text mb={1} fontSize="lg">
-        Select Language:
-      </Text>
-      <Menu >
-        <MenuButton as={Button}
-        bg="white"
-        my={2}
-        borderRadius="sm"
-        borderWidth='1px'
-        color="black"     
-        _hover={{ bg: 'gray.400' }}
-        outline="black"
-        >{language}</MenuButton>
-        <MenuList>
-          {languages.map(([language, details]) => (
-            <MenuItem key={language} onClick={()=>onSelect(language as Language)}>
-              {language}
-              &nbsp;
-              <Text as="span" color="gray.500" fontSize="sm">
-                {details.version}
-              </Text>
-            </MenuItem>
-          ))}
-        </MenuList>
-      </Menu>
-    </Box>
-  );
+export const LangSelector = ({ language_id, onSelect }: LangSelectorProps) => {
+    return (
+        <Select
+            defaultValue={language_id}
+            onValueChange={(value) => onSelect(value)}
+        >
+            <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Language" />
+            </SelectTrigger>
+            <SelectContent>
+                {Object.entries(languages).map(([id, language]) => {
+                        return (
+                            <SelectItem key={id} value={id}>
+                                {language.name}
+                            </SelectItem>
+                        );
+                })}
+            </SelectContent>
+        </Select>
+    );
 };

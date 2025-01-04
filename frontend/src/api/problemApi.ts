@@ -1,13 +1,18 @@
 import axios from "axios"
 const judge0_base_url = import.meta.env.VITE_BASE_JUDGE0;
 const server_url = import.meta.env.VITE_SERVER_URL;
+const hosted_judge0_base_url = import.meta.env.VITE_BASE_JUDGE0_HOSTED
+
+import {ProblemFormData} from "../schemas/problemSchema.tsx"
+import {EditProblemFormData} from "@/schemas/EditProblemSchema.tsx";
 
 const headers = {
     'Content-Type': 'application/json'
 }
 
 const params = {
-    base64_encoded: true
+    base64_encoded: true,
+    wait: true
 };
 
 export const createBatchSubmission = async (inputData: { submissions: any[] }) => {
@@ -16,7 +21,7 @@ export const createBatchSubmission = async (inputData: { submissions: any[] }) =
 
         // Append params directly in the URL instead of using the params object
         const { data } = await axios.post(
-            `${judge0_base_url}/submissions/batch?base64_encoded=true`,
+            `${hosted_judge0_base_url}/submissions/batch?base64_encoded=true`,
             inputData,
             { headers }
         );
@@ -55,7 +60,8 @@ export const getBatchSubmission = async (tokens: string) => {
 }
 
 export const createSubmission = async (inputData: object) =>{
-    const {data} = await axios.post(`${judge0_base_url}/submissions`, inputData, {
+    // const {data} = await axios.post(`${judge0_base_url}/submissions`, inputData, {
+    const {data} = await axios.post(`${hosted_judge0_base_url}/submissions`, inputData, {
         headers,
         params
     });
@@ -64,7 +70,7 @@ export const createSubmission = async (inputData: object) =>{
 }
 
 export const getSubmission = async (token: string) => {
-    const {data} = await axios.get(`${judge0_base_url}/submissions/${token}`,{
+    const {data} = await axios.get(`${hosted_judge0_base_url}/submissions/${token}`,{
         headers,
         params
     })
@@ -86,16 +92,29 @@ export const submitProblem = async ({ problem_id, code, language_id }: { problem
     }
 };
 
-export const runProblem = async ({ problem_id }: {problem_id: string}) =>{
+export const runProblem = async (inputData: { submissions: any[] }) =>{
     try {
-        const { data } = await axios.post(`${server_url}/api/problem/${problem_id}/run`, {}, {
-            headers,
-        });
+        console.log(inputData.submissions);
+        const { data } = await axios.post(
+            `${hosted_judge0_base_url}/submissions/batch?base64_encoded=true&wait=true`,
+            inputData,
+            { headers }
+        );
 
         return data;
     } catch (error) {
-        console.error("Error run problem:", error);
-        return { success: false, message: "An error occurred while running the problem." };
+        console.error("Error making submission:", error);
+        return { success: false, message: "An error occurred while making a batch submission" };
+    }
+}
+
+export const getProblemSubmissions = async(problem_id: string) => {
+    try {
+        const {data} = await axios.get(`${server_url}/api/problem/${problem_id}/submissions`);
+        return data.submissions;
+    }catch(error){
+        console.error('Error fetching all the problems', error);
+        throw new Error('Failed to get the problems');
     }
 }
 
@@ -103,10 +122,110 @@ export const getFileData = async (url: string)=>{
     try {
         const { data } = await axios.get(url);
 
-        return data;
+        return data.toString();
     } catch (error) {
         console.error("Error Fetching Data:", error);
         return { success: false, message: "An error occurred while fetching data." };
     }
 }
 
+export const saveProblem = async (formData: ProblemFormData) => {
+    try {
+        // Send the data to the backend API
+        const {data} = await axios.post(`${server_url}/api/problem/create`, {
+            ...formData,
+        }, {headers}
+    );
+        return data;
+    } catch (error) {
+        console.error('Error saving problem:', error);
+        throw new Error('Failed to save problem');
+    }
+};
+
+export const uploadToS3 = async (url: string, file: File, fileType: string)=> {
+    try{
+        await axios.put(url, file, {
+            headers: {
+                "Content-Type": fileType || "text/plain",
+            },
+        })
+    }catch (error) {
+        console.error('Error uploading the file to s3', error);
+        throw new Error('Failed to upload file on s3');
+    }
+}
+
+const LIMIT =10;
+export const getAllProblems = async(page:number) =>{
+    try {
+        const {data} = await axios.get(`${server_url}/api/problem/all`,{
+            params:{page,LIMIT}
+        });
+        return data;
+    }catch(error){
+        console.error('Error fetching all the problems', error);
+        throw new Error('Failed to get the problems');
+    }
+}
+
+export const fetchProblems = async (searchTerm:string, difficultyFilter:string, topicFilter:string[], companyFilter:string[], currentPage:number) => {
+    try {
+        const {data} = await axios.get(`${server_url}/api/problem/filter`,{
+            params: {
+                searchTerm,
+                difficulty: difficultyFilter === "All" ? null : difficultyFilter,
+                topic:  topicFilter,
+                company:companyFilter,
+                page: currentPage,
+                pageSize: LIMIT,
+            },
+        });
+        return data;
+    } catch (error) {
+        console.error("Error fetching problems:", error);
+    }
+};
+
+export const getProblemById = async(problem_id: string) => {
+    try {
+        const {data} = await axios.get(`${server_url}/api/problem/${problem_id}`);
+        return data.problem;
+    }catch(error){
+        console.error('Error fetching all the problems', error);
+        throw new Error('Failed to get the problems');
+    }
+}
+
+export const getAllExampleTestcases = async(problem_id: string) => {
+    try {
+        const {data} = await axios.get(`${server_url}/api/problem/${problem_id}/example_testcases`);
+        return data.testcasesURls;
+    }catch(error){
+        console.error('Error fetching all the problems', error);
+        throw new Error('Failed to get the problems');
+    }
+}
+
+export const editProblem = async(formData: EditProblemFormData)=>{
+    try {
+        const {data} = await axios.patch(`${server_url}/api/problem/edit`, {
+            ...formData,
+        }, {headers}
+    );
+        return data;
+    } catch (error) {
+        console.error('Error saving problem:', error);
+        throw new Error('Failed to save problem');
+    }
+}
+
+export const deleteProblem = async(problemId: string)=>{
+    try {
+        const {data} = await axios.delete(`${server_url}/api/problem/${problemId}`, {headers});
+        return data;
+    } catch (error) {
+        console.error('Error deleting problem:', error);
+        throw new Error('Failed to delete problem');
+    }
+}

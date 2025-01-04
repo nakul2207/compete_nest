@@ -3,7 +3,6 @@ import { Response, Request } from "express";
 import {Server} from "socket.io"
 import {Prisma, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
-import { SubmissionStatus } from '@prisma/client';
 
 const ongoingUpdates = new Set<string>();
 
@@ -67,15 +66,18 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
 
     ongoingUpdates.add(subTestcaseId);
     try {
-        const { stdout, status } = req.body;
+        const { stdout, status, time, memory } = req.body;
+        const parsedTime = parseFloat(time);
 
         await prisma.$transaction(
             async (tx) => {
-                const updatedTestcase = await tx.SubmittedTestcase.update({
+                const updatedTestcase = await tx.submittedTestcase.update({
                     where: { id: subTestcaseId },
                     data: {
                         output: stdout ?? "",
                         status: status.id,
+                        memory,
+                        time: parsedTime
                     },
                 });
 
@@ -91,30 +93,36 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
                 }
 
                 const submissionData = submission[0];
-                let overallStatus: SubmissionStatus = SubmissionStatus.Pending;
+                let { acceptedTestcases, evaluatedTestcases } = submissionData;
+                let overallStatus = submissionData.status;
 
-                const isRejected =
-                    submissionData.status === SubmissionStatus.Rejected ||
-                    updatedTestcase.status >= 4;
+                //incrementing the evaluated testcases
+                if(updatedTestcase.status >= 3){
+                    evaluatedTestcases++;
+                }
 
-                const isLastTestcase =
-                    submissionData.evaluatedTestcases + 1 ===
-                    submissionData.totalTestcases;
+                //incrementing the accepted testcases count if the current testcase is accepted
+                if(updatedTestcase.status === 3){
+                    acceptedTestcases++;
+                }
 
-                if (isRejected) {
-                    overallStatus = SubmissionStatus.Rejected;
-                } else if (isLastTestcase) {
-                    overallStatus =
-                        updatedTestcase.status === 3
-                            ? SubmissionStatus.Accepted
-                            : SubmissionStatus.Rejected;
+                if(evaluatedTestcases !== submissionData.totalTestcases){
+                    if(updatedTestcase.status > 3){
+                        overallStatus = updatedTestcase.status;
+                    }
+                }else{
+                    //then it takes the maximum of current status and previous status
+                    overallStatus = Math.max(updatedTestcase.status, overallStatus);
                 }
 
                 const updatedSubmission = await tx.submission.update({
                     where: { id: updatedTestcase.submissionId },
                     data: {
-                        evaluatedTestcases: { increment: 1 },
+                        evaluatedTestcases,
+                        acceptedTestcases,
                         status: overallStatus,
+                        memory: Math.max(submissionData.memory, memory),
+                        time: (submissionData.time + parsedTime)
                     },
                 });
 
@@ -133,8 +141,8 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
                 });
             },
             {
-                maxWait: 10000,
-                timeout: 10000,
+                maxWait: 20000,
+                timeout: 20000,
             }
         );
 
@@ -143,11 +151,33 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
             message: "Submission updated successfully.",
         });
     } catch (error) {
-        console.error("Error in handleSubmissionCallback:", error);
+        // Update the submission to "Internal Error" status (14)
+        try {
+            const updatedSubmission = await prisma.submission.update({
+                where: { id: subTestcaseId },
+                data: {
+                    status: 13, // Internal Error
+                },
+            });
+
+            // Sending the updated submission data to the client
+            const io = (req as any).io as Server | undefined;
+            if (io) {
+                io.to(subTestcaseId).emit("update", {
+                    success: false,
+                    message: "Internal error occurred in the backend.",
+                    updatedSubmission,
+                });
+            } else {
+                console.error("Socket.IO not attached to request");
+            }
+        } catch (updateError) {
+            console.error("Failed to update submission to Internal Error:", updateError);
+        }
 
         return res.status(500).json({
             success: false,
-            message: "Internal server error. Please try again later.",
+            message: "Internal server error. Submission marked as Internal Error.",
         });
     } finally {
         ongoingUpdates.delete(subTestcaseId);

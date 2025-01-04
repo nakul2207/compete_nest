@@ -6,6 +6,8 @@ import express, {NextFunction, Request, Response} from "express"
 import cors from 'cors';
 import problemRouter from "./routes/problem"
 import submissionRouter from "./routes/submission"
+import companyRouter from "./routes/company"
+import topicRouter from "./routes/topic"
 
 const app = express()
 const server = http.createServer(app);
@@ -52,9 +54,16 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use('/api/problem', problemRouter);
 app.use('/api/submission', submissionRouter);
+app.use('/api/company', companyRouter);
+app.use('/api/topic', topicRouter);
 
 app.get("/", async (req:Request, res: Response) =>{
     res.send("Server is running");
+})
+
+app.put("/callback", async (req:Request, res: Response) =>{
+    console.log(req.body);
+    res.status(200).json({message: "done"});
 })
 
 export {server, io};
