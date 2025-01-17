@@ -3,17 +3,29 @@ import { Link } from 'react-router-dom'
 import { Button } from "./ui/button"
 import { Moon, Sun, User, Menu } from 'lucide-react'
 import { useTheme } from "./ThemeProvider.tsx"
+import { useNavigate } from 'react-router-dom'
+import { useAppDispatch, useAppSelector } from '@/redux/hook'
+import { setIsLoginPage } from '@/redux/slice/toggleSlice.tsx'
+import { UserProfileModal } from "../components/UserProfileModal.tsx"
 
 export function Header() {
+  const navigate  = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const { theme, setTheme } = useTheme()
+  const dispatch = useAppDispatch();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated)
+  const user = useAppSelector((state) => state.auth.user)
+
+  const handleProfile = () => {
+    setIsProfileModalOpen(true)
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
           <Link to="/" className="mr-6 flex items-center space-x-2">
-            {/*<img src="/logo.svg" alt="Compete Nest Logo" className="h-6 w-6" />*/}
             <span className="hidden font-bold sm:inline-block">
               Compete Nest
             </span>
@@ -22,7 +34,6 @@ export function Header() {
             <Link to="/" className="transition-colors hover:text-foreground/80 text-foreground">Home</Link>
             <Link to="/problems" className="transition-colors hover:text-foreground/80 text-foreground">Problems</Link>
             <Link to="/contests" className="transition-colors hover:text-foreground/80 text-foreground">Contests</Link>
-            {/*<Link to="/discuss" className="transition-colors hover:text-foreground/80 text-foreground">Discuss</Link>*/}
             <Link to="/admin" className="transition-colors hover:text-foreground/80 text-foreground">Admin</Link>
             <Link to="/compiler" className="transition-colors hover:text-foreground/80 text-foreground">Compiler</Link>
           </nav>
@@ -38,14 +49,35 @@ export function Header() {
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
           </Button>
-          <Button variant="ghost" size="icon" className="mr-2">
-            <User className="h-[1.2rem] w-[1.2rem]" />
-            <span className="sr-only">User profile</span>
-          </Button>
-          <Button variant="outline" className="mr-2">
-            Log in
-          </Button>
-          <Button>Sign up</Button>
+          {
+            isAuthenticated ? (
+              <Button variant="ghost" size="icon" className="mr-2" onClick={handleProfile}>
+                <User className="h-[1.2rem] w-[1.2rem]" />
+                <span className="sr-only">User profile</span>
+              </Button>
+            ) : (
+              <>
+                <Button
+                  onClick={() => {
+                    dispatch(setIsLoginPage(true));
+                    navigate('/auth');
+                  }}
+                  variant="outline"
+                  className="mr-2"
+                >
+                  Log in
+                </Button>
+                <Button
+                  onClick={() => {
+                    dispatch(setIsLoginPage(false));
+                    navigate('/auth');
+                  }}
+                >
+                  Sign up
+                </Button>
+              </>
+            )
+          }
           <Button
             variant="ghost"
             size="icon"
@@ -67,6 +99,8 @@ export function Header() {
           </ul>
         </nav>
       )}
+      <UserProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} />
     </header>
   )
 }
+

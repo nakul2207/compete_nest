@@ -8,6 +8,8 @@ import problemRouter from "./routes/problem"
 import submissionRouter from "./routes/submission"
 import companyRouter from "./routes/company"
 import topicRouter from "./routes/topic"
+import authRouter from "./routes/auth"
+import userRouter from "./routes/user"
 
 const app = express()
 const server = http.createServer(app);
@@ -56,6 +58,8 @@ app.use('/api/problem', problemRouter);
 app.use('/api/submission', submissionRouter);
 app.use('/api/company', companyRouter);
 app.use('/api/topic', topicRouter);
+app.use('/api/auth',authRouter);
+app.use('/api',userRouter);
 
 app.get("/", async (req:Request, res: Response) =>{
     res.send("Server is running");

@@ -1,15 +1,17 @@
 import {useCallback, useEffect, useState} from 'react'
+import axios from 'axios'
 import { Input } from "../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from '@/components/ui/button'
 import { useNavigate } from "react-router-dom"
 import {getAllProblems, fetchProblems} from "@/api/problemApi.ts"
-import { useAppSelector} from "@/redux/hook.ts"
+import { useAppDispatch, useAppSelector} from "@/redux/hook.ts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X } from 'lucide-react'
 import {MultiSelect} from "@/components/ui/multi-select.tsx";
 import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons'
+import { setIsAuthenticated,setUser } from '@/redux/slice/authSlice'
 
 interface Company {
   id: string;
@@ -32,6 +34,7 @@ interface Problem {
 }
 
 export function ProblemsPage() {
+  const server_url = import.meta.env.VITE_SERVER_URL;
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   // const [totalPages, setTotalPages] = useState(1);
@@ -45,9 +48,13 @@ export function ProblemsPage() {
   const topics: Topic[]  = useAppSelector((state) => state.topics);
   const companies: Company[]  = useAppSelector((state) => state.companies);
 
+  const dispatch = useAppDispatch();
+
   const handlePageChange = (page:number) => {
     setCurrentPage(page);
   };
+
+
 
   useEffect(() => {
     getAllProblems(currentPage)
