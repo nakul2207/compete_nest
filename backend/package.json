@@ -5,7 +5,8 @@
   "scripts": {
     "start": "ts-node src/server.ts",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "worker": "ts-node src/bullmq/workers/contestWorkers.ts"
   },
   "keywords": [],
   "author": "",
@@ -25,15 +26,18 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.676.0",
     "@aws-sdk/s3-request-presigner": "^3.676.0",
+    "@bull-board/express": "^6.6.1",
     "@prisma/client": "^5.20.0",
     "@types/socket.io": "^3.0.1",
     "bcryptjs": "^2.4.3",
+    "bullmq": "^5.34.8",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "google-auth-library": "^9.15.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.16",
+    "redis": "^4.7.0",
     "socket.io": "^4.8.1"
   },
   "description": ""

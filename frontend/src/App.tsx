@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes, useNavigate } from "react-router-dom"
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom"
 import { ThemeProvider } from "./components/ThemeProvider"
 import { Header } from "./components/Header"
 import { CompeteNestProblemPage } from "./pages/CompeteNestProblemPage"
@@ -18,9 +18,10 @@ import {Auth} from "./pages/Auth.tsx"
 import { Home } from "./pages/Home.tsx"
 import {useEffect} from 'react'
 import axios from 'axios';
-import { useAppDispatch,useAppSelector } from '@/redux/hook';
+import { useAppDispatch } from '@/redux/hook';
 import { setIsAuthenticated,setUser } from '@/redux/slice/authSlice';
 
+import {AddContest} from "@/components/admin/AddContest.tsx";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -38,11 +39,11 @@ function App() {
         localStorage.removeItem('token');
       }
   };
-  
+
     useEffect(() => {
       const token = localStorage.getItem('token');
       if (token) {
-        validateToken(token); // Validate the token if it exists
+        validateToken(token).then(); // Validate the token if it exists
       }
     }, []);
   return (
@@ -70,6 +71,7 @@ function App() {
                     <Route path="problems/add" element={<AddProblem />} />
                     <Route path="problems/edit/:id" element={<EditProblem />} />
                     <Route path="contests" element={<ManageContests />} />
+                    <Route path="contests/add" element={<AddContest />} />
                     <Route path="companies" element={<ManageCompanies />} />
                     <Route path="topics" element={<ManageTopics />} />
                 </Route>

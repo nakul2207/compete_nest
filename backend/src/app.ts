@@ -10,6 +10,7 @@ import companyRouter from "./routes/company"
 import topicRouter from "./routes/topic"
 import authRouter from "./routes/auth"
 import userRouter from "./routes/user"
+import contestRouter from "./routes/contest"
 
 const app = express()
 const server = http.createServer(app);
@@ -42,6 +43,25 @@ const socketMiddleware = (ioInstance: Server) => {
     };
 };
 
+import {ExpressAdapter } from '@bull-board/express'
+import {createBullBoard } from '@bull-board/api'
+import { BullMQAdapter } from "@bull-board/api/bullMQAdapter.js";
+import {contestStartQueue, contestEndQueue} from './bullmq/queues/contestQueues'
+
+const serverAdapter = new ExpressAdapter();
+
+createBullBoard({
+    queues: [
+        new BullMQAdapter(contestStartQueue),
+        new BullMQAdapter(contestEndQueue)
+    ],
+    serverAdapter,
+});
+
+serverAdapter.setBasePath('/admin/queues');
+
+app.use('/admin/queues', serverAdapter.getRouter());
+
 // Middleware and route setup
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
@@ -60,6 +80,7 @@ app.use('/api/company', companyRouter);
 app.use('/api/topic', topicRouter);
 app.use('/api/auth',authRouter);
 app.use('/api',userRouter);
+app.use('/api/contest', contestRouter);
 
 app.get("/", async (req:Request, res: Response) =>{
     res.send("Server is running");

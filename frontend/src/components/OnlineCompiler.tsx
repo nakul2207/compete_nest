@@ -127,7 +127,7 @@ export function OnlineCompiler() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         {Object.entries(languages)
-                                            .filter(([_, lang]) => !lang.is_archived)
+                                            // .filter(([_, lang]) => !lang.is_archived)
                                             .map(([id, lang]) => (
                                                 <SelectItem key={id} value={id}>
                                                     {lang.name}
