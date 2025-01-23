@@ -10,6 +10,5 @@ contestRouter.route('/:id').get(handleGetContestByID as any);
 contestRouter.route('/all').get(handleGetAll as any);
 contestRouter.route('/:id/register').get(handleContestRegister as any);
 contestRouter.route('/:id/unregister').get(handleContestUnregister as any);
-// contestRouter.route()
 
 export default contestRouter;

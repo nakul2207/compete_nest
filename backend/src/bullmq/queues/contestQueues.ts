@@ -10,7 +10,7 @@ export const contestStartQueue = new Queue('contestStart', {
 })
 
 export const addContestStartJob = async (contestId: string, startTime: Date) =>{
-    console.log(startTime.getTime() - Date.now());
+    // console.log(startTime.getTime() - Date.now());
     await contestStartQueue.add(
         'startContest',
         {contestId},
@@ -26,10 +26,10 @@ export const contestEndQueue = new Queue('contestEnd', {
     }
 })
 
-export const addContestEndJob = async (contestID: string, endTime: Date) =>{
+export const addContestEndJob = async (contestId: string, endTime: Date) =>{
     await contestEndQueue.add(
         'endContest',
-        {contestID},
+        {contestId},
         {delay: endTime.getTime() - Date.now()}
     )
 }

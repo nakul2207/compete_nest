@@ -1,29 +1,92 @@
 import { Request,Response } from "express";
 import {PrismaClient } from "@prisma/client";
 import {addContestStartJob, addContestEndJob} from "../bullmq/queues/contestQueues"
-import {tryCatch} from "bullmq";
 
 const prisma = new PrismaClient();
 
+interface Problem{
+    id: string,
+    score: number
+}
+
+const handleStartContest = async (contestId: string) => {
+    try {
+        // Update the contest's status to Ongoing
+        await prisma.contest.update({
+            where: {
+                id: contestId, // Use contestId to identify the contest
+            },
+            data: {
+                status: "Ongoing", // Update status to Ongoing
+            },
+        });
+    } catch (error) {
+        console.error("Error starting contest:", error);
+    }
+};
+
+const handleEndContest = async (contestId: string) => {
+    try {
+        // Update the contest's status to Ongoing
+        await prisma.contest.update({
+            where: {
+                id: contestId, // Use contestId to identify the contest
+            },
+            data: {
+                status: "Ended", // Update status to Ended
+            },
+        });
+    } catch (error) {
+        console.error("Error ending contest:", error);
+    }
+};
+
 const handleCreateContest = async(req:Request, res:Response)=>{
     try {
-        const contestData = req.body; // Assuming `req.body` is an array of contest objects
-        console.log(contestData);
+        const {title, description, startTime, endTime, problems} = req.body; // Assuming `req.body` is an array of contest objects
+
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
         //create record in contest table
-        // const contest = prisma.contest.create({
-        //     data:{
-        //
-        //     }
-        // })
+        const contest = await prisma.contest.create({
+            data:{
+                title,
+                description,
+                startTime,
+                endTime,
+                problems: problems.map((problem: Problem) => problem.id),
+                userId: req.user.id
+            },
+            select:{
+                id: true
+            }
+        })
 
-        //create record int contestProblem table
+        // Ensure the contest is created before proceeding
+        if (!contest || !contest.id) {
+            throw new Error("Failed to create contest.");
+        }
+
+        //create record in contestProblem table
+        await Promise.all(
+            problems.map(async (problem:Problem) => {
+                await prisma.contestProblem.create({
+                    data:{
+                        contestId: contest.id,
+                        problemId: problem.id,
+                        score: problem.score
+                    }
+                })
+            })
+        );
 
         //adding the contest to the queue for scheduling
-        // await addContestStartJob(contestData.title, new Date(contestData.startTime));
-        // await addContestEndJob(contestData.title, new Date(contestData.endTime));
+        await addContestStartJob(contest.id, new Date(startTime));
+        await addContestEndJob(contest.id, new Date(endTime));
 
-        res.status(201).json({ message: 'Contest added successfully', contestData});
+        res.status(201).json({ message: 'Contest added successfully', contestId: contest.id});
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error adding companies', error });
@@ -128,4 +191,4 @@ const handleContestUnregister = async (req: Request, res: Response)=>{
     }
 }
 
-export {handleCreateContest, handleDeleteContest, handleEditContest, handleGetAll, handleGetContestByID, handleContestRegister, handleContestUnregister};
+export {handleCreateContest, handleDeleteContest, handleEditContest, handleGetAll, handleGetContestByID, handleContestRegister, handleContestUnregister, handleStartContest, handleEndContest};

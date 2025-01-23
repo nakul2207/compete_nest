@@ -1,6 +1,42 @@
 import {Worker} from 'bullmq'
+import {PrismaClient} from "@prisma/client";
+// import {handleStartContest, handleEndContest} from "../../controllers/contest"
 
 const redisOptions = { host: "localhost", port: 6379 };
+
+const prisma = new PrismaClient();
+
+const handleStartContest = async (contestId: string) => {
+    try {
+        // Update the contest's status to Ongoing
+        await prisma.contest.update({
+            where: {
+                id: contestId, // Use contestId to identify the contest
+            },
+            data: {
+                status: "Ongoing", // Update status to Ongoing
+            },
+        });
+    } catch (error) {
+        console.error("Error starting contest:", error);
+    }
+};
+
+const handleEndContest = async (contestId: string) => {
+    try {
+        // Update the contest's status to Ongoing
+        await prisma.contest.update({
+            where: {
+                id: contestId, // Use contestId to identify the contest
+            },
+            data: {
+                status: "Ended", // Update status to Ended
+            },
+        });
+    } catch (error) {
+        console.error("Error ending contest:", error);
+    }
+};
 
 //contest start worker
 const contestStartWorker= new Worker(
@@ -10,6 +46,7 @@ const contestStartWorker= new Worker(
         console.log(`Starting Contest: ${contestId}`);
 
         //start the contest and change its status to Ongoing
+        await handleStartContest(contestId);
     },
     {
         connection: redisOptions
@@ -34,10 +71,10 @@ const contestEndWorker = new Worker(
     'contestEnd',
     async (job) => {
         const { contestId } = job.data;
-
         console.log(`Ending Contest: ${contestId}`);
 
         //end the contest and change its status to Ended
+        await handleEndContest(contestId);
     },
     {
         connection: redisOptions
