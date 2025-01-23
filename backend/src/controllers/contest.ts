@@ -20,8 +20,8 @@ const handleCreateContest = async(req:Request, res:Response)=>{
         //create record int contestProblem table
 
         //adding the contest to the queue for scheduling
-        await addContestStartJob(contestData.title, new Date(contestData.startTime));
-        await addContestEndJob(contestData.title, new Date(contestData.endTime));
+        // await addContestStartJob(contestData.title, new Date(contestData.startTime));
+        // await addContestEndJob(contestData.title, new Date(contestData.endTime));
 
         res.status(201).json({ message: 'Contest added successfully', contestData});
     } catch (error) {

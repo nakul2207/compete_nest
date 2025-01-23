@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export const handleAllUsers = async (req: Request, res: Response) => {
     try {
-        const data = await prisma.user.findMany({
+        const users = await prisma.user.findMany({
             select: {
                 id: true,
                 name: true,
@@ -13,19 +13,18 @@ export const handleAllUsers = async (req: Request, res: Response) => {
                 role: true
             },
         });
-        res.status(200).json({ data });
+        res.status(200).json({ users });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
 
-
 export const updateUserRole = async (req: Request, res: Response) => {
-    const  userId  = req.params.id; 
-    const { role } = req.body;
-
     try {
+        const  userId  = req.params.id;
+        const { role } = req.body;
+
         // Validate the input
         if (!userId || !role) {
             return res.status(400).json({ error: "Missing userId or role in request" });
@@ -43,10 +42,11 @@ export const updateUserRole = async (req: Request, res: Response) => {
         return res.status(500).json({ error: "Internal Server Error" });
     }
 };
-export const deleteUser = async (req: Request, res: Response) => {
-    const userId = req.params.id;
 
+export const deleteUser = async (req: Request, res: Response) => {
     try {
+        const userId = req.params.id;
+
         // Validate the input
         if (!userId) {
             return res.status(400).json({ error: "Missing userId in request" });

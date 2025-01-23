@@ -47,7 +47,7 @@ export function AddContest() {
     // console.log("render");
 
     useEffect(() => {
-        setValue('problems', selectedProblems.map(p => ({ id: p.id, title: p.title, score: p.score })))
+        setValue('problems', selectedProblems.map(p => ({ id: p.problemId, title: p.title, score: p.score })))
     }, [selectedProblems, setValue])
 
     const onSubmit = async (data: ContestFormData) => {
@@ -60,9 +60,9 @@ export function AddContest() {
 
     const handleProblemToggle = (problem: Problem) => {
         setSelectedProblems(prev => {
-            const isSelected = prev.some(p => p.id === problem.id)
+            const isSelected = prev.some(p => p.problemId === problem.problemId)
             if (isSelected) {
-                return prev.filter(p => p.id !== problem.id)
+                return prev.filter(p => p.problemId !== problem.problemId)
             } else {
                 return [...prev, { ...problem, score: 0 }]
             }
@@ -70,12 +70,12 @@ export function AddContest() {
     }
 
     const handleRemoveSelectedProblem = (problemId: string) => {
-        setSelectedProblems(prev => prev.filter(p => p.id !== problemId))
+        setSelectedProblems(prev => prev.filter(p => p.problemId !== problemId))
     }
 
     const handleScoreChange = (problemId: string, score: number) => {
         setSelectedProblems(prev =>
-            prev.map(p => p.id === problemId ? { ...p, score } : p)
+            prev.map(p => p.problemId === problemId ? { ...p, score } : p)
         )
     }
 
@@ -159,7 +159,7 @@ export function AddContest() {
                             <h3 className="text-lg font-semibold mb-2">Selected Problems</h3>
                             <div className="flex flex-wrap gap-2 mb-4">
                                 {selectedProblems.map((problem) => (
-                                    <div key={problem.id} className="flex items-center space-x-2">
+                                    <div key={problem.problemId} className="flex items-center space-x-2">
                                           <span
                                               className="bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-1 rounded-full">
                                                 {problem.title}
@@ -167,13 +167,13 @@ export function AddContest() {
                                         <Input
                                             type="number"
                                             value={problem.score}
-                                            onChange={(e) => handleScoreChange(problem.id, parseInt(e.target.value, 10))}
+                                            onChange={(e) => handleScoreChange(problem.problemId, parseInt(e.target.value, 10))}
                                             className="w-14 h-8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                             min="0"
                                         />
                                         <button
                                             type="button"
-                                            onClick={() => handleRemoveSelectedProblem(problem.id)}
+                                            onClick={() => handleRemoveSelectedProblem(problem.problemId)}
                                             className="bg-red-500 rounded-full w-5 h-5 flex items-center justify-center text-white text-xs"
                                         >
                                             <X className="h-3 w-3" />

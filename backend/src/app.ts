@@ -4,6 +4,7 @@ import {Server} from "socket.io"
 import http from "http"
 import express, {NextFunction, Request, Response} from "express"
 import cors from 'cors';
+import cookieParser from "cookie-parser"
 import problemRouter from "./routes/problem"
 import submissionRouter from "./routes/submission"
 import companyRouter from "./routes/company"
@@ -65,6 +66,7 @@ app.use('/admin/queues', serverAdapter.getRouter());
 // Middleware and route setup
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
+app.use(cookieParser());
 app.use(socketMiddleware(io));
 
 const corsOptions = {
@@ -79,7 +81,7 @@ app.use('/api/submission', submissionRouter);
 app.use('/api/company', companyRouter);
 app.use('/api/topic', topicRouter);
 app.use('/api/auth',authRouter);
-app.use('/api',userRouter);
+app.use('/api/user',userRouter);
 app.use('/api/contest', contestRouter);
 
 app.get("/", async (req:Request, res: Response) =>{

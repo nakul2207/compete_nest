@@ -54,8 +54,6 @@ export function ProblemsPage() {
     setCurrentPage(page);
   };
 
-
-
   useEffect(() => {
     getAllProblems(currentPage)
         .then((data) => {

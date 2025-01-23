@@ -5,8 +5,7 @@ import { Input } from '../ui/input'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog'
-import { GetUsers } from '@/api/authApi'
-import { DeleteUser,RoleChange } from '@/api/authApi'
+import { GetUsers, DeleteUser, RoleChange } from "@/api/userApi.ts"
 import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
 
@@ -27,15 +26,6 @@ export function ManageUsers() {
     const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; userId: string; newRole: string }>({ isOpen: false, userId: '', newRole: '' })
     const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; userId: string }>({ isOpen: false, userId: '' })
 
-    const GetallUsers = async()=>{
-        const data = await GetUsers();
-        if(data){
-            setUsers(data)
-        }else{
-            setUsers([]) 
-        }
-    }
-
     const handleDeleteUser = async (userId: string) => {
         try {
             await DeleteUser(userId)
@@ -51,7 +41,15 @@ export function ManageUsers() {
     }
 
     useEffect(() => {
-        GetallUsers()
+        GetUsers().then((data) => {
+            if(data){
+                setUsers(data.users)
+            }else{
+                setUsers([])
+            }
+        }).catch((err) => {
+            console.log("Failed to load users: ", err);
+        })
     }, [])
 
     const handleRoleChange = useCallback((userId: string, newRole: string) => {
@@ -61,7 +59,7 @@ export function ManageUsers() {
     const confirmRoleChange = async () => {
         const { userId, newRole } = confirmDialog
         try {
-            await RoleChange(userId,newRole);
+            await RoleChange(userId, newRole);
             setUsers(prevUsers => prevUsers.map(user =>
                 user.id === userId ? { ...user, role: newRole } : user
             ))

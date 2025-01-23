@@ -7,10 +7,17 @@ import LoginForm from '../components/auth/LoginForm'
 import GoogleAuth from '../components/auth/GoogleAuth'
 import { useAppDispatch, useAppSelector } from '@/redux/hook'
 import { setIsLoginPage } from '@/redux/slice/toggleSlice'
+import {useNavigate} from "react-router-dom";
 
 export function Auth() {
-  const isLoginPage = useAppSelector((state) => state.toggle.value)
+  const isLoginPage = useAppSelector((state) => state.toggle.value);
+  const user = useAppSelector((state)=> state.auth.user)
   const dispatch = useAppDispatch()
+  const navigate = useNavigate();
+
+  if(user){
+    navigate('/');
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">

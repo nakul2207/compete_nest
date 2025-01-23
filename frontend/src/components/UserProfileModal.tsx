@@ -1,19 +1,19 @@
-import { useState } from 'react'
 import { Button } from "./ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog"
 import { useAppDispatch, useAppSelector } from '@/redux/hook'
 import { logout } from '@/redux/slice/authSlice'
 import { useNavigate } from 'react-router-dom'
+import { LogoutUser} from "@/api/authApi.ts";
 
 export function UserProfileModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const dispatch = useAppDispatch()
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user)
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    dispatch(logout())
-    navigate("/auth")
+  const handleLogout = async () => {
+    await LogoutUser();
+    dispatch(logout());
+    navigate("/auth");
     onClose()
   }
 

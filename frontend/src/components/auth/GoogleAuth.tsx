@@ -10,11 +10,10 @@ const GoogleAuth: React.FC = () => {
   const dispatch = useAppDispatch();
   const onSuccess = async (credentialResponse: any) => {
     try {
-      const  data  = await AuthenticateWithGoogle(credentialResponse.credential)
+      const data  = await AuthenticateWithGoogle(credentialResponse.credential)
       dispatch(setIsAuthenticated(true));
       dispatch(setUser(data.user));
-      localStorage.setItem('token', data.token);
-      navigate('/problems');
+      navigate(-1);
     } catch (error) {
       console.error('Google authentication failed:', error);
     }

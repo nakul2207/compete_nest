@@ -3,6 +3,7 @@ import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { useAppSelector,useAppDispatch } from '@/redux/hook';
 import { setIsAuthenticated,setUser } from '@/redux/slice/authSlice';
 import { ValidateToken } from '@/api/authApi';
+import {Loader} from "../Loader.tsx"
 
 interface ProtectedRouteProps {
   allowedRoles: string[];
@@ -13,38 +14,29 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const validateToken = async (token: string) => {
-      try {
-        const data = await ValidateToken(token);
-        if(data){
+  useEffect(() => {
+    if(!user) {
+      ValidateToken().then((data) => {
+        if (data) {
           dispatch(setIsAuthenticated(true));
           dispatch(setUser(data.user));
         }
-      } catch (error) {
-        console.error('Token validation failed:', error);
-        localStorage.removeItem('token');
-      }
-  };
-  
-    useEffect(() => {
-      const token = localStorage.getItem('token');
-      if(!token){
-        navigate("/auth")
-      }
-      if (!user && token) {
-        validateToken(token);
-      }
-    }, []);
+      }).catch((err) => {
+        navigate('/auth');
+        console.error('Token validation failed:', err);
+      })
+    }
+  }, []);
 
   if (!user) {
-    return <div>loading</div>
+    return <Loader />
   }
 
   try {
     if (allowedRoles.includes(user.role)) {
       return <Outlet />;
     } else {
-      return <Navigate to="/unauthorized" replace />;
+      return <Navigate to="/forbidden" replace />;
     }
   } catch (error) {
     console.error('Invalid token:', error);

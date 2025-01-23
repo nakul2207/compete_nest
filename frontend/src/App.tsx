@@ -15,37 +15,29 @@ import {OnlineCompiler} from "@/components/OnlineCompiler.tsx"
 import {EditProblem} from "@/components/admin/EditProblem.tsx";
 import {ProtectedRoute} from "./components/auth/ProtectedRoute.tsx"
 import {Auth} from "./pages/Auth.tsx"
-import { Home } from "./pages/Home.tsx"
+import { HomePage } from "./pages/HomePage.tsx"
 import {useEffect} from 'react'
-import axios from 'axios';
 import { useAppDispatch } from '@/redux/hook';
 import { setIsAuthenticated,setUser } from '@/redux/slice/authSlice';
-
 import {AddContest} from "@/components/admin/AddContest.tsx";
+import {ValidateToken} from "@/api/authApi.ts";
+import {ForbiddenPage} from "@/pages/ForbiddenPage.tsx";
+import {NotFoundPage} from "@/pages/NotFoundPage.tsx";
+import {Loader} from "./components/Loader.tsx"
 
 function App() {
   const dispatch = useAppDispatch();
-  const server_url= import.meta.env.VITE_SERVER_URL;
-  const validateToken = async (token: string) => {
-      try {
-        console.log("called")
-        const { data } = await axios.post(`${server_url}/api/auth/validate`, { token });
-        if(data){
-          dispatch(setIsAuthenticated(true));
-          dispatch(setUser(data.user));
-        }
-      } catch (error) {
-        console.error('Token validation failed:', error);
-        localStorage.removeItem('token');
-      }
-  };
-
     useEffect(() => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        validateToken(token).then(); // Validate the token if it exists
-      }
+        ValidateToken().then((data) => {
+            if(data){
+                dispatch(setIsAuthenticated(true));
+                dispatch(setUser(data.user));
+            }
+        }).catch((err) => {
+            console.error('Token validation failed:', err);
+        })
     }, []);
+
   return (
       <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
         <Router>
@@ -57,10 +49,10 @@ function App() {
                 <Route element={<ProtectedRoute allowedRoles={['Admin','Organiser','User']} />}>
                   <Route path="/problems" element={<ProblemsPage/>} />
                 </Route>
-                <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
+                <Route element={<ProtectedRoute allowedRoles={['Organiser', 'Admin']} />}>
                   <Route path="/admin" element={<AdminPortal />} />
                 </Route>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<HomePage />} />
                 <Route path="/problems" element={<ProblemsPage />} />
                 <Route path="/problems/:problem_id" element={<CompeteNestProblemPage />} />
                 <Route path="/contests" element={<ContestsPage/>} />
@@ -75,6 +67,9 @@ function App() {
                     <Route path="companies" element={<ManageCompanies />} />
                     <Route path="topics" element={<ManageTopics />} />
                 </Route>
+                  <Route path="/forbidden" element={<ForbiddenPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                  <Route path="/loader" element={<Loader />} />
               </Routes>
             </main>
           </div>

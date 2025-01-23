@@ -1,28 +1,36 @@
-import { Request,Response } from 'express';
-import { config } from 'dotenv';
+import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import jwt,{JwtPayload} from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
-import nodemailer from "nodemailer"
+import nodemailer from 'nodemailer';
 
-config()
 const prisma = new PrismaClient();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-interface TokenPayload extends JwtPayload {
-  userId: string; // Define the structure of your token payload
-}
 
+// Email transporter configuration
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+// In-memory OTP store (for production, use a database)
+const otpStore: { [key: string]: { otp: string; expiry: number } } = {};
+
+/**
+ * Handle User Signup
+ */
 export const handleSignup = async (req: Request, res: Response) => {
-  const { name, email, password} = req.body;
-
   try {
-    // Validate and map the role
-    // Check if the email already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const { name, email, password } = req.body;
+
+    // Check if the email is already registered
+    const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: 'Email already in use' });
     }
@@ -30,44 +38,34 @@ export const handleSignup = async (req: Request, res: Response) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create the user in the database
+    // Create the new user
     const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
-      select:{
-        id: true,
-        name:true,
-        email:true,
-        role:true,
-        createdAt:true
-      }
+      data: { name, email, password: hashedPassword },
+      select: { id: true, name: true, email: true, role: true },
     });
 
-    // Ensure JWT_SECRET is defined
     if (!process.env.JWT_SECRET) {
       throw new Error('JWT_SECRET is not defined');
     }
 
-    // Generate a JWT token for the user
+    // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+        { userId: user.id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '10d' }
     );
 
-    // Respond with the user details and the token
-    res.status(201).json({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        createdAt: user.createdAt,
-      },
+    // Set cookie options
+    const options = {
+      expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    };
+
+    res.status(201).cookie('token', token, options).json({
+      message: 'Registration successful',
+      user,
     });
   } catch (error) {
     console.error('Error during signup:', error);
@@ -75,36 +73,81 @@ export const handleSignup = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Handle User Login
+ */
+export const handleLogin = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
 
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user || !user.password) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
 
-// Login
-export const handleLogin =  async (req:Request, res:Response) => {
-  const { email, password } = req.body;
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user || !user.password) {
-    return res.status(400).json({ error: 'Invalid credentials' });
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not defined');
+    }
+
+    const token = jwt.sign(
+        { userId: user.id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '10d' }
+    );
+
+    const options = {
+      expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    };
+
+    res.status(200).cookie('token', token, options).json({
+      message: 'Login successful',
+      user,
+    });
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ message: `Login failed: ${error}` });
   }
-
-  const validPassword = await bcrypt.compare(password, user.password);
-  if (!validPassword) {
-    return res.status(400).json({ error: 'Invalid credentials' });
-  }
-
-  if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET is not defined');
-  }
-
-  const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
 };
 
-// Google Auth
-
-export const handleGoogleAuth = async (req: Request, res: Response) => {
-  const { token } = req.body;
-
+/**
+ * Handle User Logout
+ */
+export const handleLogoutUser = async (req: Request, res: Response) => {
   try {
+    res.status(200).cookie("token", null, {
+          expires: new Date(Date.now()),
+          httpOnly: true,
+          secure: true,
+          sameSite: 'none' // Allow cross-site requests
+        })
+        .json({
+          success: true,
+          message: "Logged out successfully"
+        })
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+/**
+ * Handle Google Authentication
+ */
+export const handleGoogleAuth = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+
     const ticket = await googleClient.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
@@ -118,37 +161,30 @@ export const handleGoogleAuth = async (req: Request, res: Response) => {
     const { sub: googleId, email, name } = payload;
 
     let user = await prisma.user.findUnique({ where: { email } });
-
     if (!user) {
-      // Generate a random placeholder password
       const randomPassword = crypto.randomBytes(16).toString('hex');
 
-      // Create a new user
       user = await prisma.user.create({
-        data: {
-          email: email!,
-          name: name!,
-          token:googleId,
-          password: randomPassword, // Save placeholder password
-        },
+        data: { email: email!, name: name!, token: googleId, password: randomPassword },
       });
     }
 
-    // Generate a JWT token
     const jwtToken = jwt.sign(
-      { userId: user.id, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: '1d' }
+        { userId: user.id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '10d' }
     );
 
-    res.json({
-      token: jwtToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
+    const options = {
+      expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    };
+
+    res.status(200).cookie('token', jwtToken, options).json({
+      message: 'Login successful',
+      user,
     });
   } catch (error) {
     console.error('Google authentication error:', error);
@@ -156,73 +192,60 @@ export const handleGoogleAuth = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Validate User Token
+ */
 export const handleValidation = async (req: Request, res: Response) => {
-  const { token } = req.body;
-
   try {
-    if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET is not defined');
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Unauthorized: No user information found' });
     }
 
-    // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET) as TokenPayload;
-
-    // Access userId from the decoded token
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }, 
-    });
-
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
     if (!user) {
-      throw new Error('User not found');
+      return res.status(404).json({ message: 'No user found for the given token' });
     }
 
-    res.json({ user });
+    res.status(200).json({
+      message: 'Validation successful',
+      user,
+    });
   } catch (error) {
     console.error('Token validation failed:', error);
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(500).json({ error: 'Server error during validation' });
   }
 };
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
-
-// In-memory storage for OTPs (in production, use a database)
-const otpStore: { [key: string]: { otp: string; expiry: number } } = {};
-
-export const handleSendOTP = async(req:Request,res:Response)=>{
-  const { email } = req.body;
-
+/**
+ * Handle OTP Sending
+ */
+export const handleSendOTP = async (req: Request, res: Response) => {
   try {
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+    const { email } = req.body;
 
-    // Store OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = Date.now() + 10 * 60 * 1000;
+
     otpStore[email] = { otp, expiry };
 
-    // Send email
     await transporter.sendMail({
       from: process.env.SMTP_USER,
       to: email,
       subject: 'Your OTP for Signup',
-      text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
       html: `<p>Your OTP is <strong>${otp}</strong>. It will expire in 10 minutes.</p>`,
     });
 
-    res.json({ message: 'OTP sent successfully' });
+    res.status(200).json({ message: 'OTP sent successfully' });
   } catch (error) {
     console.error('Error sending OTP:', error);
     res.status(500).json({ error: 'Failed to send OTP' });
   }
 };
 
-export const handleVerifyOTP = async(req:Request,res:Response)=>{
+/**
+ * Handle OTP Verification
+ */
+export const handleVerifyOTP = async (req: Request, res: Response) => {
   const { email, otp } = req.body;
 
   const storedOTP = otpStore[email];
@@ -230,9 +253,6 @@ export const handleVerifyOTP = async(req:Request,res:Response)=>{
     return res.status(400).json({ error: 'Invalid or expired OTP' });
   }
 
-  // Clear the OTP from storage
   delete otpStore[email];
-
-  res.json({ message: 'OTP verified successfully' });
+  res.status(200).json({ message: 'OTP verified successfully' });
 };
-

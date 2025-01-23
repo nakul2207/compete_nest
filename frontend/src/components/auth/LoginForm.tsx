@@ -18,18 +18,16 @@ export default function LoginForm() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch();
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     
     try {
-      const response = await LoginUser(email,password);
+      const data = await LoginUser(email,password);
       dispatch(setIsAuthenticated(true));
-      dispatch(setUser(response.data.user));
-      localStorage.setItem('token', response.data.token)
+      dispatch(setUser(data.user));
       toast.success('Successfully logged in!')
-      navigate('/problems')
+      navigate(-1)
     } catch (error: any) {
       console.error('Login failed:', error)
       if (error.response) {

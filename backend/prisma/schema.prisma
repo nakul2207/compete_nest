@@ -40,7 +40,7 @@ model Problem {
   outputFormat      String
   ownerCodeLanguage Int
   contestProblems   ContestProblem[]
-  user              User             @relation("UserProblems", fields: [userId], references: [id])
+  user              User             @relation("UserProblems", fields: [userId], references: [id], onDelete: Cascade)
   queries           QueryTable[]
   submissions       Submission[]
   testcases         Testcase[]
@@ -67,7 +67,7 @@ model Testcase {
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   submittedTests SubmittedTestcase[]
-  problem        Problem             @relation(fields: [problemId], references: [id])
+  problem        Problem             @relation(fields: [problemId], references: [id], onDelete: Cascade)
 }
 
 model Submission {
@@ -84,8 +84,8 @@ model Submission {
   time               Float               @default(0)
   acceptedTestcases  Int                 @default(0)
   status             Int                 @default(2)
-  problem            Problem             @relation(fields: [problemId], references: [id])
-  user               User                @relation("UserSubmissions", fields: [userId], references: [id])
+  problem            Problem             @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user               User                @relation("UserSubmissions", fields: [userId], references: [id], onDelete: Cascade)
   submittedTests     SubmittedTestcase[]
 }
 
@@ -99,8 +99,8 @@ model SubmittedTestcase {
   memory       Float?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-  submission   Submission @relation(fields: [submissionId], references: [id])
-  testcase     Testcase   @relation(fields: [testcaseId], references: [id])
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  testcase     Testcase   @relation(fields: [testcaseId], references: [id], onDelete: Cascade)
 }
 
 model QueryTable {
@@ -113,8 +113,8 @@ model QueryTable {
   updatedAt  DateTime   @updatedAt
   title      String
   company    Company    @relation(fields: [companyId], references: [id])
-  problem    Problem    @relation(fields: [problemId], references: [id])
-  topic      Topic      @relation(fields: [topicId], references: [id])
+  problem    Problem    @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  topic      Topic      @relation(fields: [topicId], references: [id], onDelete: Cascade)
 }
 
 model Contest {
@@ -124,11 +124,11 @@ model Contest {
   status              ContestStatus         @default(Upcoming)
   problems            String[]
   startTime           DateTime              @default(now())
-  duration            Int                   @default(0)
   userId              String
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
-  createdBy           User                  @relation("UserContests", fields: [userId], references: [id])
+  endTime             DateTime              @default(now())
+  createdBy           User                  @relation("UserContests", fields: [userId], references: [id], onDelete: Cascade)
   contestParticipants ContestParticipants[]
   contestProblems     ContestProblem[]
 }
@@ -140,8 +140,8 @@ model ContestProblem {
   score     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  contest   Contest  @relation(fields: [contestId], references: [id])
-  problem   Problem  @relation(fields: [problemId], references: [id])
+  contest   Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  problem   Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
 }
 
 model ContestParticipants {
@@ -152,8 +152,8 @@ model ContestParticipants {
   rank      Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  contest   Contest  @relation(fields: [contestId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  contest   Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Role {

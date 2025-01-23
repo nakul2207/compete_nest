@@ -9,6 +9,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle2,Eye, EyeOff } from 'lucide-react'
 import { Progress } from "@/components/ui/progress"
 import { SendOTP,VerifyOTP,SignUpUser } from '@/api/authApi'
+import {setIsAuthenticated, setUser} from "@/redux/slice/authSlice.tsx";
+import {useAppDispatch} from "@/redux/hook.ts";
 
 export default function SignupForm() {
   const [email, setEmail] = useState('')
@@ -21,6 +23,7 @@ export default function SignupForm() {
   const [isOtpSent, setIsOtpSent] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const navigate = useNavigate()
+  const dispatch = useAppDispatch();
 
 
   const checkPasswordStrength = (password: string) => {
@@ -70,10 +73,11 @@ export default function SignupForm() {
     setIsLoading(true)
     
     try {
-      const response = await SignUpUser(email,password,name);
-      localStorage.setItem('token', response.data.token)
+      const data = await SignUpUser(email,password,name);
+      dispatch(setIsAuthenticated(true));
+      dispatch(setUser(data.user));
       toast.success('Account created successfully!')
-      navigate('/problems')
+      navigate(-1);
     } catch (error) {
       console.error('Signup failed:', error)
       toast.error('Signup failed. Please try again.')

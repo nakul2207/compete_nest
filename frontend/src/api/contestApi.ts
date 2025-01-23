@@ -8,8 +8,8 @@ const headers = {
 
 export const createContest = async (Contest: ContestFormData) =>{
     const {data} = await axios.post(`${server_url}/api/contest/create`, Contest, {
-
         headers,
+        withCredentials: true
     });
 
     return data;
