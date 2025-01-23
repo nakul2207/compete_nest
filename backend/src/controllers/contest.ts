@@ -143,17 +143,47 @@ const handleGetContestByID = async(req:Request, res:Response)=>{
     }
 }
 
-const handleGetAll = async(req:Request, res:Response)=>{
+const handleGetAll = async (req: Request, res: Response) => {
     try {
-        //get all contests
-        const contests = prisma.contest.findMany({});
+        // Get all contests
+        const contests = await prisma.contest.findMany();
+        console.log(contests);
 
-        res.status(200).json({ message: 'Contests fetched successfully', contests});
+        // Get all the user's contests from contestParticipants
+        const userContests = await prisma.contestParticipants.findMany({
+            where: {
+                userId: req.user?.id, // Ensure req.user exists; otherwise, handle unauthorized error
+            },
+            select: {
+                contestId: true,
+            },
+        });
+
+        console.log(userContests);
+
+        // Create a Set of attended contest IDs for quick lookup
+        const userAttended = new Set<string>(userContests.map((uc) => uc.contestId));
+
+        // Add isAttended field to each contest
+        const enrichedContests = contests.map((contest) => ({
+            ...contest,
+            attended: userAttended.has(contest.id),
+        }));
+
+        console.log(enrichedContests);
+
+        res.status(200).json({
+            message: "Contests fetched successfully",
+            contests: enrichedContests,
+        });
     } catch (error) {
-        console.error('Error fetching contest:', error);
-        res.status(500).json({ message: 'Error fetching contest', error });
+        console.error("Error fetching contests:", error);
+        res.status(500).json({
+            message: "Error fetching contests",
+            error: error.message,
+        });
     }
-}
+};
 
 const handleContestRegister = async (req: Request, res: Response)=>{
     try {

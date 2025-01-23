@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
 import { Calendar, Clock, Users } from 'lucide-react'
+import {getAllContests} from "@/api/contestApi.ts";
 
 // Dummy data for contests
 const futureContests = [
@@ -19,21 +20,33 @@ const pastContests = [
 ]
 
 export function ContestsPage() {
-  const [pastContestFilter, setPastContestFilter] = useState("all")
+  const [contests, setContests] = useState([]);
+  const [filter, setFilter] = useState("all");
 
-  const filteredPastContests = pastContests.filter(contest => 
-    pastContestFilter === "all" || 
-    (pastContestFilter === "attended" && contest.attended) ||
-    (pastContestFilter === "not-attended" && !contest.attended)
-  )
+  // const filteredPastContests = pastContests.filter(contest =>
+  //   pastContestFilter === "all" ||
+  //   (pastContestFilter === "attended" && contest.attended) ||
+  //   (pastContestFilter === "not-attended" && !contest.attended)
+  // )
 
-  const ContestCard = ({ contest, isPast = false }) => (
-    <Card className="mb-4 hover:shadow-md transition-shadow">
+  useEffect(() => {
+    getAllContests().then((data) => {
+      console.log(data);
+      setContests(data.contests);
+    }).catch((err) => console.log(err))
+  }, [])
+
+  const ContestCard = ({ contest, isPast = false }) => {
+    console.log(contest);
+    const date = new Date(contest.startTime);
+
+    return <Card className="mb-4 hover:shadow-md transition-shadow">
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
-          <span>{contest.name}</span>
+          <span>{contest.title}</span>
           {isPast && (
-            <span className={`text-sm px-2 py-1 rounded ${contest.attended ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+              <span
+                  className={`text-sm px-2 py-1 rounded ${contest.attended ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
               {contest.attended ? 'Attended' : 'Not Attended'}
             </span>
           )}
@@ -42,19 +55,19 @@ export function ContestsPage() {
       <CardContent>
         <div className="grid grid-cols-2 gap-4">
           <div className="flex items-center">
-            <Calendar className="mr-2 h-4 w-4" />
-            <span>{contest.date}</span>
+            <Calendar className="mr-2 h-4 w-4"/>
+            <span>{date.getDate()}</span>
           </div>
           <div className="flex items-center">
-            <Clock className="mr-2 h-4 w-4" />
-            <span>{contest.time} ({contest.duration})</span>
+            <Clock className="mr-2 h-4 w-4"/>
+            <span>{date.getTime()}</span>
           </div>
           <div className="flex items-center">
-            <Users className="mr-2 h-4 w-4" />
-            <span>{contest.participants.toLocaleString()} participants</span>
+            <Users className="mr-2 h-4 w-4"/>
+            {/*<span>{contest.participants.toLocaleString()} participants</span>*/}
           </div>
           <div>
-            <span>{contest.questions} questions</span>
+            <span>{contest.problems.length} questions</span>
           </div>
         </div>
         <Button className="w-full mt-4">
@@ -62,7 +75,7 @@ export function ContestsPage() {
         </Button>
       </CardContent>
     </Card>
-  )
+  }
 
   return (
     <div className="container mx-auto py-8">
@@ -74,14 +87,17 @@ export function ContestsPage() {
         </TabsList>
         <TabsContent value="upcoming">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {futureContests.map(contest => (
-              <ContestCard key={contest.id} contest={contest} />
-            ))}
+            {contests.filter(contest => {
+                  if (contest.status !== 'Ended') {
+                    return <ContestCard key={contest.id} contest={contest}/>
+                  }
+                })
+            }
           </div>
         </TabsContent>
         <TabsContent value="past">
           <div className="mb-4">
-            <Select onValueChange={setPastContestFilter} defaultValue="all">
+            <Select onValueChange={setFilter} defaultValue="all">
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filter contests" />
               </SelectTrigger>
@@ -93,9 +109,12 @@ export function ContestsPage() {
             </Select>
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredPastContests.map(contest => (
-              <ContestCard key={contest.id} contest={contest} isPast={true} />
-            ))}
+            {contests.filter(contest => {
+              console.log(contest);
+              if (contest.status === 'Ended') {
+                return <ContestCard key={contest.id} contest={contest} isPast={true}/>
+              }
+            })}
           </div>
         </TabsContent>
       </Tabs>

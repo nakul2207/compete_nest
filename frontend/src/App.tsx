@@ -55,7 +55,9 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/problems" element={<ProblemsPage />} />
                 <Route path="/problems/:problem_id" element={<CompeteNestProblemPage />} />
-                <Route path="/contests" element={<ContestsPage/>} />
+                  <Route element={<ProtectedRoute allowedRoles={['User', 'Organiser', 'Admin']} />}>
+                    <Route path="/contests" element={<ContestsPage/>} />
+                  </Route>
                 <Route path="/compiler" element={<OnlineCompiler/>} />
                 <Route path="/admin" element={<AdminPortal />}>
                     <Route path="users" element={<ManageUsers />} />

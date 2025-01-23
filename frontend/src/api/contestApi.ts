@@ -7,11 +7,30 @@ const headers = {
 }
 
 export const createContest = async (Contest: ContestFormData) =>{
-    const {data} = await axios.post(`${server_url}/api/contest/create`, Contest, {
-        headers,
-        withCredentials: true
-    });
+    try{
+        const {data} = await axios.post(`${server_url}/api/contest/create`, Contest, {
+            headers,
+            withCredentials: true
+        });
+    
+        return data;
+    }catch(error){
+        console.error('Error creating the contest', error);
+        throw new Error('Failed to create contest');
+    }
+}
 
-    return data;
+export const getAllContests = async() => {
+    try{
+        const {data} = await axios.get(`${server_url}/api/contest/all`, {
+            headers,
+            withCredentials: true
+        })
+
+        return data;
+    }catch(error){
+        console.error('Error fetching all the contest', error);
+        throw new Error('Failed to get the contests');
+    }
 }
 
