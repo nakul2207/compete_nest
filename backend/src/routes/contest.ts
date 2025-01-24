@@ -8,7 +8,6 @@ contestRouter.route('/:id').delete(authenticate as any, authorize(['Organiser', 
 contestRouter.route('/:id').put(authenticate as any, authorize(['Organiser', 'Admin']) as any, handleEditContest as any);
 contestRouter.route('/all').get(authenticate as any, handleGetAll as any);
 contestRouter.route('/:id').get(authenticate as any, handleGetContestByID as any);
-contestRouter.route('/:id/register').get(handleContestRegister as any);
-contestRouter.route('/:id/unregister').get(handleContestUnregister as any);
+contestRouter.route('/:id/register').get(authenticate as any, handleContestRegister as any);
 
 export default contestRouter;

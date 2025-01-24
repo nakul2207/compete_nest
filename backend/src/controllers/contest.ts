@@ -147,7 +147,6 @@ const handleGetAll = async (req: Request, res: Response) => {
     try {
         // Get all contests
         const contests = await prisma.contest.findMany();
-        console.log(contests);
 
         // Get all the user's contests from contestParticipants
         const userContests = await prisma.contestParticipants.findMany({
@@ -159,7 +158,6 @@ const handleGetAll = async (req: Request, res: Response) => {
             },
         });
 
-        console.log(userContests);
 
         // Create a Set of attended contest IDs for quick lookup
         const userAttended = new Set<string>(userContests.map((uc) => uc.contestId));
@@ -170,7 +168,6 @@ const handleGetAll = async (req: Request, res: Response) => {
             attended: userAttended.has(contest.id),
         }));
 
-        console.log(enrichedContests);
 
         res.status(200).json({
             message: "Contests fetched successfully",
@@ -187,38 +184,57 @@ const handleGetAll = async (req: Request, res: Response) => {
 
 const handleContestRegister = async (req: Request, res: Response)=>{
     try {
-        //register user for the contest
+        //register/unregister user for the contest
         const contestId = req.params.id;
-        const userId = "123";
+        const {register} = req.query;
 
-        //check for the contest timing the user can only register before the start time
+        //check for the contest timing the user can only register/unregister before the start time
+        const contest = await prisma.contest.findUnique({
+            where: {
+                id: contestId
+            }
+        });
+
+        if(!contest){
+            res.status(404).json({
+                message: "No such contest found."
+            })
+        }
+
+        if(contest && contest?.startTime && contest?.startTime < new Date()){
+            res.status(400).json({
+                message: "Contest has already started."
+            })
+        }
 
         //create a record for the user in the ContestParticipants table to register
+        if(register === "true"){
+            await prisma.contestParticipants.create({
+                data: {
+                    contestId: contestId,
+                    userId: req.user?.id
+                }
+            })
 
+            return res.status(200).json({
+                message: "Contest registration successful. You will be notified 10 minutes before starting the contest.",
+            });
+        }else{
+            await prisma.contestParticipants.deleteMany({
+                where: {
+                    contestId: contestId,
+                    userId: req.user?.id
+                }
+            })
 
-        res.status(200).json({ message: 'Contest registration successful. You will be notified 10 minutes before starting the contest.', });
+            return res.status(200).json({
+                message: "Contest unregistration successful.",
+            });
+        }
     } catch (error) {
-        console.error('Error in registering:', error);
-        res.status(500).json({ message: 'Error in registering. Please try after sometime', error });
+        console.error('Error in handling registration:', error);
+        res.status(500).json({ message: 'Error in handling registration. Please try after sometime', error });
     }
 }
 
-const handleContestUnregister = async (req: Request, res: Response)=>{
-    try {
-        //register user for the contest
-        const contestId = req.params.id;
-        const userId = "123";
-
-        //check for the contest timing the user can only un-register before the start time
-
-        //create a record for the user in the ContestParticipants table to unregister
-
-
-        res.status(200).json({ message: 'Contest unregister successful.', });
-    } catch (error) {
-        console.error('Error in registering:', error);
-        res.status(500).json({ message: 'Error in registering. Please try after sometime', error });
-    }
-}
-
-export {handleCreateContest, handleDeleteContest, handleEditContest, handleGetAll, handleGetContestByID, handleContestRegister, handleContestUnregister, handleStartContest, handleEndContest};
+export {handleCreateContest, handleDeleteContest, handleEditContest, handleGetAll, handleGetContestByID, handleContestRegister, handleStartContest, handleEndContest};

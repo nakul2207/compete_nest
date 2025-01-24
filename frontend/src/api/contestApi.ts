@@ -34,3 +34,16 @@ export const getAllContests = async() => {
     }
 }
 
+export const handleRegistration = async (contestId: string, isRegister: boolean) => {
+    try{
+        const {data} = await axios.get(`${server_url}/api/contest/${contestId}/register?register=${isRegister}`, {
+            headers,
+            withCredentials: true
+        })
+
+        return data;
+    }catch(error){
+        console.error('Error registering for the contest', error);
+        throw new Error('Failed to register for the contest');
+    }
+}
