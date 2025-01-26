@@ -124,7 +124,7 @@ const handleEditContest = async (req: Request, res: Response) => {
 const handleGetContestByID = async(req:Request, res:Response)=>{
     try {
         //get contest by id logic
-        const requiredContest = prisma.contest.findUnique({
+        const requiredContest = await prisma.contest.findUnique({
             where: {
                 id: req.params.id,
             },

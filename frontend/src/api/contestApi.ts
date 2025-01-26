@@ -19,6 +19,19 @@ export const createContest = async (Contest: ContestFormData) =>{
         throw new Error('Failed to create contest');
     }
 }
+export const getContestById = async(id: string|undefined) => {
+    try{
+        const {data} = await axios.get(`${server_url}/api/contest/${id}`, {
+            headers,
+            withCredentials: true
+        })
+
+        return data;
+    }catch(error){
+        console.error('Error fetching the contest', error);
+        throw new Error('Failed to get the contest');
+    }
+}
 
 export const getAllContests = async() => {
     try{
