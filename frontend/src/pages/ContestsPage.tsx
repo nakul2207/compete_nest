@@ -3,12 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
-import { Calendar, Clock, Users } from 'lucide-react'
+import { Calendar, Clock } from 'lucide-react'
 import {getAllContests, handleRegistration} from "@/api/contestApi.ts";
-import { formatDistanceToNow, format } from 'date-fns'
 import { Link } from 'react-router-dom'
-
-// Dummy data for contests
 
 interface Contest {
   id: string;
@@ -20,15 +17,10 @@ interface Contest {
   status: string;
   attended: boolean;
 }
+
 export function ContestsPage() {
   const [contests, setContests] = useState<Contest[]>([]);
   const [filter, setFilter] = useState("all");
-
-  // const filteredPastContests = pastContests.filter(contest =>
-  //   pastContestFilter === "all" ||
-  //   (pastContestFilter === "attended" && contest.attended) ||
-  //   (pastContestFilter === "not-attended" && !contest.attended)
-  // )
 
   useEffect(() => {
     getAllContests().then((data) => {
@@ -36,17 +28,6 @@ export function ContestsPage() {
       setContests(data.contests);
     }).catch((err) => console.log(err))
   }, [])
-
-  const formatSubmissionTime = (createdAt: string) => {
-    const submissionDate = new Date(createdAt)
-    const now = new Date()
-
-    if (submissionDate.toDateString() === now.toDateString()) {
-        return format(submissionDate, 'HH:mm')
-    } else {
-        return formatDistanceToNow(submissionDate, { addSuffix: true })
-    }
-  }
 
   const handleRegister = (contestId: string, isRegister: boolean) => {
     handleRegistration(contestId, isRegister).then((data) => {
@@ -163,9 +144,9 @@ export function ContestsPage() {
             {contests
               .filter(contest => {
                 if (filter === 'attended') {
-                  return contest.status === 'Ended' && contest.attended === true;
+                  return contest.status === 'Ended' && contest.attended;
                 } else if (filter === 'not-attended') {
-                  return contest.status === 'Ended' && contest.attended === false;
+                  return contest.status === 'Ended' && !contest.attended;
                 } else {
                   return contest.status === 'Ended';
                 }
