@@ -79,6 +79,16 @@ const handleCreateContest = async(req:Request, res:Response)=>{
                         score: problem.score
                     }
                 })
+
+                //add the contestid field to the problem table
+                await prisma.problem.update({
+                    where: {
+                        id: problem.id
+                    },
+                    data: {
+                        contestId: contest.id
+                    }
+                })
             })
         );
 

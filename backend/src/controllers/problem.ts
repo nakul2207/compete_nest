@@ -293,7 +293,7 @@ const handleCreateProblem  = async (req: Request, res:Response) =>{
     }
 }
 
-const handleGetAllProblem =  async (req: Request, res:Response) => {
+const handleAdminGetAllProblem =  async (req: Request, res:Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
@@ -303,10 +303,124 @@ const handleGetAllProblem =  async (req: Request, res:Response) => {
             take: limit,
             distinct: ['problemId'],
         });
+
         // console.log(problems);
         // const totalPages = Math.ceil(problems.length / limit);
         res.status(200).json({
             problems,
+            // totalPages
+        });
+    }catch (error) {
+        console.error('Error saving problem:', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+}
+
+const handleAdminGetFilterProblems = async (req: Request, res: Response) => {
+    try {
+        const {
+            searchTerm,
+            difficulty,
+            topic,
+            company,
+            page,
+            pageSize,
+        } = req.query;
+
+        const pageNum = parseInt(page as string, 10) || 1;
+        const limit = parseInt(pageSize as string, 10) || 10;
+        const offset = (pageNum - 1) * limit;
+
+        const filter: any = {};
+
+        if (searchTerm) {
+            filter.title = { contains: searchTerm, mode: "insensitive" };
+        }
+
+        if (difficulty) {
+            filter.difficulty = difficulty as string; // Assuming difficulty is an enum
+        }
+
+        if (topic) {
+            const topics = Array.isArray(topic) ? topic : [topic];
+            filter.topicId = { in: topics };
+        }
+
+        if (company) {
+            const companies = Array.isArray(company) ? company : [company];
+            filter.companyId = { in: companies };
+        }
+
+        // if (
+        //     !searchTerm &&
+        //     !difficulty &&
+        //     !topic &&
+        //     !company
+        // ) {
+        //     return res.status(200).json({
+        //         problems: [],
+        //         totalPages: 0,
+        //         currentPage: pageNum,
+        //     });
+        // }
+
+        // Fetch filtered problems with pagination
+        const problems = await prisma.queryTable.findMany({
+            where: filter,
+            skip: offset,
+            take: limit,
+            distinct: ['problemId'],
+        });
+
+        // const totalPages = Math.ceil(problems.length / limit);
+
+        res.status(200).json({
+            problems,
+            // totalPages,
+            currentPage: pageNum,
+        });
+    } catch (error) {
+        console.error("Error fetching problems:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+const handleGetAllProblem =  async (req: Request, res:Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    //only show the problems that are not in the contest        
+    try{
+        
+        const problems = await prisma.queryTable.findMany({
+            skip,
+            take: limit,
+            distinct: ['problemId'],
+        });
+
+        //filter out the problems from problems table and only return the problems that are not in the contest using map
+        //extract all teh problems which has contestId set and store in a set
+        const contestProblems = await prisma.problem.findMany({
+            where:{
+                contestId: {
+                    not: null
+                }
+            },
+            select: {
+                id: true
+            }
+        })
+
+        const contestProblemsSet = new Set(contestProblems.map(problem => problem.id));
+
+        //filter out the problems from problems table and only return the problems that are not in the contest using map
+        const filteredProblems = problems.filter(problem => !contestProblemsSet.has(problem.problemId));
+
+        // console.log(problems);
+        // const totalPages = Math.ceil(problems.length / limit);
+        res.status(200).json({
+            problems: filteredProblems,
             // totalPages
         });
     }catch (error) {
@@ -370,6 +484,24 @@ const handleGetFilterProblems = async (req: Request, res: Response) => {
             take: limit,
             distinct: ['problemId'],
         });
+
+        //filter out the problems from problems table and only return the problems that are not in the contest using map
+        //extract all teh problems which has contestId set and store in a set
+        const contestProblems = await prisma.problem.findMany({
+            where:{
+                contestId: {
+                    not: null
+                }
+            },
+            select: {
+                id: true
+            }
+        })
+
+        const contestProblemsSet = new Set(contestProblems.map(problem => problem.id));
+
+        //filter out the problems from problems table and only return the problems that are not in the contest using map
+        const filteredProblems = problems.filter(problem => !contestProblemsSet.has(problem.problemId));
 
         // const totalPages = Math.ceil(problems.length / limit);
 

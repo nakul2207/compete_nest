@@ -176,7 +176,7 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
             handleTab("results");
 
             // Verify that submissions array is populated
-            const base_url: string = "https://c0e7-2409-40d2-10-6766-a5e6-5a26-7d04-4bc1.ngrok-free.app";
+            const base_url: string = "https://9f76-59-153-99-135.ngrok-free.app";
             const submissions = input.map((inputValue, index) => ({
                 source_code: btoa(code),
                 language_id: problem.languageId,

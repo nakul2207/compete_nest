@@ -24,14 +24,25 @@ const handleStartContest = async (contestId: string) => {
 
 const handleEndContest = async (contestId: string) => {
     try {
-        // Update the contest's status to Ongoing
-        await prisma.contest.update({
+        // Update the contest's status to Ended
+        const contest =await prisma.contest.update({
             where: {
-                id: contestId, // Use contestId to identify the contest
+                id: contestId,
             },
             data: {
-                status: "Ended", // Update status to Ended
+                status: "Ended",
             },
+            select: {
+                problems: true
+            }
+        });
+
+        //update the problems table to remove the contestId
+        contest.problems.forEach(async (problemId) => {
+            await prisma.problem.update({
+                where: { id: problemId },
+                data: { contestId: null }
+            });
         });
     } catch (error) {
         console.error("Error ending contest:", error);
