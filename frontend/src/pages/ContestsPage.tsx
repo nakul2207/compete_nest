@@ -97,11 +97,16 @@ export function ContestsPage() {
                 {contest.attended ? 'Unregister' : 'Register'}
               </Button>
             ) : (
-              <Link to={`/contest/${contest.id}`}>
-                <Button>
-                  Open
+              contest.attended ? (
+                <Link to={`/contest/${contest.id}`}>
+                  <Button>
+                    Open
                 </Button>
-              </Link>
+              </Link>):(
+                <Button disabled>
+                  You are not registered for this contest
+                </Button>
+              )
             )
           )}
         </div>
