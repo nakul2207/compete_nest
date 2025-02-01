@@ -16,6 +16,7 @@ import {
 import {createBatchSubmission, createSubmission, getFileData, submitProblem} from "../api/problemApi.ts";
 
 import {io} from "socket.io-client";
+import { toast } from "sonner";
 const server_url = import.meta.env.VITE_SERVER_URL;
 const socket = io(server_url, { transports: ["websocket"] });
 
@@ -24,7 +25,12 @@ interface CodeEditorProps {
     isFullScreen: boolean
     handleFullScreen: (isFullScreen: boolean) => void
 }
-
+interface User {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  }
 type Language = {
     name: string;
     is_archived: boolean;
@@ -44,6 +50,7 @@ const monacoLanguageMap: { [key: string]: string } = {
 }
 
 export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEditorProps) {
+    const {user} = useAppSelector((state) => state.auth);  
     const code = useAppSelector((state) => state.problem.code);
     const problem  = useAppSelector((state) => state.problem);
     const languageId =  useAppSelector((state) => state.problem.languageId);
@@ -149,8 +156,14 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
 
     const submitCode = async () => {
         try {
-            const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id: problem.id, code: btoa(code),  language_id: parseInt(problem.languageId)});
+            if(!user){
+                //toast
+                console.log("Please login to submit code");
+                toast.error("Please login to submit code");
+                return;
+            }
 
+            const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id: problem.id, code: btoa(code),  language_id: parseInt(problem.languageId)});
             // Use Promise.all to fetch data concurrently for input and output
             const input: string[] = await Promise.all(input_urls.map((url: string) => getFileData(url)));
             const output: string[] = await Promise.all(exp_output_urls.map((url: string) => getFileData(url)));
@@ -165,7 +178,7 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
                 problemId: problem.id,
                 language: problem.languageId,
                 userCode: btoa(code),
-                userId: "123",
+                userId: user?.id,
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
             }

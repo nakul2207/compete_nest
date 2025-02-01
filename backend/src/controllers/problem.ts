@@ -110,7 +110,7 @@ const handleSubmitProblem = async (req:Request, res:Response) => {
     try {
         const { code, language_id } = req.body;
         const problem_id: string = req.params.id;
-        const user_id: string = "123";
+        const user_id: string = req.user.id;
 
         //getting all the testcases for the given problem
         const testcases = await prisma.testcase.findMany({
@@ -190,7 +190,7 @@ const handleRunProblem = async (req: Request, res: Response) => {
 }
 
 const handleCreateProblem  = async (req: Request, res:Response) =>{
-    const userId = "123";
+    const userId = req.user.id;
     const {
         title,
         description,
@@ -568,13 +568,18 @@ const handleGetAllExampleTestcases = async (req: Request, res: Response) => {
 
 const handleGetSubmissions = async (req: Request, res: Response) => {
     try{
-        const userId = "123";
+        const userId = req.user.id;
+        console.log(userId);
         const problemId = req.params.id;
-
+        
+        //fetch all the submissions in the descending order of createdAt
         const submissions = await prisma.submission.findMany({
             where:{
                 userId,
                 problemId
+            },
+            orderBy: {
+                createdAt: 'desc'
             }
         })
 
@@ -589,7 +594,6 @@ const handleGetSubmissions = async (req: Request, res: Response) => {
 }
 
 const handleEditProblem = async (req: Request, res: Response) => {
-    const userId = "123"; // Replace with actual user authentication logic
     const {
         problemId, // Retrieve problem ID from the request body
         description,
@@ -726,4 +730,4 @@ const handleDeleteProblem = async (req: Request, res: Response) => {
     }
 };
 
-export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleEditProblem, handleDeleteProblem, handleGetAllProblem, handleGetProblemById, handleGetAllExampleTestcases, handleGetSubmissions, handleGetFilterProblems };
+export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleEditProblem, handleDeleteProblem, handleGetAllProblem, handleGetProblemById, handleGetAllExampleTestcases, handleGetSubmissions, handleGetFilterProblems, handleAdminGetAllProblem, handleAdminGetFilterProblems };

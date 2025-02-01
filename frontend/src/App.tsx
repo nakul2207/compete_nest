@@ -47,9 +47,9 @@ function App() {
             <main className="flex-grow">
               <Routes>
                 <Route path="/auth" element={<Auth />} />
-                <Route element={<ProtectedRoute allowedRoles={['Admin','Organiser','User']} />}>
+                {/* <Route element={<ProtectedRoute allowedRoles={['Admin','Organiser','User']} />}>
                   <Route path="/problems" element={<ProblemsPage/>} />
-                </Route>
+                </Route> */}
                 <Route element={<ProtectedRoute allowedRoles={['Organiser', 'Admin']} />}>
                   <Route path="/admin" element={<AdminPortal />} />
                 </Route>

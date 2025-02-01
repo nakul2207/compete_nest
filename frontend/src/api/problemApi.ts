@@ -23,7 +23,9 @@ export const createBatchSubmission = async (inputData: { submissions: any[] }) =
         const { data } = await axios.post(
             `${hosted_judge0_base_url}/submissions/batch?base64_encoded=true`,
             inputData,
-            { headers }
+            { 
+                headers
+             }
         );
 
         return data;
@@ -50,6 +52,7 @@ export const createRunSubmission = async ({ problem_id, uid }: {problem_id: stri
 export const getBatchSubmission = async (tokens: string) => {
     const {data} = await axios.get(`${judge0_base_url}/submissions/batch/`,{
         headers,
+        withCredentials: true,
         params: {
             base64_encoded: true,
             tokens
@@ -72,7 +75,7 @@ export const createSubmission = async (inputData: object) =>{
 export const getSubmission = async (token: string) => {
     const {data} = await axios.get(`${hosted_judge0_base_url}/submissions/${token}`,{
         headers,
-        params
+        params,
     })
 
     return data;
@@ -83,6 +86,7 @@ export const submitProblem = async ({ problem_id, code, language_id }: { problem
         // console.log(`${server_url}/api/problem/${problem_id}/submit`);
         const { data } = await axios.post(`${server_url}/api/problem/${problem_id}/submit`, { code, language_id }, {
             headers,
+            withCredentials: true
         });
 
         return data;
@@ -110,7 +114,10 @@ export const runProblem = async (inputData: { submissions: any[] }) =>{
 
 export const getProblemSubmissions = async(problem_id: string) => {
     try {
-        const {data} = await axios.get(`${server_url}/api/problem/${problem_id}/submissions`);
+        const {data} = await axios.get(`${server_url}/api/problem/${problem_id}/submissions`, {
+            headers,
+            withCredentials: true
+        });
         return data.submissions;
     }catch(error){
         console.error('Error fetching all the problems', error);
@@ -134,7 +141,10 @@ export const saveProblem = async (formData: ProblemFormData) => {
         // Send the data to the backend API
         const {data} = await axios.post(`${server_url}/api/problem/create`, {
             ...formData,
-        }, {headers}
+        }, {
+            headers,
+            withCredentials: true
+        }
     );
         return data;
     } catch (error) {
@@ -189,7 +199,10 @@ export const fetchProblems = async (searchTerm:string, difficultyFilter:string, 
 
 export const getProblemById = async(problem_id: string) => {
     try {
-        const {data} = await axios.get(`${server_url}/api/problem/${problem_id}`);
+        const {data} = await axios.get(`${server_url}/api/problem/${problem_id}`, {
+            headers,
+            withCredentials: true
+        });
         return data.problem;
     }catch(error){
         console.error('Error fetching all the problems', error);
@@ -211,7 +224,10 @@ export const editProblem = async(formData: EditProblemFormData)=>{
     try {
         const {data} = await axios.patch(`${server_url}/api/problem/edit`, {
             ...formData,
-        }, {headers}
+        }, {
+            headers,
+            withCredentials: true
+        }
     );
         return data;
     } catch (error) {
@@ -222,7 +238,10 @@ export const editProblem = async(formData: EditProblemFormData)=>{
 
 export const deleteProblem = async(problemId: string)=>{
     try {
-        const {data} = await axios.delete(`${server_url}/api/problem/${problemId}`, {headers});
+        const {data} = await axios.delete(`${server_url}/api/problem/${problemId}`, {
+            headers,
+            withCredentials: true
+        });
         return data;
     } catch (error) {
         console.error('Error deleting problem:', error);
