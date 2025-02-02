@@ -146,7 +146,15 @@ const handleGetContestByID = async(req:Request, res:Response)=>{
             })
         }
 
-        res.status(200).json({ message: 'Contest fetched successfully', contestData: requiredContest });
+        //check if the user is registered for the contest
+        const isRegistered = await prisma.contestParticipants.findFirst({
+            where: {
+                contestId: req.params.id,
+                userId: req.user?.id
+            }
+        })
+
+        res.status(200).json({ message: 'Contest fetched successfully', contestData: {...requiredContest, registered: isRegistered ? true : false}});
     } catch (error) {
         console.error('Error fetching contest:', error);
         res.status(500).json({ message: 'Error fetching contest', error });

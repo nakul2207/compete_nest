@@ -60,7 +60,7 @@ export const ContestTimer: React.FC<ContestTimerProps> = ({ startTime, endTime, 
 
   return (
     <div className="w-fit space-y-2">
-      <div className="text-xl font-semibold text-primary flex items-center gap-2">
+      <div className="font-semibold text-primary flex items-center gap-2">
         <Timer className="w-5 h-5" />
         <span className={status.color}>{status.text}:</span>
         {timeRemaining}

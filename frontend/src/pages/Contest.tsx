@@ -28,6 +28,7 @@ interface Contest {
   createdAt: string
   updatedAt: string
   userId: string
+  registered: boolean
 }
 
 interface ContestStatus {
@@ -51,8 +52,8 @@ const Contest: React.FC = () => {
     const fetchContest = async () => {
       setIsLoading(true)
       const contestData = await getContestById(contest_id);
-      setContest(contestData.contestData)
-      if (new Date(contestData.contestData.endTime) < new Date()) {
+      setContest(contestData)
+      if (new Date(contestData.endTime) < new Date()) {
         setShowEndedPopup(true);
       }
       setIsLoading(false)
@@ -224,7 +225,7 @@ const Contest: React.FC = () => {
                       asChild 
                       className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
                     >
-                      <Link to={`/problems/${problemId}`} className="flex items-center justify-center gap-2">
+                      <Link to={`/contest/${contest_id}/problem/${problemId}`} className="flex items-center justify-center gap-2">
                         Solve Problem
                         <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </Link>

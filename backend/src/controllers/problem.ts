@@ -112,6 +112,28 @@ const handleSubmitProblem = async (req:Request, res:Response) => {
         const problem_id: string = req.params.id;
         const user_id: string = req.user.id;
 
+        const problem = await prisma.problem.findUnique({
+            where: {
+                id: problem_id
+            }
+        });
+
+        if(problem?.contestId){
+            const contest = await prisma.contest.findUnique({
+                where: {
+                    id: problem.contestId
+                },
+                select: {
+                    startTime: true,
+                    endTime: true
+                }
+            });
+
+            if(contest?.startTime && contest.startTime > new Date()){
+                return res.status(400).json({error: "Contest has not started yet"});
+            }
+        }
+        
         //getting all the testcases for the given problem
         const testcases = await prisma.testcase.findMany({
             where: {
@@ -153,7 +175,13 @@ const handleSubmitProblem = async (req:Request, res:Response) => {
                     }
                 })
 
-                const callback_url = `/api/submission/submitted_testcase/${sub_testcase_id.id}`;
+                let callback_url = `/api/submission/submitted_testcase/${sub_testcase_id.id}`;
+
+                if(problem?.contestId){
+                    callback_url = `/api/submission/contest/${problem.contestId}/submitted_testcase/${sub_testcase_id.id}`;
+                }
+
+                console.log(callback_url);
 
                 input_urls.push(input_url);
                 exp_output_urls.push(exp_output_url);
@@ -528,7 +556,7 @@ const handleGetProblemById = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Problem not found.' });
         }
 
-        res.status(200).json({ problem });
+        return res.status(200).json({ problem });
     } catch (error) {
         console.error('Error fetching problem:', error);
         res.status(500).json({ error: 'Internal server error.' });
@@ -572,16 +600,43 @@ const handleGetSubmissions = async (req: Request, res: Response) => {
         console.log(userId);
         const problemId = req.params.id;
         
+        const problem = await prisma.problem.findUnique({
+            where: {
+                id: problemId
+            },
+            select: {
+                contestId: true
+            }
+        })
+
+
         //fetch all the submissions in the descending order of createdAt
-        const submissions = await prisma.submission.findMany({
+        let submissions = await prisma.submission.findMany({
             where:{
                 userId,
-                problemId
+                problemId,
             },
             orderBy: {
                 createdAt: 'desc'
             }
         })
+
+        if(problem?.contestId){
+            const contest = await prisma.contest.findUnique({
+                where: {
+                    id: problem.contestId
+                },
+                select: {
+                    startTime: true,
+                }
+            })
+
+            submissions = submissions.filter(submission => {
+                if(contest?.startTime && contest.startTime <= submission.createdAt){
+                    return submission;
+                }
+            })
+        }
 
         res.status(200).json({
             success: true,

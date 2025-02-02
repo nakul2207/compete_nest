@@ -26,7 +26,7 @@ export const getContestById = async(id: string|undefined) => {
             withCredentials: true
         })
 
-        return data;
+        return data.contestData;
     }catch(error){
         console.error('Error fetching the contest', error);
         throw new Error('Failed to get the contest');

@@ -7,23 +7,67 @@ import { Solutions } from "../components/Solutions"
 import { Submissions } from "../components/Submissions"
 import { CustomTestCases } from "../components/CustomTestCases"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../components/ui/resizable"
-import {useParams} from "react-router-dom";
+import {Navigate, useParams, useNavigate} from "react-router-dom";
 import {getProblemById, getAllExampleTestcases, getFileData, getProblemSubmissions} from "@/api/problemApi.ts";
-import {useAppDispatch} from "@/redux/hook.ts";
+import {useAppDispatch, useAppSelector} from "@/redux/hook.ts";
 import {setProblem, setExampleTestcases, setSubmissions} from "@/redux/slice/problemSlice.tsx";
+import { Button } from "@/components/ui/button"
+import { ArrowLeft, Badge } from "lucide-react"
+import { ContestTimer } from "@/components/ContestTimer"
+import { Dialog, DialogFooter, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { getContestById } from "@/api/contestApi"
+import { Loader } from "@/components/Loader"
+
+interface Contest{
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  startTime: string;
+  endTime: string;
+  problems: string[];
+  registered: boolean;
+}
 
 export function CompeteNestProblemPage() {
-  const [isFullScreen, setIsFullScreen] = useState(false)
-  const [currentTab, setCurrentTab] = useState("description");
-  const {problem_id} = useParams();
-  const dispatch = useAppDispatch();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState("");
 
-  // console.log("render")
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [currentTab, setCurrentTab] = useState("description");
+  const [contest, setContest] = useState<Contest | null>(null);
+  const {problem_id} = useParams();
+  const [showEndedPopup, setShowEndedPopup] = useState(false);
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const user = useAppSelector((state) => state.auth.user);
+
   useEffect(() =>{
     const fetchProblem = async () => {
       try {
+        setIsLoading(true);
         const problemData = await getProblemById(problem_id as string);
+
+        if(user && problemData.contestId){
+          console.log(user);
+          const contest = await getContestById(problemData.contestId);
+            if(contest){
+              const contestStartTime = new Date(contest.startTime);
+              if(contestStartTime <= new Date()){
+                if(contest.registered){
+                    //check for contest start time
+                    setContest(contest);
+                }else{
+                  setIsError("You are not registered for this contest");  
+                }
+              }else{
+                setIsError("Contest has not started yet");
+              }
+            }  
+        }
+
         dispatch(setProblem(problemData));
+        setIsLoading(false);
 
         //fetch example testcases psURLs from database
         const testcaseURLs = await getAllExampleTestcases(problem_id as string);
@@ -43,11 +87,50 @@ export function CompeteNestProblemPage() {
     fetchProblem().then();
   }, [])
 
+  if(isLoading){
+    return <Loader />
+  }
+
+  if(isError !== ""){
+    return <Navigate to="/forbidden" state={{ errorMessage: isError }} />
+  }
+
   return (
     <div className="h-[calc(100vh-3.5rem)]">
+      {
+      contest && (
+         <div className="px-6 py-2 flex justify-between items-center flex-wrap gap-4">
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-2 h-2" />
+          </Button>
+
+          <div className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+           {contest.title}
+          </div>
+
+        {
+          (contest && contest.status !== 'Ended') ? (
+            <div className="text-md">
+            <ContestTimer 
+            startTime={contest.startTime} 
+            endTime={contest.endTime} 
+            onEnd={() => setShowEndedPopup(true)}
+            />
+            </div>
+          )
+          :(
+            <Badge variant="outline" className={`text-md px-4 py-2 text-red-500`}>
+              Ended
+            </Badge>
+          )
+        }
+        </div>
+      )
+      }
+       
       <ResizablePanelGroup direction="horizontal" className="h-full">
-        <ResizablePanel defaultSize={50} minSize={30}>
-          <Tabs value={currentTab} onValueChange={setCurrentTab} className="h-full flex flex-col">
+          <ResizablePanel defaultSize={50} minSize={30}>
+            <Tabs value={currentTab} onValueChange={setCurrentTab} className="h-full flex flex-col">
             <TabsList className="justify-start border-b px-4 rounded-none">
               <TabsTrigger value="description">Description</TabsTrigger>
               <TabsTrigger value="results">Results</TabsTrigger>
@@ -63,10 +146,16 @@ export function CompeteNestProblemPage() {
                 <Results />
               </TabsContent>
               <TabsContent value="solutions">
-                <Solutions />
+                {
+                  contest && contest.status !== 'Ended' ? (
+                    <Solutions show={false}/>
+                  ) : (
+                    <Solutions show={true}/>
+                  )
+                }
               </TabsContent>
               <TabsContent value="submissions">
-                <Submissions  handleTab={setCurrentTab}/>
+                <Submissions handleTab={setCurrentTab}/>
               </TabsContent>
               <TabsContent value="testcases">
                 <CustomTestCases />
@@ -86,7 +175,29 @@ export function CompeteNestProblemPage() {
             </div>
           </div>
         </ResizablePanel>
-      </ResizablePanelGroup>
+      </ResizablePanelGroup>  
+      
+      <Dialog open={showEndedPopup} onOpenChange={setShowEndedPopup}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="text-2xl">Contest Ended</DialogTitle>
+        </DialogHeader>
+        <DialogDescription className="text-lg">
+          The contest has ended.
+        </DialogDescription>
+        <DialogFooter className="flex justify-center items-center w-full">
+          <Button 
+            onClick={() => {
+              setShowEndedPopup(false);
+              navigate(-1);
+            }}
+            className="mt-4 mx-auto"
+          >
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </div>
   )
 }

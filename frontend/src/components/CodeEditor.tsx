@@ -157,8 +157,6 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
     const submitCode = async () => {
         try {
             if(!user){
-                //toast
-                console.log("Please login to submit code");
                 toast.error("Please login to submit code");
                 return;
             }
@@ -189,7 +187,7 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
             handleTab("results");
 
             // Verify that submissions array is populated
-            const base_url: string = "https://9f76-59-153-99-135.ngrok-free.app";
+            const base_url: string = "https://50ca-59-153-99-135.ngrok-free.app";
             const submissions = input.map((inputValue, index) => ({
                 source_code: btoa(code),
                 language_id: problem.languageId,
@@ -231,7 +229,7 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
     }
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col">
             <div className="flex justify-between items-center p-4 border-b">
                 <LangSelector language_id={languageId} onSelect={onSelect} />
                 <div className="flex items-center gap-2">
@@ -258,7 +256,7 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
             </div>
 
             <Editor
-                height="80vh"
+                height="65vh"
                 theme={theme}
                 language={monacoLanguageMap[languageId]}
                 value={code}

@@ -1,16 +1,18 @@
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { ShieldAlert } from "lucide-react"
 
 export function ForbiddenPage() {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
+    const location = useLocation();
+    const message = location.state?.errorMessage || "You are not authorized to access this page.";    console.log(message);
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-background">
             <div className="text-center space-y-6">
                 <ShieldAlert className="mx-auto h-24 w-24 text-yellow-500" />
                 <h1 className="text-4xl font-bold tracking-tight">Access Denied</h1>
-                <p className="text-xl text-muted-foreground">Sorry, you don't have permission to access this page.</p>
+                <p className="text-xl text-muted-foreground">{message}</p>
                 <div className="flex justify-center space-x-4">
                     <Button onClick={() => navigate("/")}>Go to Home</Button>
                     <Button variant="outline" onClick={() => navigate(-1)}>

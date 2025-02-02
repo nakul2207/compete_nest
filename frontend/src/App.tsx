@@ -59,6 +59,7 @@ function App() {
                   <Route element={<ProtectedRoute allowedRoles={['User', 'Organiser', 'Admin']} />}>
                     <Route path="/contests" element={<ContestsPage/>} />
                     <Route path="/contest/:contest_id" element={<Contest/>} />
+                    <Route path="/contest/:contest_id/problem/:problem_id" element={<CompeteNestProblemPage/>} />
                   </Route>
                 <Route path="/compiler" element={<OnlineCompiler/>} />
                 <Route path="/admin" element={<AdminPortal />}>
