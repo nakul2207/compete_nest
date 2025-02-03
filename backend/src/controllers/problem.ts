@@ -175,10 +175,10 @@ const handleSubmitProblem = async (req:Request, res:Response) => {
                     }
                 })
 
-                let callback_url = `/api/submission/submitted_testcase/${sub_testcase_id.id}`;
+                let callback_url = `/api/submission/${sub_id.id}/submitted_testcase/${sub_testcase_id.id}`;
 
                 if(problem?.contestId){
-                    callback_url = `/api/submission/contest/${problem.contestId}/submitted_testcase/${sub_testcase_id.id}`;
+                    callback_url = `/api/submission/${sub_id.id}/contest/${problem.contestId}/submitted_testcase/${sub_testcase_id.id}`;
                 }
 
                 console.log(callback_url);

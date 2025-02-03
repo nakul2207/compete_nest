@@ -1,9 +1,9 @@
-import {useEffect, useRef, useCallback, useMemo, useState} from "react"
+import { useEffect, useRef, useCallback, useMemo, useState } from "react"
 import { Button } from "./ui/button"
 import { Maximize2, Minimize2, Sun, Moon } from 'lucide-react'
 import { Editor, useMonaco } from "@monaco-editor/react"
-import {languages } from "../assets/mapping.ts";
-import {LangSelector} from "./LangSelector.tsx";
+import { languages } from "../assets/mapping.ts";
+import { LangSelector } from "./LangSelector.tsx";
 import { useAppSelector, useAppDispatch } from '../redux/hook.ts'
 import {
     pushSubmission,
@@ -13,15 +13,15 @@ import {
     setRecentSubmission,
     updateRecentSubmission
 } from '../redux/slice/problemSlice.tsx'
-import {createBatchSubmission, createSubmission, getFileData, submitProblem} from "../api/problemApi.ts";
+import { createBatchSubmission, createSubmission, getFileData, submitProblem } from "../api/problemApi.ts";
 
-import {io} from "socket.io-client";
+import { io } from "socket.io-client";
 import { toast } from "sonner";
 const server_url = import.meta.env.VITE_SERVER_URL;
-const socket = io(server_url, { transports: ["websocket"] });
+const socket = io(server_url, { transports: ["websocket"] });
 
 interface CodeEditorProps {
-    handleTab: (currentTab:string) => void
+    handleTab: (currentTab: string) => void
     isFullScreen: boolean
     handleFullScreen: (isFullScreen: boolean) => void
 }
@@ -30,7 +30,7 @@ interface User {
     name: string;
     email: string;
     role: string;
-  }
+}
 type Language = {
     name: string;
     is_archived: boolean;
@@ -49,11 +49,11 @@ const monacoLanguageMap: { [key: string]: string } = {
     "35": "python"
 }
 
-export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEditorProps) {
-    const {user} = useAppSelector((state) => state.auth);  
+export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEditorProps) {
+    const { user } = useAppSelector((state) => state.auth);
     const code = useAppSelector((state) => state.problem.code);
-    const problem  = useAppSelector((state) => state.problem);
-    const languageId =  useAppSelector((state) => state.problem.languageId);
+    const problem = useAppSelector((state) => state.problem);
+    const languageId = useAppSelector((state) => state.problem.languageId);
     const [theme, setTheme] = useState<'vs-dark' | 'light'>('vs-dark')
     const editorRef = useRef<any>(null);
     const monaco = useMonaco()
@@ -69,7 +69,7 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
         editor.focus();
     }, []);
 
-    useEffect(() =>{
+    useEffect(() => {
         dispatch(setCode(atob(getLanguageBoilerplate(languageId))));
     }, [dispatch, languageId]);
 
@@ -156,12 +156,12 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
 
     const submitCode = async () => {
         try {
-            if(!user){
+            if (!user) {
                 toast.error("Please login to submit code");
                 return;
             }
 
-            const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id: problem.id, code: btoa(code),  language_id: parseInt(problem.languageId)});
+            const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id: problem.id, code: btoa(code), language_id: parseInt(problem.languageId) });
             // Use Promise.all to fetch data concurrently for input and output
             const input: string[] = await Promise.all(input_urls.map((url: string) => getFileData(url)));
             const output: string[] = await Promise.all(exp_output_urls.map((url: string) => getFileData(url)));
@@ -187,13 +187,13 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
             handleTab("results");
 
             // Verify that submissions array is populated
-            const base_url: string = "https://50ca-59-153-99-135.ngrok-free.app";
+            const base_url: string = "https://fb4a-106-219-91-160.ngrok-free.app";
             const submissions = input.map((inputValue, index) => ({
                 source_code: btoa(code),
                 language_id: problem.languageId,
                 stdin: btoa(inputValue),
                 expected_output: btoa(output[index]),
-                callback_url:`${base_url}${callback_urls[index]}`
+                callback_url: `${base_url}${callback_urls[index]}`
             }));
 
             console.log("Submissions array:", submissions);

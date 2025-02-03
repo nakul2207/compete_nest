@@ -49,8 +49,9 @@ const handleRunCallback = async (req: Request, res: Response) => {
 
 const handleSubmissionCallback = async (req: Request, res: Response) => {
     const subTestcaseId = req.params.id;
+    const submissionId = req.params.submissionId;
 
-    if (!subTestcaseId || !req.body) {
+    if (!subTestcaseId || !req.body || !submissionId) {
         return res.status(400).json({
             success: false,
             message: "Invalid request. Testcase ID or request body missing.",
@@ -154,7 +155,7 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
         // Update the submission to "Internal Error" status (14)
         try {
             const updatedSubmission = await prisma.submission.update({
-                where: { id: subTestcaseId },
+                where: { id: submissionId },
                 data: {
                     status: 13, // Internal Error
                 },
@@ -163,7 +164,7 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
             // Sending the updated submission data to the client
             const io = (req as any).io as Server | undefined;
             if (io) {
-                io.to(subTestcaseId).emit("update", {
+                io.to(submissionId).emit("update", {
                     success: false,
                     message: "Internal error occurred in the backend.",
                     updatedSubmission,
@@ -187,8 +188,9 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
 const handleContestSubmissionCallback = async (req: Request, res: Response) => {
     const subTestcaseId = req.params.id;
     const contestId = req.params.contestId;
+    const submissionId = req.params.submissionId;
 
-    if (!subTestcaseId || !req.body) {
+    if (!subTestcaseId || !req.body || !submissionId) {
         return res.status(400).json({
             success: false,
             message: "Invalid request. Testcase ID or request body missing.",
@@ -321,19 +323,21 @@ const handleContestSubmissionCallback = async (req: Request, res: Response) => {
         // Update the submission to "Internal Error" status (14)
         try {
             const updatedSubmission = await prisma.submission.update({
-                where: { id: subTestcaseId },
+                where: { id: submissionId },
                 data: {
                     status: 13, // Internal Error
                 },
             });
 
+
             // Sending the updated submission data to the client
             const io = (req as any).io as Server | undefined;
             if (io) {
-                io.to(subTestcaseId).emit("update", {
+                io.to(submissionId).emit("update", {
                     success: false,
                     message: "Internal error occurred in the backend.",
                     updatedSubmission,
+
                 });
             } else {
                 console.error("Socket.IO not attached to request");

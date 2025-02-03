@@ -5,8 +5,8 @@ import {handleSubmissionCallback, handleRunCallback, handleContestSubmissionCall
 
 const submissionRouter = Router();
 
-submissionRouter.route('/submitted_testcase/:id').put(handleSubmissionCallback as any);
-submissionRouter.route('/contest/:contestId/submitted_testcase/:id').put(handleContestSubmissionCallback as any);
+submissionRouter.route('/:submissionId/submitted_testcase/:id').put(handleSubmissionCallback as any);
+submissionRouter.route('/:submissionId/contest/:contestId/submitted_testcase/:id').put(handleContestSubmissionCallback as any);
 submissionRouter.route("/run/:id").post(handleRunCallback as any);
 
 export default submissionRouter;
