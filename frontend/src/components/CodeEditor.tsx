@@ -13,12 +13,12 @@ import {
     setRecentSubmission,
     updateRecentSubmission
 } from '../redux/slice/problemSlice.tsx'
-import { createBatchSubmission, createSubmission, getFileData, submitProblem, updateSubmission } from "../api/problemApi.ts";
+import { createSubmission, getFileData, submitProblem, updateSubmission } from "../api/problemApi.ts";
 
-import { io } from "socket.io-client";
+// import { io } from "socket.io-client";
 import { toast } from "sonner";
-const server_url = import.meta.env.VITE_SERVER_URL;
-const socket = io(server_url, { transports: ["websocket"] });
+// const server_url = import.meta.env.VITE_SERVER_URL;
+// const socket = io(server_url, { transports: ["websocket"] });
 
 interface CodeEditorProps {
     handleTab: (currentTab: string) => void
