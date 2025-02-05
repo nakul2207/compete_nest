@@ -13,7 +13,7 @@ import {
     setRecentSubmission,
     updateRecentSubmission
 } from '../redux/slice/problemSlice.tsx'
-import { createBatchSubmission, createSubmission, getFileData, submitProblem } from "../api/problemApi.ts";
+import { createBatchSubmission, createSubmission, getFileData, submitProblem, updateSubmission } from "../api/problemApi.ts";
 
 import { io } from "socket.io-client";
 import { toast } from "sonner";
@@ -187,36 +187,75 @@ export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEd
             handleTab("results");
 
             // Verify that submissions array is populated
-            const base_url: string = "https://fb4a-106-219-91-160.ngrok-free.app";
-            const submissions = input.map((inputValue, index) => ({
-                source_code: btoa(code),
-                language_id: problem.languageId,
-                stdin: btoa(inputValue),
-                expected_output: btoa(output[index]),
-                callback_url: `${base_url}${callback_urls[index]}`
-            }));
+            // const base_url: string = "https://fbef-106-219-91-217.ngrok-free.app";
+            let updatedSubmission = null;
+            for (let index = 0; index < input.length; index++) {
+                try {
+                    const inputData = {
+                        source_code: btoa(code),
+                        language_id: problem.languageId,
+                        stdin: btoa(input[index]),
+                        expected_output: btoa(output[index]),
+                    };
 
-            console.log("Submissions array:", submissions);
-            if (submissions.length === 0) {
-                console.error("Error: Submissions array is empty");
-                return;
+                    const result = await createSubmission(inputData);
+                    const data = await updateSubmission(result, callback_urls[index]);
+
+                    if (data.updatedSubmission) {
+                        updatedSubmission = data.updatedSubmission;
+                        dispatch(updateRecentSubmission(data.updatedSubmission));
+                        dispatch(setRecentSubmission(data.updatedSubmission));
+
+                        if (data.updatedSubmission.status > 3) {
+                            // Stop evaluation if testcase fails
+                            break;
+                        }
+                    } else {
+                        console.error("Error in handleOnSubmit:", data.message);
+                        break;
+                    }
+                } catch (error) {
+                    console.error("Error in handleOnSubmit:", error);
+                    break;
+                }
             }
 
-            // Join the socket room with the UID
-            socket.emit("join", submission_id);
+            if (updatedSubmission) {
+                if (updatedSubmission.status === 3) {
+                    toast.success("Solution Accepted");
+                } else {
+                    toast.error("Solution Rejected: " + updatedSubmission.status);
+                }
+            }
+            // const submissions = input.map((inputValue, index) => ({
+            //     source_code: btoa(code),
+            //     language_id: problem.languageId,
+            //     stdin: btoa(inputValue),
+            //     expected_output: btoa(output[index]),
+            //     callback_url: `${base_url}${callback_urls[index]}`
+            // }));
 
-            // Set up the listener for the 'update' event
-            socket.on("update", (data) => {
-                // console.log("UpdatedSubmission:", data);
+            // console.log("Submissions array:", submissions);
+            // if (submissions.length === 0) {
+            //     console.error("Error: Submissions array is empty");
+            //     return;
+            // }
 
-                //updating redux state
-                dispatch(updateRecentSubmission(data.updatedSubmission));
-                dispatch(setRecentSubmission(data.updatedSubmission));
-            });
+            // // Join the socket room with the UID
+            // socket.emit("join", submission_id);
 
-            // Make a batch submission only if submissions array is not empty
-            const result = await createBatchSubmission({ submissions });
-            console.log(result);
+            // // Set up the listener for the 'update' event
+            // socket.on("update", (data) => {
+            //     // console.log("UpdatedSubmission:", data);
+
+            //     //updating redux state
+            //     dispatch(updateRecentSubmission(data.updatedSubmission));
+            //     dispatch(setRecentSubmission(data.updatedSubmission));
+            // });
+
+            // // Make a batch submission only if submissions array is not empty
+            // const result = await createBatchSubmission({ submissions });
+            // console.log(result);
 
             // const tokens = result.map((obj: { token: any; }) => obj.token).join(",");
             // setTimeout(async () =>{

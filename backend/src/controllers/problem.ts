@@ -181,8 +181,6 @@ const handleSubmitProblem = async (req:Request, res:Response) => {
                     callback_url = `/api/submission/${sub_id.id}/contest/${problem.contestId}/submitted_testcase/${sub_testcase_id.id}`;
                 }
 
-                console.log(callback_url);
-
                 input_urls.push(input_url);
                 exp_output_urls.push(exp_output_url);
                 callback_urls.push(callback_url);

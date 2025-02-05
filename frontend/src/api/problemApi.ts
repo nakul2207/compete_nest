@@ -81,7 +81,23 @@ export const getSubmission = async (token: string) => {
     return data;
 }
 
+export const updateSubmission = async(result: any, callback_url: string) => {
+    try {
+        const { data } = await axios.put(`${server_url}${callback_url}`, result, {
+            headers,
+
+            withCredentials: true   
+        });
+        
+        return data;
+    } catch (error) {
+        console.error("Error updating submission:", error);
+        return { success: false, message: "An error occurred while updating the submission." };
+    }
+}
+
 export const submitProblem = async ({ problem_id, code, language_id }: { problem_id: string; code: string, language_id: number }) => {
+
     try {
         // console.log(`${server_url}/api/problem/${problem_id}/submit`);
         const { data } = await axios.post(`${server_url}/api/problem/${problem_id}/submit`, { code, language_id }, {
