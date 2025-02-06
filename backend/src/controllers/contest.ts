@@ -154,7 +154,54 @@ const handleGetContestByID = async(req:Request, res:Response)=>{
             }
         })
 
-        res.status(200).json({ message: 'Contest fetched successfully', contestData: {...requiredContest, registered: isRegistered ? true : false}});
+        //getting the number of participants in the contest
+        const participants = await prisma.contestParticipants.count({
+            where: {
+                contestId: req.params.id
+            },
+        })
+
+        //get the problem title, difficulty and score using problem Ids in contestData
+        const problemDetails = await Promise.all(
+            requiredContest!.problems.map(async (problemId: string) => {
+                const problem = await prisma.problem.findUnique({
+                    where: {
+                        id: problemId
+                    },
+                    select: {
+                        id: true,
+                        title: true,
+                        difficulty: true,
+                    }
+                });
+        
+                //get the score of the problem from the contestProblem table
+                const participant = await prisma.contestProblem.findFirst({
+                    where: {
+                        problemId: problemId,
+                        contestId: req.params.id
+                    },
+                    select: {
+                        score: true
+                    }
+                });
+
+                //getting the solved problems of the user
+                const solvedProblems = await prisma.contestParticipants.findFirst({
+                    where: {
+                        contestId: req.params.id,
+                        userId: req.user?.id
+                    },
+                    select: {
+                        problemsSolved: true
+                    }
+                })
+        
+                return { ...problem, score: participant?.score, solved: solvedProblems?.problemsSolved };
+            })
+        );
+
+        res.status(200).json({ message: 'Contest fetched successfully', contestData: {...requiredContest,  participants, registered: isRegistered ? true : false, problems: problemDetails}}, );
     } catch (error) {
         console.error('Error fetching contest:', error);
         res.status(500).json({ message: 'Error fetching contest', error });
@@ -255,4 +302,33 @@ const handleContestRegister = async (req: Request, res: Response)=>{
     }
 }
 
-export {handleCreateContest, handleDeleteContest, handleEditContest, handleGetAll, handleGetContestByID, handleContestRegister, handleStartContest, handleEndContest};
+const handleGetLeaderboard = async (req: Request, res: Response) => {
+    try {
+        const contestParticipants = await prisma.contestParticipants.findMany({
+            where: {
+                contestId: req.params.id
+            },
+            orderBy: [
+                { score: 'desc' },
+                { updatedAt: 'asc' }
+            ],
+            include: {
+                user: {
+                    select: {
+                        name: true
+                    }
+                }
+            }
+        });
+
+        res.status(200).json({
+            message: "Leaderboard fetched successfully",
+            leaderboard: contestParticipants
+        });
+    } catch (error) {
+        console.error('Error in handling leaderboard:', error);
+        res.status(500).json({ message: 'Error in handling leaderboard. Please try after sometime', error });
+    }
+}
+
+export {handleCreateContest, handleDeleteContest, handleEditContest, handleGetAll, handleGetContestByID, handleContestRegister, handleStartContest, handleEndContest, handleGetLeaderboard};

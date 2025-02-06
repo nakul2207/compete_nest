@@ -8,14 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Loader } from "@/components/Loader"
 import { getContestById } from "@/api/contestApi"
-import { Calendar, Clock, Trophy, Users, AlertTriangle, ChevronRight, Star, Timer, BarChart } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
+import { Calendar, Clock, Trophy, Users, AlertTriangle, ChevronRight, Star, Check } from "lucide-react"
 import { ContestTimer } from "@/components/ContestTimer"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
-interface Problem {
-  id: string
-}
 
 interface Contest {
   id: string
@@ -23,13 +19,21 @@ interface Contest {
   description: string
   startTime: string
   endTime: string
-  problems: string[]
   status: string
   createdAt: string
   updatedAt: string
   userId: string
   registered: boolean
+  participants: number
+  problems: {
+    id: string
+    title: string
+    difficulty: string
+    score: number
+    solved: string[]
+  }[]
 }
+
 
 interface ContestStatus {
   color: string
@@ -45,7 +49,7 @@ const Contest: React.FC = () => {
   const { contest_id } = useParams<{ contest_id: string }>()
   const [contest, setContest] = useState<Contest | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth)
+  const { isAuthenticated } = useAppSelector((state) => state.auth)
   const [showEndedPopup, setShowEndedPopup] = useState(false)
 
   useEffect(() => {
@@ -75,7 +79,7 @@ const Contest: React.FC = () => {
 
   const getContestStatus = (): ContestStatus => {
     if (!contest) return { color: "gray", text: "Unknown" }
-    
+
     const now = new Date()
     const start = new Date(contest.startTime)
     const end = new Date(contest.endTime)
@@ -89,14 +93,14 @@ const Contest: React.FC = () => {
     }
   }
 
-  const getDifficultyConfig = (index: number): DifficultyConfig => {
-    const difficulties = [
-      { color: "text-green-500", label: "Easy" },
-      { color: "text-yellow-500", label: "Medium" },
-      { color: "text-orange-500", label: "Hard" },
-      { color: "text-red-500", label: "Expert" },
-    ];
-    return difficulties[index % difficulties.length];
+  const getDifficultyConfig = (difficulty: string): DifficultyConfig => {
+    if (difficulty === "Easy") {
+      return { color: "text-green-500", label: "Easy" }
+    } else if (difficulty === "Medium") {
+      return { color: "text-yellow-500", label: "Medium" }
+    } else {
+      return { color: "text-red-500", label: "Hard" }
+    }
   };
 
   if (!isAuthenticated && !isContestEnded) {
@@ -123,21 +127,21 @@ const Contest: React.FC = () => {
             </CardTitle>
 
             {isContestActive ? (
-            <ContestTimer 
-              startTime={contest.startTime} 
-              endTime={contest.endTime}
-              onEnd={() => setShowEndedPopup(true)}
-            />
-          ):(
-            <Badge 
-              variant="outline" 
-              className={`text-lg px-4 py-2 ${getContestStatus().color}`}
-            >
-              {getContestStatus().text}
-            </Badge>
-          )}
+              <ContestTimer
+                startTime={contest.startTime}
+                endTime={contest.endTime}
+                onEnd={() => setShowEndedPopup(true)}
+              />
+            ) : (
+              <Badge
+                variant="outline"
+                className={`text-lg px-4 py-2 ${getContestStatus().color}`}
+              >
+                {getContestStatus().text}
+              </Badge>
+            )}
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" />
@@ -153,16 +157,9 @@ const Contest: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
-              <span>Participants: {/* Add participant count here */}</span>
+              <span>Participants: {contest.participants}</span>
             </div>
           </div>
-
-          {/* {isContestActive && (
-            <ContestTimer 
-              startTime={contest.startTime} 
-              endTime={contest.endTime} 
-            />
-          )} */}
         </CardHeader>
 
         <CardContent className="space-y-6">
@@ -192,11 +189,14 @@ const Contest: React.FC = () => {
         </h2>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {contest.problems.map((problemId, index) => {
-            const difficulty = getDifficultyConfig(index);
+          {contest.problems.map((problem, index) => {
+            const difficulty = getDifficultyConfig(problem.difficulty);
+            const isSolved = problem.solved.includes(problem.id) || true;
+            const cardColor = isSolved ? "bg-green-500" : "bg-primary/10";
+
             return (
               <motion.div
-                key={problemId}
+                key={problem.id || index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -205,28 +205,31 @@ const Contest: React.FC = () => {
                   <CardHeader>
                     <CardTitle className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
-                        <div className="bg-primary/10 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-primary">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-primary ${cardColor}`}>
                           {String.fromCharCode(65 + index)}
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-lg">Problem {String.fromCharCode(65 + index)}</span>
+
+                          <span className="text-lg">{problem.title}</span>
                           <span className={`text-sm ${difficulty.color}`}>
                             {difficulty.label}
                           </span>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="text-xs">
-                        100 points
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className={`text-xs`}>
+                          {problem.score} points
+                        </Badge>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <Button 
-                      asChild 
+                    <Button
+                      asChild
                       className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
                     >
-                      <Link to={`/contest/${contest_id}/problem/${problemId}`} className="flex items-center justify-center gap-2">
-                        Solve Problem
+                      <Link to={`/contest/${contest_id}/problem/${problem.id}`} className="flex items-center justify-center gap-2">
+                        {isSolved ? "View Problem" : "Solve Problem"}
                         <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </Link>
                     </Button>
@@ -240,7 +243,7 @@ const Contest: React.FC = () => {
 
       <div className="mt-8 flex justify-center gap-4">
         <Button asChild size="lg" className="min-w-[200px]">
-          <Link to={`/contests/${contest_id}/leaderboard`}>
+          <Link to={`/contest/${contest_id}/leaderboard`}>
             <Trophy className="w-5 h-5 mr-2" />
             View Leaderboard
           </Link>
@@ -256,7 +259,7 @@ const Contest: React.FC = () => {
             The contest has ended.
           </DialogDescription>
           <DialogFooter className="flex justify-center items-center w-full">
-            <Button 
+            <Button
               onClick={() => setShowEndedPopup(false)}
               className="mt-4 mx-auto"
             >

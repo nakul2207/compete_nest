@@ -150,6 +150,7 @@ model ContestParticipants {
   userId    String
   score     Float    @default(0)
   rank      Int?
+  problemsSolved String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   contest   Contest  @relation(fields: [contestId], references: [id], onDelete: Cascade)

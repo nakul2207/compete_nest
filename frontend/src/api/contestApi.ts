@@ -60,3 +60,17 @@ export const handleRegistration = async (contestId: string, isRegister: boolean)
         throw new Error('Failed to register for the contest');
     }
 }
+
+export const getLeaderboard = async (contestId: string) => {
+    try{
+        const {data} = await axios.get(`${server_url}/api/contest/${contestId}/leaderboard`, {
+            headers,
+            withCredentials: true
+        })
+
+        return data.leaderboard;
+    }catch(error){
+        console.error('Error fetching the leaderboard', error);
+        throw new Error('Failed to get the leaderboard');
+    }
+}
