@@ -291,31 +291,76 @@ const handleContestSubmissionCallback = async (req: Request, res: Response) => {
                 
                 //if the final testcase get accepted, then update the score of the participant
                 if(overallStatus === 3){
-                    const contestProblem = await tx.contestProblem.findFirst({
+                    const participant = await tx.contestParticipants.findFirst({
                         where: {
                             contestId,
-                            problemId: updatedSubmission.problemId
-                        },select: {
-                            score: true
+                            userId: updatedSubmission.userId
+                        },
+                        select:{
+                            problemsSolved: true
                         }
                     })
 
-                    console.log(contestProblem);
-                    
-                    if(contestProblem){
-                        const updatedContestParticipants = await tx.contestParticipants.updateMany({
+                    if(!participant?.problemsSolved.includes(updatedSubmission.problemId)){
+                        const contestProblem = await tx.contestProblem.findFirst({
                             where: {
                                 contestId,
-                                userId: updatedSubmission.userId
-                            },
-                            data: {
-                                score: {
-                                    increment: contestProblem.score
-                                }
+    
+                                problemId: updatedSubmission.problemId
+                            },select: {
+                                score: true
                             }
                         })
+                        
+                        if(contestProblem){
+                            const [updatedParticipant, contestParticipants] = await Promise.all([
+                                tx.contestParticipants.updateMany({
+                                    where: {
+                                        contestId,
+                                        userId: updatedSubmission.userId,
+                                    },
+                                    data: {
+                                        score: {
+                                            increment: contestProblem.score
+                                        },
+                                        problemsSolved: {
+                                            push: updatedSubmission.problemId
+                                        }
+                                    }
+                                }),
+                                tx.contestParticipants.findMany({
+                                    where: {
+                                        contestId
+                                    },
+                                    orderBy: [
+                                        { score: 'desc' },
+                                        { updatedAt: 'asc' }
+                                    ],
+                                    include: {
+                                        user: {
+                                            select: {
+                                                name: true
+                                            }
+                                        }
+                                    }
+                                })
+                            ]);
 
-                        console.log(updatedContestParticipants);
+                            
+                            //send the updated leaderboard details to the client
+                            const io = (req as any).io as Server | undefined;
+                            if (!io) {
+                                console.error('Socket.IO not attached to request');
+                                throw new Error("IO object not found");
+                            }
+
+                            console.log('Attempting to emit with io:', !!io);
+                            io.to(contestId+"-leaderboard").emit("update", {
+                                success: true,
+                                message: "Leaderboard updated successfully",
+                                leaderboard: contestParticipants
+                            });
+                        }
                     }
                 }
 

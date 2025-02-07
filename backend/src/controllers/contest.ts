@@ -211,7 +211,11 @@ const handleGetContestByID = async(req:Request, res:Response)=>{
 const handleGetAll = async (req: Request, res: Response) => {
     try {
         // Get all contests
-        const contests = await prisma.contest.findMany();
+        const contests = await prisma.contest.findMany({
+            orderBy: {
+                endTime: 'desc'
+            }
+        });
 
         // Get all the user's contests from contestParticipants
         const userContests = await prisma.contestParticipants.findMany({
@@ -220,9 +224,8 @@ const handleGetAll = async (req: Request, res: Response) => {
             },
             select: {
                 contestId: true,
-            },
+            }
         });
-
 
         // Create a Set of attended contest IDs for quick lookup
         const userAttended = new Set<string>(userContests.map((uc) => uc.contestId));

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Loader } from "@/components/Loader"
 import { getContestById } from "@/api/contestApi"
-import { Calendar, Clock, Trophy, Users, AlertTriangle, ChevronRight, Star, Check } from "lucide-react"
+import { Calendar, Clock, Trophy, Users, AlertTriangle, ChevronRight, Star, ArrowLeft } from "lucide-react"
 import { ContestTimer } from "@/components/ContestTimer"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
@@ -119,6 +119,14 @@ const Contest: React.FC = () => {
       transition={{ duration: 0.5 }}
       className="container mx-auto px-4 py-8 max-w-7xl"
     >
+      <div className="mb-4">
+        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground" asChild>
+          <Link to={`/contests`}>
+            <ArrowLeft className="h-4 w-4" />
+            Back to Contests
+          </Link>
+        </Button>
+      </div>
       <Card className="mb-8 border-2">
         <CardHeader className="space-y-4">
           <div className="flex justify-between items-center flex-wrap gap-4">
@@ -191,7 +199,7 @@ const Contest: React.FC = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {contest.problems.map((problem, index) => {
             const difficulty = getDifficultyConfig(problem.difficulty);
-            const isSolved = problem.solved.includes(problem.id) || true;
+            const isSolved = problem.solved.includes(problem.id) || false;
             const cardColor = isSolved ? "bg-green-500" : "bg-primary/10";
 
             return (
@@ -243,8 +251,18 @@ const Contest: React.FC = () => {
 
       <div className="mt-8 flex justify-center gap-4">
         <Button asChild size="lg" className="min-w-[200px]">
-          <Link to={`/contest/${contest_id}/leaderboard`}>
-            <Trophy className="w-5 h-5 mr-2" />
+          <Link to={`/contest/${contest_id}/leaderboard`}
+            state={{
+              contest: {
+                id: contest.id,
+                title: contest.title,
+                startTime: contest.startTime,
+                endTime: contest.endTime,
+                status: contest.status
+              }
+            }}
+          >
+            <Trophy className="w-5 h-5 mr-1" />
             View Leaderboard
           </Link>
         </Button>
