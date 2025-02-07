@@ -1,5 +1,4 @@
 import {useCallback, useEffect, useState} from 'react'
-import axios from 'axios'
 import { Input } from "../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
@@ -11,7 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { X } from 'lucide-react'
 import {MultiSelect} from "@/components/ui/multi-select.tsx";
 import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons'
-import { setIsAuthenticated,setUser } from '@/redux/slice/authSlice'
+import { getAllTopics} from '@/api/topicApi'
+import { getAllCompanies } from '@/api/companyApi'
+import { setTopics } from '@/redux/slice/topicSlice'
+import { setCompanies } from '@/redux/slice/companySlice'
+import { Spinner } from '@/components/ui/Spinner'
 
 interface Company {
   id: string;
@@ -34,11 +37,10 @@ interface Problem {
 }
 
 export function ProblemsPage() {
-  const server_url = import.meta.env.VITE_SERVER_URL;
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
-  // const [totalPages, setTotalPages] = useState(1);
   const [problems, setProblems] = useState<Problem[]>([]);
+  const [isloading, setIsLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("")
   const [difficultyFilter, setDifficultyFilter] = useState("All")
@@ -55,9 +57,31 @@ export function ProblemsPage() {
   };
 
   useEffect(() => {
+    if(topics.length === 0){
+      getAllTopics().then((topics) => {
+          // console.log(topics);
+          dispatch(setTopics(topics));
+      }).catch((error)=>{
+          console.log(error);
+      })
+    }
+
+    if(companies.length === 0){
+      getAllCompanies().then((companies) => {
+          // console.log(companies);
+          dispatch(setCompanies(companies));
+      }).catch((error)=>{
+          console.log(error);
+      })
+    }
+  }, []);
+
+  useEffect(() => {
+    setIsLoading(true);
     getAllProblems(currentPage)
         .then((data) => {
         setProblems(data.problems);
+        setIsLoading(false);
     }).catch((error) => {
       console.error("Error fetching problems:", error);
     });
@@ -186,7 +210,13 @@ export function ProblemsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {problems.length === 0 ? (
+                  {isloading?(                                
+                      <TableRow>
+                          <TableCell colSpan={4} className="h-32 text-center">
+                              <Spinner/>
+                          </TableCell>
+                      </TableRow>):
+                  (problems.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center py-4 text-gray-500">
                           No problems found
@@ -209,7 +239,7 @@ export function ProblemsPage() {
                             {/*  <span>unsolved</span>*/}
                             {/*</TableCell>*/}
                           </TableRow>
-                      ))
+                      )))
                   )}
                 </TableBody>
               </Table>

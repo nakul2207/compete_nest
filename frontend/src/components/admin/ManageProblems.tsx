@@ -10,6 +10,7 @@ import { useAppSelector } from "@/redux/hook"
 import {deleteProblem, fetchProblems, getAllProblems} from "@/api/problemApi.ts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {ChevronLeftIcon, ChevronRightIcon} from "@radix-ui/react-icons";
+import { Spinner } from '../ui/Spinner.tsx'
 
 interface Company {
     id: string;
@@ -41,18 +42,22 @@ export function ManageProblems() {
     const [topicFilter, setTopicFilter] = useState<Topic[]>([])
     const [companyFilter, setCompanyFilter] = useState<Company[]>([])
     const [refresh, setRefresh] = useState<number>(0);
+    const [isLoading, setIsLoading] = useState(true);
 
     const topics: Topic[] = useAppSelector((state) => state.topics);
     const companies: Company[] = useAppSelector((state) => state.companies);
+    
 
     const handlePageChange = useCallback((page: number) => {
         setCurrentPage(page);
     }, []);
 
     useEffect(() => {
+        setIsLoading(true);
         getAllProblems(currentPage)
             .then((data) => {
                 setProblems(data.problems);
+                setIsLoading(false);
             }).catch((error) => {
             console.error("Error fetching problems:", error);
         });
@@ -190,7 +195,13 @@ export function ManageProblems() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {problems.length === 0 ? (
+                            {isLoading?(                                
+                                <TableRow>
+                                    <TableCell colSpan={4} className="h-32 text-center">
+                                        <Spinner/>
+                                    </TableCell>
+                                </TableRow>):
+                            (problems.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={4} className="text-center py-4 text-gray-500">
                                         No problems found
@@ -215,7 +226,7 @@ export function ManageProblems() {
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                            )))
+                            ))))
                             }
                         </TableBody>
                     </Table>

@@ -9,6 +9,7 @@ import { MultiSelect } from '@/components/ui/multi-select'
 import { fetchProblems } from '@/api/problemApi'
 import {useAppSelector} from "@/redux/hook.ts";
 import {X} from "lucide-react";
+import {Spinner} from "@/components/ui/Spinner.tsx";
 
 interface Problem {
     id: string
@@ -44,6 +45,7 @@ export function ProblemSelectionTable({
     const [topicFilter, setTopicFilter] = useState<Topic[]>([])
     const [companyFilter, setCompanyFilter] = useState<Company[]>([])
     const [filteredProblems, setFilteredProblems] = useState<Problem[]>(problems)
+    const[isloading, setIsLoading] = useState(true);
 
     const topics: Topic[] = useAppSelector((state) => state.topics);
     const companies: Company[] = useAppSelector((state) => state.companies);
@@ -51,7 +53,9 @@ export function ProblemSelectionTable({
     // console.log("problems render");
 
     useEffect(() => {
-        handleFilter().then((data) => console.log(data)).catch((error) => console.log(error));
+        setIsLoading(true);
+        handleFilter().then((data) => {console.log(data); setIsLoading(false);}).catch((error) => console.log(error));
+        
     }, [])
 
     const handlePageChange = (page: number) => {
@@ -172,8 +176,13 @@ export function ProblemSelectionTable({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {
-                            filteredProblems.length === 0 ? (
+                        {isloading?(                     
+                        <TableRow>
+                                <TableCell colSpan={4} className="h-32 text-center">
+                                    <Spinner/>
+                                </TableCell>
+                                </TableRow>):
+                            (filteredProblems.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={3} className="text-center py-4 text-gray-500">
                                         No problems found
@@ -197,7 +206,7 @@ export function ProblemSelectionTable({
                                     </span>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )))}
                     </TableBody>
                 </Table>
             </div>

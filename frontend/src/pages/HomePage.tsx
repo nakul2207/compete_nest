@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { TypeAnimation } from 'react-type-animation'
-// import img from "../assets/png-clipart-ai-generated-man-beard-tiktok-face-male-social-media-3d-character-candidphotocontest.png"
+import img from "../assets/png-clipart-ai-generated-man-beard-tiktok-face-male-social-media-3d-character-candidphotocontest.png"
 
 interface FeatureCardProps {
   title: string
@@ -301,7 +301,7 @@ export function HomePage() {
               intro="Passionate about creating efficient algorithms and scalable systems."
               github="https://github.com/DineshK3012/"
               linkedin="https://www.linkedin.com/in/dinesh-kumar-06ab741ba/"
-              image={"Dinesh Kumar"}
+              image={img}
             />
             <TeamMember
               name="Nakul Gupta"
@@ -309,7 +309,7 @@ export function HomePage() {
               intro="Dedicated to crafting intuitive and beautiful user experiences."
               github="https://github.com/nakul2207"
               linkedin="https://www.linkedin.com/in/nakul-gupta-321893203/"
-              image={"Nakul Gupta"}
+              image={img}
             />
           </div>
         </section>
