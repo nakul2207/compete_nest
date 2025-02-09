@@ -82,7 +82,7 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
                     },
                 });
 
-                const submission = await tx.$queryRaw`
+                const submission = await tx.$queryRaw<Prisma.SubmissionGetPayload<{}>[]>`
                     SELECT * 
                     FROM "Submission"
                     WHERE "id" = ${updatedTestcase.submissionId}
@@ -230,7 +230,7 @@ const handleContestSubmissionCallback = async (req: Request, res: Response) => {
                     },
                 });
 
-                const submission = await tx.$queryRaw`
+                const submission = await tx.$queryRaw<Prisma.SubmissionGetPayload<{}>[]>`
                     SELECT * 
                     FROM "Submission"
                     WHERE "id" = ${updatedTestcase.submissionId}
@@ -313,7 +313,7 @@ const handleContestSubmissionCallback = async (req: Request, res: Response) => {
                         })
                         
                         if(contestProblem){
-                            const [updatedParticipant, contestParticipants] = await Promise.all([
+                            const [_updatedParticipant, contestParticipants] = await Promise.all([
                                 tx.contestParticipants.updateMany({
                                     where: {
                                         contestId,
