@@ -60,7 +60,7 @@ export const handleSignup = async (req: Request, res: Response) => {
       expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
+      sameSite: 'none' as 'none',
     };
 
     res.status(201).cookie('token', token, options).json({
@@ -104,7 +104,7 @@ export const handleLogin = async (req: Request, res: Response) => {
       expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
+      sameSite: 'none' as 'none',
     };
 
     res.status(200).cookie('token', token, options).json({
@@ -120,13 +120,13 @@ export const handleLogin = async (req: Request, res: Response) => {
 /**
  * Handle User Logout
  */
-export const handleLogoutUser = async (req: Request, res: Response) => {
+export const handleLogoutUser = async (_req: Request, res: Response) => {
   try {
     res.status(200).cookie("token", null, {
           expires: new Date(Date.now()),
           httpOnly: true,
           secure: true,
-          sameSite: 'none' // Allow cross-site requests
+          sameSite: 'none' as 'none' // Allow cross-site requests
         })
         .json({
           success: true,
@@ -136,7 +136,7 @@ export const handleLogoutUser = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: error.message
+      message: error instanceof Error ? error.message: "Unknown error occured"
     })
   }
 }
@@ -171,7 +171,7 @@ export const handleGoogleAuth = async (req: Request, res: Response) => {
 
     const jwtToken = jwt.sign(
         { userId: user.id, role: user.role },
-        process.env.JWT_SECRET,
+        process.env.JWT_SECRET as string,
         { expiresIn: '10d' }
     );
 
@@ -179,7 +179,7 @@ export const handleGoogleAuth = async (req: Request, res: Response) => {
       expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       httpOnly: true,
       secure: true,
-      sameSite: "none",
+      sameSite: "none" as "none",
     };
 
     res.status(200).cookie('token', jwtToken, options).json({
