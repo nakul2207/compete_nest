@@ -14,11 +14,8 @@ import {
     updateRecentSubmission
 } from '../redux/slice/problemSlice.tsx'
 import { createSubmission, getFileData, submitProblem, updateSubmission } from "../api/problemApi.ts";
-
-// import { io } from "socket.io-client";
 import { toast } from "sonner";
-// const server_url = import.meta.env.VITE_SERVER_URL;
-// const socket = io(server_url, { transports: ["websocket"] });
+import { Loader } from 'lucide-react';
 
 interface CodeEditorProps {
     handleTab: (currentTab: string) => void
@@ -46,7 +43,7 @@ const monacoLanguageMap: { [key: string]: string } = {
     "54": "cpp",
     "62": "java",
     "63": "javascript",
-    "35": "python"
+    "71": "python"
 }
 
 export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEditorProps) {
@@ -55,6 +52,8 @@ export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEd
     const problem = useAppSelector((state) => state.problem);
     const languageId = useAppSelector((state) => state.problem.languageId);
     const [theme, setTheme] = useState<'vs-dark' | 'light'>('vs-dark')
+    const [isRunning, setIsRunning] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const editorRef = useRef<any>(null);
     const monaco = useMonaco()
     const dispatch = useAppDispatch();
@@ -100,31 +99,27 @@ export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEd
     }, [monaco, theme])
 
     const runCode = async () => {
+        setIsRunning(true);
         try {
-            // Initialize outputs as a new array
             let updatedOutputs = problem.example_inputs.map(() => ({
                 status: "Code Running...",
                 output: null,
             }));
 
-            dispatch(setCodeOutputs([...updatedOutputs])); // Dispatch initial state update
+            dispatch(setCodeOutputs([...updatedOutputs]));
 
-            // Process each input asynchronously
             const results = await Promise.all(
                 problem.example_inputs.map(async (inputValue, index) => {
                     try {
-                        // Prepare the data for submission
                         const data = {
-                            source_code: btoa(problem.code), // Encode source code in Base64
+                            source_code: btoa(problem.code),
                             language_id: problem.languageId,
-                            stdin: btoa(inputValue), // Encode stdin in Base64
-                            expected_output: btoa(problem.example_exp_outputs[index]), // Encode expected output
+                            stdin: btoa(inputValue),
+                            expected_output: btoa(problem.example_exp_outputs[index]),
                         };
 
-                        // Create submission and await the result
                         const result = await createSubmission(data);
 
-                        // Return the result for the current input
                         if (result.status.id === 3 || result.stdout) {
                             return {
                                 status: result.status.description,
@@ -146,15 +141,17 @@ export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEd
                 })
             );
 
-            // Update the outputs in state after processing all submissions
-            dispatch(setCodeOutputs([...results])); // Use a new array reference
-            handleTab("testcases"); // Change tab after all submissions are processed
+            dispatch(setCodeOutputs([...results]));
+            handleTab("testcases");
         } catch (error) {
             console.error("Error processing submissions:", error);
+        } finally {
+            setIsRunning(false);
         }
     };
 
     const submitCode = async () => {
+        setIsSubmitting(true);
         try {
             if (!user) {
                 toast.error("Please login to submit code");
@@ -162,7 +159,7 @@ export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEd
             }
 
             const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id: problem.id, code: btoa(code), language_id: parseInt(problem.languageId) });
-            // Use Promise.all to fetch data concurrently for input and output
+
             const input: string[] = await Promise.all(input_urls.map((url: string) => getFileData(url)));
             const output: string[] = await Promise.all(exp_output_urls.map((url: string) => getFileData(url)));
             const sub = {
@@ -181,13 +178,10 @@ export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEd
                 updatedAt: Date.now(),
             }
 
-            //updating redux state
             dispatch(pushSubmission(sub));
             dispatch(setRecentSubmission(sub));
             handleTab("results");
 
-            // Verify that submissions array is populated
-            // const base_url: string = "https://fbef-106-219-91-217.ngrok-free.app";
             let updatedSubmission = null;
             for (let index = 0; index < input.length; index++) {
                 try {
@@ -207,7 +201,6 @@ export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEd
                         dispatch(setRecentSubmission(data.updatedSubmission));
 
                         if (data.updatedSubmission.status > 3) {
-                            // Stop evaluation if testcase fails
                             break;
                         }
                     } else {
@@ -227,43 +220,10 @@ export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEd
                     toast.error("Solution Rejected: " + updatedSubmission.status);
                 }
             }
-            // const submissions = input.map((inputValue, index) => ({
-            //     source_code: btoa(code),
-            //     language_id: problem.languageId,
-            //     stdin: btoa(inputValue),
-            //     expected_output: btoa(output[index]),
-            //     callback_url: `${base_url}${callback_urls[index]}`
-            // }));
-
-            // console.log("Submissions array:", submissions);
-            // if (submissions.length === 0) {
-            //     console.error("Error: Submissions array is empty");
-            //     return;
-            // }
-
-            // // Join the socket room with the UID
-            // socket.emit("join", submission_id);
-
-            // // Set up the listener for the 'update' event
-            // socket.on("update", (data) => {
-            //     // console.log("UpdatedSubmission:", data);
-
-            //     //updating redux state
-            //     dispatch(updateRecentSubmission(data.updatedSubmission));
-            //     dispatch(setRecentSubmission(data.updatedSubmission));
-            // });
-
-            // // Make a batch submission only if submissions array is not empty
-            // const result = await createBatchSubmission({ submissions });
-            // console.log(result);
-
-            // const tokens = result.map((obj: { token: any; }) => obj.token).join(",");
-            // setTimeout(async () =>{
-            //     const status = await getBatchSubmission(tokens);
-            //     console.log(status);
-            // }, 5000);
         } catch (error) {
             console.error("Error in handleOnSubmit:", error);
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -305,8 +265,12 @@ export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEd
             />
 
             <div className="flex justify-end items-center gap-2 p-4 border-t">
-                <Button variant="outline" onClick={runCode}>Run Code</Button>
-                <Button onClick={submitCode}>Submit</Button>
+                <Button variant="outline" onClick={runCode} disabled={isRunning} className="min-w-[100px]">
+                    {isRunning ? <Loader className="animate-spin h-4 w-4" /> : "Run Code"}
+                </Button>
+                <Button onClick={submitCode} disabled={isSubmitting} className="min-w-[100px]">
+                    {isSubmitting ? <Loader className="animate-spin h-4 w-4" /> : "Submit"}
+                </Button>
             </div>
         </div>
     )

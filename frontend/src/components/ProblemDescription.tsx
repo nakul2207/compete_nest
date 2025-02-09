@@ -66,9 +66,12 @@ export function ProblemDescription() {
                     </AccordionTrigger>
                     <AccordionContent>
                         <div className="flex flex-wrap gap-2">
-                            {problem.topics.map((topic, index) => (
-                                <Badge key={index} variant="outline">{topic}</Badge>
-                            ))}
+                            {problem.topics.map((topic, index) =>{ 
+                                const topicObj = JSON.parse(topic);
+                                return (
+                                    <Badge key={index} variant="outline">{topicObj.name}</Badge>
+                                )
+                            })}
                         </div>
                     </AccordionContent>
                 </AccordionItem>
@@ -80,10 +83,13 @@ export function ProblemDescription() {
                         </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                    <div className="flex flex-wrap gap-2">
-                            {problem.companies.map((company, index) => (
-                                <Badge key={index} variant="outline">{company}</Badge>
-                            ))}
+                        <div className="flex flex-wrap gap-2">
+                            {problem.companies.map((company, index) => {
+                                const companyObj = JSON.parse(company);
+                                return (
+                                    <Badge key={index} variant="outline">{companyObj.name}</Badge>
+                                )
+                            })}
                         </div>
                     </AccordionContent>
                 </AccordionItem>

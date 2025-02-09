@@ -121,9 +121,9 @@ export const languages = {
         is_archived: false,
         boilerplate: "Y29uc29sZS5sb2coJ0hlbGxvLCB3b3JsZCEnKTs="
     },
-    35: {
-        name: "Python (3.5.3)",
-        is_archived: true,
+    71: {
+        name: "Python (3.8.1)",
+        is_archived: false,
         boilerplate: "cHJpbnQoIkhlbGxvLCB3b3JsZCEiKQ=="
     }
 };

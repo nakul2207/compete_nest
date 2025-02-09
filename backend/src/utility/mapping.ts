@@ -91,7 +91,7 @@ export const languageMapping = {
     // 37: { name: "Python (2.6.9)", is_archived: true },
     // 70: { name: "Python (2.7.17)", is_archived: false },
     // 36: { name: "Python (2.7.9)", is_archived: true },
-    35: { name: "Python (3.5.3)", is_archived: true },
+    71: { name: "Python (3.8.1)", is_archived: false },
     // Add more languages as needed
 };
 
