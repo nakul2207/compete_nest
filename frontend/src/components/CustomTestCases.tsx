@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { Button } from "./ui/button"
 import { Textarea } from "./ui/textarea"
 import { useAppSelector } from "../redux/hook.ts"
-import { createSubmission, getSubmission } from "../api/problemApi.ts"
+import { createSubmission } from "../api/problemApi.ts"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
@@ -52,7 +52,7 @@ export function CustomTestCases() {
             }
 
         } catch (error) {
-            setOutput("Error running code: " + error.message)
+            setOutput("Error running code: " + (error instanceof Error ? error.message : String(error)))
         }
     }
 
@@ -117,12 +117,12 @@ export function CustomTestCases() {
                                         <CardHeader>
                                             <CardTitle className="flex items-center gap-2">
                                                 Code Output:
-                                                {getStatusIcon(problem.code_outputs[index], problem.example_exp_outputs[index])}
+                                                {getStatusIcon(problem.code_outputs[index] as CodeOutput, problem.example_exp_outputs[index])}
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent>
                                             <pre className="bg-muted p-2 rounded-md overflow-x-auto">
-                                                {problem.code_outputs[index].output || problem.code_outputs[index].status}
+                                                {(problem.code_outputs[index] as CodeOutput).output || (problem.code_outputs[index] as CodeOutput).status}
                                             </pre>
                                         </CardContent>
                                     </Card>

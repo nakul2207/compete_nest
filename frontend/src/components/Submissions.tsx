@@ -47,18 +47,18 @@ interface SubmissionsProps {
 export function Submissions({ handleTab }: SubmissionsProps) {
   const {user} = useAppSelector((state) => state.auth);
 
-  const submissions: Submission[] = useAppSelector(
-      (state) => state.problem.submissions
+  const submissions = useAppSelector(
+      (state) => state.problem.submissions as Submission[]
   );
   const dispatch = useAppDispatch();
 
   const getStatusBadge = (status: number) => {
     if (status <= 2) {
-      return <Badge variant="secondary">{statuses[status]}</Badge>;
+      return <Badge variant="secondary">{statuses[status as keyof typeof statuses]}</Badge>;
     } else if (status === 3) {
       return <Badge variant="success">{statuses[status]}</Badge>;
     } else {
-      return <Badge variant="destructive">{statuses[status]}</Badge>;
+      return <Badge variant="destructive">{statuses[status as keyof typeof statuses]}</Badge>;
     }
   };
 

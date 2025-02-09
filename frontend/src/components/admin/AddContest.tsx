@@ -12,7 +12,6 @@ import { ProblemSelectionTable } from './ProblemSelectionTable.tsx'
 import { X } from 'lucide-react'
 import { getAllProblems } from '@/api/problemApi'
 import {createContest} from "@/api/contestApi.ts";
-import { set } from 'date-fns'
 
 interface Problem {
     id: string
@@ -24,7 +23,6 @@ interface Problem {
 export function AddContest() {
     const [allProblems, setAllProblems] = useState<Problem[]>([])
     const [selectedProblems, setSelectedProblems] = useState<(Problem & { score: number })[]>([])
-    const [isloading, setIsLoading] = useState(true)
 
     const { control, handleSubmit, formState: { errors }, setValue } = useForm<ContestFormData>({
         resolver: zodResolver(contestSchema),
@@ -125,10 +123,8 @@ export function AddContest() {
                                             id="startTime"
                                             label="Start Time"
                                             {...field}
-                                            onChange={(e) => {
-                                                const date = new Date(e.target.value);
-                                                onChange(date);
-                                            }}
+                                            value={field.value.toISOString().slice(0, 16)}
+                                            onChange={(e) => onChange(new Date(e.target.value))}
                                         />
                                     )}
                                 />
@@ -144,10 +140,8 @@ export function AddContest() {
                                             id="endTime"
                                             label="End Time"
                                             {...field}
-                                            onChange={(e) => {
-                                                const date: Date = new Date(e.target.value);
-                                                onChange(date);
-                                            }}
+                                            value={field.value.toISOString().slice(0, 16)}
+                                            onChange={(e) => onChange(new Date(e.target.value))}
                                         />
                                     )}
                                 />
