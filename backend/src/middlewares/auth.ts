@@ -32,7 +32,7 @@ const authenticate = async (req: Request, res: Response, next: NextFunction) => 
         if (user.role !== decoded.role) {
             const newToken = jwt.sign(
                 { userId: user.id, role: user.role },
-                process.env.JWT_SECRET,
+                process.env.JWT_SECRET as string,
                 { expiresIn: '10d' }
             );
 
@@ -40,7 +40,7 @@ const authenticate = async (req: Request, res: Response, next: NextFunction) => 
                 expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
                 httpOnly: true,
                 secure: true,
-                sameSite: 'none',
+                sameSite: 'none' as 'none',
             };
 
             return res.status(403).cookie("token", newToken, options).json({ message: 'Please try once again.' });
