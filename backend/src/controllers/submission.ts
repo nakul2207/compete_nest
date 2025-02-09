@@ -49,8 +49,9 @@ const handleRunCallback = async (req: Request, res: Response) => {
 
 const handleSubmissionCallback = async (req: Request, res: Response) => {
     const subTestcaseId = req.params.id;
+    const submissionId = req.params.submissionId;
 
-    if (!subTestcaseId || !req.body) {
+    if (!subTestcaseId || !req.body || !submissionId) {
         return res.status(400).json({
             success: false,
             message: "Invalid request. Testcase ID or request body missing.",
@@ -67,16 +68,16 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
     ongoingUpdates.add(subTestcaseId);
     try {
         const { stdout, status, time, memory } = req.body;
-        const parsedTime = parseFloat(time);
+        const parsedTime = time ? parseFloat(time) : 0;
 
-        await prisma.$transaction(
+        const result = await prisma.$transaction(
             async (tx) => {
                 const updatedTestcase = await tx.submittedTestcase.update({
                     where: { id: subTestcaseId },
                     data: {
                         output: stdout ?? "",
                         status: status.id,
-                        memory,
+                        memory: memory ?? 0,
                         time: parsedTime
                     },
                 });
@@ -127,18 +128,24 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
                 });
 
                 //sending the updated submission data to the client
-                const io = (req as any).io as Server | undefined;
-                if (!io) {
-                    console.error('Socket.IO not attached to request');
-                    throw new Error("IO object not found");
-                }
+                // const io = (req as any).io as Server | undefined;
+                // if (!io) {
+                //     console.error('Socket.IO not attached to request');
+                //     throw new Error("IO object not found");
+                // }
 
-                console.log('Attempting to emit with io:', !!io);
-                io.to(updatedTestcase.submissionId).emit("update", {
+                // console.log('Attempting to emit with io:', !!io);
+                // io.to(updatedTestcase.submissionId).emit("update", {
+                //     success: true,
+                //     message: "Testcase updated successfully",
+                //     updatedSubmission
+                // });
+
+                return {
                     success: true,
-                    message: "Testcase updated successfully",
+                    message: "Submission updated successfully.",
                     updatedSubmission
-                });
+                }
             },
             {
                 maxWait: 20000,
@@ -146,39 +153,268 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
             }
         );
 
-        return res.status(200).json({
-            success: true,
-            message: "Submission updated successfully.",
-        });
+        return res.status(200).json(result);
     } catch (error) {
         // Update the submission to "Internal Error" status (14)
         try {
             const updatedSubmission = await prisma.submission.update({
-                where: { id: subTestcaseId },
+                where: { id: submissionId },
                 data: {
                     status: 13, // Internal Error
                 },
             });
 
             // Sending the updated submission data to the client
-            const io = (req as any).io as Server | undefined;
-            if (io) {
-                io.to(subTestcaseId).emit("update", {
-                    success: false,
-                    message: "Internal error occurred in the backend.",
-                    updatedSubmission,
-                });
-            } else {
-                console.error("Socket.IO not attached to request");
-            }
+            // const io = (req as any).io as Server | undefined;
+            // if (io) {
+            //     io.to(submissionId).emit("update", {
+            //         success: false,
+            //         message: "Internal error occurred in the backend.",
+            //         updatedSubmission,
+            //     });
+            // } else {
+            //     console.error("Socket.IO not attached to request");
+            // }
+
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error. Submission marked as Internal Error.",
+                updatedSubmission
+            })
         } catch (updateError) {
             console.error("Failed to update submission to Internal Error:", updateError);
+
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error. Submission marked as Internal Error.",
+            });
+        }
+    } finally {
+        ongoingUpdates.delete(subTestcaseId);
+    }
+};
+
+const handleContestSubmissionCallback = async (req: Request, res: Response) => {
+    const subTestcaseId = req.params.id;
+    const contestId = req.params.contestId;
+    const submissionId = req.params.submissionId;
+
+    if (!subTestcaseId || !req.body || !submissionId) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid request. Testcase ID or request body missing.",
+        });
+    }
+
+    if (ongoingUpdates.has(subTestcaseId)) {
+        return res.status(429).json({
+            success: false,
+            message: "This submission is already being processed.",
+        });
+    }
+
+    ongoingUpdates.add(subTestcaseId);
+    try {
+        const { stdout, status, time, memory } = req.body;
+        const parsedTime = time ? parseFloat(time) : 0;
+
+        const result = await prisma.$transaction(
+            async (tx) => {
+                const updatedTestcase = await tx.submittedTestcase.update({
+                    where: { id: subTestcaseId },
+                    data: {
+                        output: stdout ?? "",
+                        status: status.id,
+                        memory: memory ?? 0,
+                        time: parsedTime
+                    },
+                });
+
+                const submission = await tx.$queryRaw`
+                    SELECT * 
+                    FROM "Submission"
+                    WHERE "id" = ${updatedTestcase.submissionId}
+                    FOR UPDATE
+                `;
+
+                if (!submission?.length) {
+                    throw new Error("Submission not found.");
+                }
+
+                const submissionData = submission[0];
+                let { acceptedTestcases, evaluatedTestcases } = submissionData;
+                let overallStatus = submissionData.status;
+
+                //incrementing the evaluated testcases
+                if(updatedTestcase.status >= 3){
+                    evaluatedTestcases++;
+                }
+
+                //incrementing the accepted testcases count if the current testcase is accepted
+                if(updatedTestcase.status === 3){
+                    acceptedTestcases++;
+                }
+
+                if(evaluatedTestcases !== submissionData.totalTestcases){
+                    if(updatedTestcase.status > 3){
+                        overallStatus = updatedTestcase.status;
+                    }
+                }else{
+                    //then it takes the maximum of current status and previous status
+                    overallStatus = Math.max(updatedTestcase.status, overallStatus);
+                }
+
+                const updatedSubmission = await tx.submission.update({
+                    where: { id: updatedTestcase.submissionId },
+                    data: {
+                        evaluatedTestcases,
+                        acceptedTestcases,
+                        status: overallStatus,
+                        memory: Math.max(submissionData.memory, memory),
+                        time: (submissionData.time + parsedTime)
+                    },
+                });
+
+                //sending the updated submission data to the client
+                // const io = (req as any).io as Server | undefined;
+                // if (!io) {
+                //     console.error('Socket.IO not attached to request');
+                //     throw new Error("IO object not found");
+                // }
+
+                // console.log('Attempting to emit with io:', !!io);
+                // io.to(updatedTestcase.submissionId).emit("update", {
+                //     success: true,
+                //     message: "Testcase updated successfully",
+                //     updatedSubmission
+                // });
+                
+                //if the final testcase get accepted, then update the score of the participant
+                if(overallStatus === 3){
+                    const participant = await tx.contestParticipants.findFirst({
+                        where: {
+                            contestId,
+                            userId: updatedSubmission.userId
+                        },
+                        select:{
+                            problemsSolved: true
+                        }
+                    })
+
+                    if(!participant?.problemsSolved.includes(updatedSubmission.problemId)){
+                        const contestProblem = await tx.contestProblem.findFirst({
+                            where: {
+                                contestId,
+    
+                                problemId: updatedSubmission.problemId
+                            },select: {
+                                score: true
+                            }
+                        })
+                        
+                        if(contestProblem){
+                            const [updatedParticipant, contestParticipants] = await Promise.all([
+                                tx.contestParticipants.updateMany({
+                                    where: {
+                                        contestId,
+                                        userId: updatedSubmission.userId,
+                                    },
+                                    data: {
+                                        score: {
+                                            increment: contestProblem.score
+                                        },
+                                        problemsSolved: {
+                                            push: updatedSubmission.problemId
+                                        }
+                                    }
+                                }),
+                                tx.contestParticipants.findMany({
+                                    where: {
+                                        contestId
+                                    },
+                                    orderBy: [
+                                        { score: 'desc' },
+                                        { updatedAt: 'asc' }
+                                    ],
+                                    include: {
+                                        user: {
+                                            select: {
+                                                name: true
+                                            }
+                                        }
+                                    }
+                                })
+                            ]);
+
+                            
+                            //send the updated leaderboard details to the client
+                            const io = (req as any).io as Server | undefined;
+                            if (!io) {
+                                console.error('Socket.IO not attached to request');
+                                throw new Error("IO object not found");
+                            }
+
+                            console.log('Attempting to emit with io:', !!io);
+                            io.to(contestId+"-leaderboard").emit("update", {
+                                success: true,
+                                message: "Leaderboard updated successfully",
+                                leaderboard: contestParticipants
+                            });
+                        }
+                    }
+                }
+
+                return {
+                    success: true,
+                    message: "Submission updated successfully.",
+                    updatedSubmission
+                }
+            },
+            {
+                maxWait: 20000,
+                timeout: 20000,
+            }
+        );
+
+        return res.status(200).json(result);
+    } catch (error) {
+        // Update the submission to "Internal Error" status (14)
+        try {
+            const updatedSubmission = await prisma.submission.update({
+                where: { id: submissionId },
+                data: {
+                    status: 13, // Internal Error
+                },
+            });
+
+
+            // Sending the updated submission data to the client
+            // const io = (req as any).io as Server | undefined;
+            // if (io) {
+            //     io.to(submissionId).emit("update", {
+            //         success: false,
+            //         message: "Internal error occurred in the backend.",
+            //         updatedSubmission,
+
+            //     });
+            // } else {
+            //     console.error("Socket.IO not attached to request");
+            // }
+
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error. Submission marked as Internal Error.",
+                updatedSubmission
+            })
+        } catch (updateError) {
+            console.error("Failed to update submission to Internal Error:", updateError);
+
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error. Submission marked as Internal Error.",
+            });
         }
 
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error. Submission marked as Internal Error.",
-        });
     } finally {
         ongoingUpdates.delete(subTestcaseId);
     }
@@ -291,4 +527,4 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
 //     }
 // };
 
-export { handleSubmissionCallback, handleRunCallback };
+export { handleSubmissionCallback, handleRunCallback, handleContestSubmissionCallback };

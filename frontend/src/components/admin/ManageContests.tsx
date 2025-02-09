@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo,useEffect } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -6,22 +6,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Pencil, Trash2, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { getAllContests } from '@/api/contestApi'
+import { Spinner } from '../ui/Spinner.tsx'
 
-const dummyContests = [
-    { id: 1, title: 'Weekly Contest 1', startDate: '2024-01-01T20:00:00Z', duration: '2 hours', participants: 1000 },
-    { id: 2, title: 'Biweekly Contest 1', startDate: '2024-01-15T14:00:00Z', duration: '3 hours', participants: 1500 },
-    { id: 3, title: 'Monthly Contest 1', startDate: '2024-02-01T18:00:00Z', duration: '4 hours', participants: 2000 },
-    { id: 4, title: 'Weekly Contest 2', startDate: '2023-12-25T20:00:00Z', duration: '2 hours', participants: 950 },
-]
 
-type Contest = typeof dummyContests[0]
+interface Contest {
+    id: number
+    title: string
+    startTime: string
+    endTime: string
+}
+
 
 export function ManageContests() {
-    const [contests, setContests] = useState(dummyContests)
+    const [contests, setContests] = useState<Contest[]>([]);
     const [searchTerm, setSearchTerm] = useState('')
     const [statusFilter, setStatusFilter] = useState('all')
-    const [sortBy, setSortBy] = useState<keyof Contest>('startDate')
+    const [sortBy, setSortBy] = useState<keyof Contest>('startTime')
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+    const [isloading, setIsLoading] = useState(true)
 
     const handleDelete = (id: number) => {
         setContests(contests.filter(contest => contest.id !== id))
@@ -29,19 +32,45 @@ export function ManageContests() {
 
     const filteredAndSortedContests = useMemo(() => {
         const now = new Date()
-        return contests
-            .filter(contest =>
-                contest.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-                (statusFilter === 'all' ||
-                    (statusFilter === 'upcoming' && new Date(contest.startDate) > now) ||
-                    (statusFilter === 'past' && new Date(contest.startDate) <= now))
-            )
-            .sort((a, b) => {
-                if (a[sortBy] < b[sortBy]) return sortOrder === 'asc' ? -1 : 1
-                if (a[sortBy] > b[sortBy]) return sortOrder === 'asc' ? 1 : -1
-                return 0
-            })
+        return contests.filter(contest =>
+            contest.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            (statusFilter === 'all' ||
+            (statusFilter === 'upcoming' && new Date(contest.startTime) > now) ||
+            (statusFilter === 'past' && new Date(contest.endTime) <= now) ||
+            (statusFilter === 'ongoing' && new Date(contest.startTime) <= now && new Date(contest.endTime) > now))
+        )
+        .sort((a, b) => {
+            // Handle comparison differently based on the field (date vs. string)
+            let aValue, bValue;
+            if (sortBy === 'startTime' || sortBy === 'endTime') {
+            // Convert dates to timestamps for numerical comparison
+            aValue = new Date(a[sortBy]).getTime();
+            bValue = new Date(b[sortBy]).getTime();
+            } else if (sortBy === 'title') {
+            // Case-insensitive comparison for titles
+            aValue = a[sortBy].toLowerCase();
+            bValue = b[sortBy].toLowerCase();
+            } else {
+            aValue = a[sortBy];
+            bValue = b[sortBy];
+            }
+
+            // Determine the sort order
+            if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+            if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+            return 0;
+        })
     }, [contests, searchTerm, statusFilter, sortBy, sortOrder])
+    useEffect(()=>{
+        setIsLoading(true);
+        getAllContests().then((data)=>{
+            console.log(data);
+            setContests(data.contests);
+            setIsLoading(false);
+        }).catch((err)=>{
+            console.log(err);
+        })
+    },[])
 
     return (
         <Card>
@@ -62,6 +91,7 @@ export function ManageContests() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Contests</SelectItem>
+                            <SelectItem value="ongoing">Ongoing</SelectItem>
                             <SelectItem value="upcoming">Upcoming</SelectItem>
                             <SelectItem value="past">Past</SelectItem>
                         </SelectContent>
@@ -71,9 +101,8 @@ export function ManageContests() {
                             <SelectValue placeholder="Sort by" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="startDate">Start Date</SelectItem>
+                            <SelectItem value="startTime">Start Date</SelectItem>
                             <SelectItem value="title">Title</SelectItem>
-                            <SelectItem value="participants">Participants</SelectItem>
                         </SelectContent>
                     </Select>
                     <div className="flex gap-2 flex-wrap">
@@ -95,17 +124,34 @@ export function ManageContests() {
                                 <TableHead>Title</TableHead>
                                 <TableHead>Start Date</TableHead>
                                 <TableHead>Duration</TableHead>
-                                <TableHead>Participants</TableHead>
+                                {/* <TableHead>Participants</TableHead> */}
                                 <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredAndSortedContests.map((contest) => (
+                            {isloading ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="h-32 text-center">
+                                        <Spinner/>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                            filteredAndSortedContests.map((contest) => (
                                 <TableRow key={contest.id}>
                                     <TableCell>{contest.title}</TableCell>
-                                    <TableCell>{new Date(contest.startDate).toLocaleString()}</TableCell>
-                                    <TableCell>{contest.duration}</TableCell>
-                                    <TableCell>{contest.participants}</TableCell>
+                                    <TableCell>{new Date(contest.startTime).toLocaleString()}</TableCell>
+                                    <TableCell>
+                                    {(() => {
+                                        const durationMs = new Date(contest.endTime).getTime() - new Date(contest.startTime).getTime();
+                                        const durationSeconds = Math.floor(durationMs / 1000);
+                                        const hours = Math.floor(durationSeconds / 3600);
+                                        const minutes = Math.floor((durationSeconds % 3600) / 60);
+                                        const seconds = durationSeconds % 60;
+
+                                        return `${hours}h ${minutes}m ${seconds}s`;
+                                    })()}
+                                    </TableCell>
+                                    {/* <TableCell>{contest.participants}</TableCell> */}
                                     <TableCell>
                                         <div className="flex space-x-2">
                                             <Button variant="outline" size="sm" asChild>
@@ -119,7 +165,7 @@ export function ManageContests() {
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )))}
                         </TableBody>
                     </Table>
                 </div>

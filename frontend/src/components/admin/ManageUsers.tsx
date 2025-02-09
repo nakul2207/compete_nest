@@ -8,6 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { GetUsers, DeleteUser, RoleChange } from "@/api/userApi.ts"
 import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
+import { Spinner } from '../ui/Spinner'
 
 interface User {
     id: string
@@ -25,6 +26,7 @@ export function ManageUsers() {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
     const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; userId: string; newRole: string }>({ isOpen: false, userId: '', newRole: '' })
     const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; userId: string }>({ isOpen: false, userId: '' })
+    const [loading, setLoading] = useState(true)
 
     const handleDeleteUser = async (userId: string) => {
         try {
@@ -41,12 +43,14 @@ export function ManageUsers() {
     }
 
     useEffect(() => {
+        setLoading(true)
         GetUsers().then((data) => {
             if(data){
                 setUsers(data.users)
             }else{
                 setUsers([])
             }
+            setLoading(false)
         }).catch((err) => {
             console.log("Failed to load users: ", err);
         })
@@ -136,7 +140,14 @@ export function ManageUsers() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredAndSortedUsers.map((user) => (
+                            {loading?(
+                                <TableRow>
+                                <TableCell colSpan={4} className="h-32 text-center">
+                                    <Spinner/>
+                                </TableCell>
+                                </TableRow>
+                            ):
+                            (filteredAndSortedUsers.map((user) => (
                                 <TableRow key={user.id}>
                                     <TableCell>{user.name}</TableCell>
                                     <TableCell>{user.email}</TableCell>
@@ -162,7 +173,7 @@ export function ManageUsers() {
                                             />
                                         </TableCell>
                                 </TableRow>
-                            ))}
+                            )))}
                         </TableBody>
                     </Table>
                 </div>

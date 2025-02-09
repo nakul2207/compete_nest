@@ -18,7 +18,7 @@ type LanguageMap = {
   [key: string]: Language;
 };
 
-export function Solutions() {
+export function Solutions({show}: {show: boolean}) {
   const solutionCode = useAppSelector((state) => state.problem.ownerCode);
   const solutionLanguage = useAppSelector((state) => state.problem.ownerCodeLanguage);
   const [copied, setCopied] = useState(false);
@@ -47,6 +47,7 @@ export function Solutions() {
   };
 
   return (
+    show ? (
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
@@ -91,6 +92,11 @@ export function Solutions() {
           </div>
         </CardContent>
       </Card>
+    ) : (
+      <div className="flex justify-center items-center h-full">
+        <p className="text-gray-500">No solutions available</p>
+      </div>
+    )
   )
 }
 

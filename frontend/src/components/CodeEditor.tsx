@@ -1,9 +1,9 @@
-import {useEffect, useRef, useCallback, useMemo, useState} from "react"
+import { useEffect, useRef, useCallback, useMemo, useState } from "react"
 import { Button } from "./ui/button"
 import { Maximize2, Minimize2, Sun, Moon } from 'lucide-react'
 import { Editor, useMonaco } from "@monaco-editor/react"
-import {languages } from "../assets/mapping.ts";
-import {LangSelector} from "./LangSelector.tsx";
+import { languages } from "../assets/mapping.ts";
+import { LangSelector } from "./LangSelector.tsx";
 import { useAppSelector, useAppDispatch } from '../redux/hook.ts'
 import {
     pushSubmission,
@@ -13,18 +13,21 @@ import {
     setRecentSubmission,
     updateRecentSubmission
 } from '../redux/slice/problemSlice.tsx'
-import {createBatchSubmission, createSubmission, getFileData, submitProblem} from "../api/problemApi.ts";
-
-import {io} from "socket.io-client";
-const server_url = import.meta.env.VITE_SERVER_URL;
-const socket = io(server_url, { transports: ["websocket"] });
+import { createSubmission, getFileData, submitProblem, updateSubmission } from "../api/problemApi.ts";
+import { toast } from "sonner";
+import { Loader } from 'lucide-react';
 
 interface CodeEditorProps {
-    handleTab: (currentTab:string) => void
+    handleTab: (currentTab: string) => void
     isFullScreen: boolean
     handleFullScreen: (isFullScreen: boolean) => void
 }
-
+interface User {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+}
 type Language = {
     name: string;
     is_archived: boolean;
@@ -40,14 +43,17 @@ const monacoLanguageMap: { [key: string]: string } = {
     "54": "cpp",
     "62": "java",
     "63": "javascript",
-    "35": "python"
+    "71": "python"
 }
 
-export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEditorProps) {
+export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEditorProps) {
+    const { user } = useAppSelector((state) => state.auth);
     const code = useAppSelector((state) => state.problem.code);
-    const problem  = useAppSelector((state) => state.problem);
-    const languageId =  useAppSelector((state) => state.problem.languageId);
+    const problem = useAppSelector((state) => state.problem);
+    const languageId = useAppSelector((state) => state.problem.languageId);
     const [theme, setTheme] = useState<'vs-dark' | 'light'>('vs-dark')
+    const [isRunning, setIsRunning] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const editorRef = useRef<any>(null);
     const monaco = useMonaco()
     const dispatch = useAppDispatch();
@@ -62,7 +68,7 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
         editor.focus();
     }, []);
 
-    useEffect(() =>{
+    useEffect(() => {
         dispatch(setCode(atob(getLanguageBoilerplate(languageId))));
     }, [dispatch, languageId]);
 
@@ -93,31 +99,27 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
     }, [monaco, theme])
 
     const runCode = async () => {
+        setIsRunning(true);
         try {
-            // Initialize outputs as a new array
             let updatedOutputs = problem.example_inputs.map(() => ({
                 status: "Code Running...",
                 output: null,
             }));
 
-            dispatch(setCodeOutputs([...updatedOutputs])); // Dispatch initial state update
+            dispatch(setCodeOutputs([...updatedOutputs]));
 
-            // Process each input asynchronously
             const results = await Promise.all(
                 problem.example_inputs.map(async (inputValue, index) => {
                     try {
-                        // Prepare the data for submission
                         const data = {
-                            source_code: btoa(problem.code), // Encode source code in Base64
+                            source_code: btoa(problem.code),
                             language_id: problem.languageId,
-                            stdin: btoa(inputValue), // Encode stdin in Base64
-                            expected_output: btoa(problem.example_exp_outputs[index]), // Encode expected output
+                            stdin: btoa(inputValue),
+                            expected_output: btoa(problem.example_exp_outputs[index]),
                         };
 
-                        // Create submission and await the result
                         const result = await createSubmission(data);
 
-                        // Return the result for the current input
                         if (result.status.id === 3 || result.stdout) {
                             return {
                                 status: result.status.description,
@@ -139,19 +141,25 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
                 })
             );
 
-            // Update the outputs in state after processing all submissions
-            dispatch(setCodeOutputs([...results])); // Use a new array reference
-            handleTab("testcases"); // Change tab after all submissions are processed
+            dispatch(setCodeOutputs([...results]));
+            handleTab("testcases");
         } catch (error) {
             console.error("Error processing submissions:", error);
+        } finally {
+            setIsRunning(false);
         }
     };
 
     const submitCode = async () => {
+        setIsSubmitting(true);
         try {
-            const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id: problem.id, code: btoa(code),  language_id: parseInt(problem.languageId)});
+            if (!user) {
+                toast.error("Please login to submit code");
+                return;
+            }
 
-            // Use Promise.all to fetch data concurrently for input and output
+            const { submission_id, input_urls, exp_output_urls, callback_urls } = await submitProblem({ problem_id: problem.id, code: btoa(code), language_id: parseInt(problem.languageId) });
+
             const input: string[] = await Promise.all(input_urls.map((url: string) => getFileData(url)));
             const output: string[] = await Promise.all(exp_output_urls.map((url: string) => getFileData(url)));
             const sub = {
@@ -165,60 +173,62 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
                 problemId: problem.id,
                 language: problem.languageId,
                 userCode: btoa(code),
-                userId: "123",
+                userId: user?.id,
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
             }
 
-            //updating redux state
             dispatch(pushSubmission(sub));
             dispatch(setRecentSubmission(sub));
             handleTab("results");
 
-            // Verify that submissions array is populated
-            const base_url: string = "https://c0e7-2409-40d2-10-6766-a5e6-5a26-7d04-4bc1.ngrok-free.app";
-            const submissions = input.map((inputValue, index) => ({
-                source_code: btoa(code),
-                language_id: problem.languageId,
-                stdin: btoa(inputValue),
-                expected_output: btoa(output[index]),
-                callback_url:`${base_url}${callback_urls[index]}`
-            }));
+            let updatedSubmission = null;
+            for (let index = 0; index < input.length; index++) {
+                try {
+                    const inputData = {
+                        source_code: btoa(code),
+                        language_id: problem.languageId,
+                        stdin: btoa(input[index]),
+                        expected_output: btoa(output[index]),
+                    };
 
-            console.log("Submissions array:", submissions);
-            if (submissions.length === 0) {
-                console.error("Error: Submissions array is empty");
-                return;
+                    const result = await createSubmission(inputData);
+                    const data = await updateSubmission(result, callback_urls[index]);
+
+                    if (data.updatedSubmission) {
+                        updatedSubmission = data.updatedSubmission;
+                        dispatch(updateRecentSubmission(data.updatedSubmission));
+                        dispatch(setRecentSubmission(data.updatedSubmission));
+
+                        if (data.updatedSubmission.status > 3) {
+                            break;
+                        }
+                    } else {
+                        console.error("Error in handleOnSubmit:", data.message);
+                        break;
+                    }
+                } catch (error) {
+                    console.error("Error in handleOnSubmit:", error);
+                    break;
+                }
             }
 
-            // Join the socket room with the UID
-            socket.emit("join", submission_id);
-
-            // Set up the listener for the 'update' event
-            socket.on("update", (data) => {
-                // console.log("UpdatedSubmission:", data);
-
-                //updating redux state
-                dispatch(updateRecentSubmission(data.updatedSubmission));
-                dispatch(setRecentSubmission(data.updatedSubmission));
-            });
-
-            // Make a batch submission only if submissions array is not empty
-            const result = await createBatchSubmission({ submissions });
-            console.log(result);
-
-            // const tokens = result.map((obj: { token: any; }) => obj.token).join(",");
-            // setTimeout(async () =>{
-            //     const status = await getBatchSubmission(tokens);
-            //     console.log(status);
-            // }, 5000);
+            if (updatedSubmission) {
+                if (updatedSubmission.status === 3) {
+                    toast.success("Solution Accepted");
+                } else {
+                    toast.error("Solution Rejected: " + updatedSubmission.status);
+                }
+            }
         } catch (error) {
             console.error("Error in handleOnSubmit:", error);
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col">
             <div className="flex justify-between items-center p-4 border-b">
                 <LangSelector language_id={languageId} onSelect={onSelect} />
                 <div className="flex items-center gap-2">
@@ -245,7 +255,7 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
             </div>
 
             <Editor
-                height="80vh"
+                height="65vh"
                 theme={theme}
                 language={monacoLanguageMap[languageId]}
                 value={code}
@@ -255,8 +265,12 @@ export function CodeEditor({handleTab, isFullScreen, handleFullScreen }: CodeEdi
             />
 
             <div className="flex justify-end items-center gap-2 p-4 border-t">
-                <Button variant="outline" onClick={runCode}>Run Code</Button>
-                <Button onClick={submitCode}>Submit</Button>
+                <Button variant="outline" onClick={runCode} disabled={isRunning} className="min-w-[100px]">
+                    {isRunning ? <Loader className="animate-spin h-4 w-4" /> : "Run Code"}
+                </Button>
+                <Button onClick={submitCode} disabled={isSubmitting} className="min-w-[100px]">
+                    {isSubmitting ? <Loader className="animate-spin h-4 w-4" /> : "Submit"}
+                </Button>
             </div>
         </div>
     )

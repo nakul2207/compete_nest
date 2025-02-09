@@ -3,12 +3,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select"
-import { Calendar, Clock, Users } from 'lucide-react'
-import {getAllContests, handleRegistration} from "@/api/contestApi.ts";
-import { formatDistanceToNow, format } from 'date-fns'
+import { Calendar, Clock } from 'lucide-react'
+import { getAllContests, handleRegistration } from "@/api/contestApi.ts";
 import { Link } from 'react-router-dom'
-
-// Dummy data for contests
+import { Spinner } from "../components/ui/Spinner"
 
 interface Contest {
   id: string;
@@ -20,33 +18,22 @@ interface Contest {
   status: string;
   attended: boolean;
 }
+
 export function ContestsPage() {
   const [contests, setContests] = useState<Contest[]>([]);
   const [filter, setFilter] = useState("all");
-
-  // const filteredPastContests = pastContests.filter(contest =>
-  //   pastContestFilter === "all" ||
-  //   (pastContestFilter === "attended" && contest.attended) ||
-  //   (pastContestFilter === "not-attended" && !contest.attended)
-  // )
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getAllContests().then((data) => {
       console.log(data);
       setContests(data.contests);
-    }).catch((err) => console.log(err))
+      setLoading(false);
+    }).catch((err) => {
+      console.log(err);
+      setLoading(false);
+    })
   }, [])
-
-  const formatSubmissionTime = (createdAt: string) => {
-    const submissionDate = new Date(createdAt)
-    const now = new Date()
-
-    if (submissionDate.toDateString() === now.toDateString()) {
-        return format(submissionDate, 'HH:mm')
-    } else {
-        return formatDistanceToNow(submissionDate, { addSuffix: true })
-    }
-  }
 
   const handleRegister = (contestId: string, isRegister: boolean) => {
     handleRegistration(contestId, isRegister).then((data) => {
@@ -92,10 +79,6 @@ export function ContestsPage() {
             <Clock className="mr-2 h-4 w-4"/>
             <span>{date.toLocaleTimeString()}</span>
           </div>
-          {/* <div className="flex items-center">
-            <Users className="mr-2 h-4 w-4"/>
-            <span>{contest.participants.toLocaleString()} participants</span>
-          </div> */}
           <div>
             <span>{contest.problems.length} questions</span>
           </div>
@@ -116,11 +99,16 @@ export function ContestsPage() {
                 {contest.attended ? 'Unregister' : 'Register'}
               </Button>
             ) : (
-              <Link to={`/contest/${contest.id}`}>
-                <Button>
-                  Open
+              contest.attended ? (
+                <Link to={`/contest/${contest.id}`}>
+                  <Button>
+                    Open
                 </Button>
-              </Link>
+              </Link>):(
+                <Button disabled>
+                  You are not registered for this contest
+                </Button>
+              )
             )
           )}
         </div>
@@ -137,14 +125,27 @@ export function ContestsPage() {
           <TabsTrigger value="past">Past Contests</TabsTrigger>
         </TabsList>
         <TabsContent value="upcoming">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {contests
-              .filter(contest => contest.status !== 'Ended')
-              .map(contest => (
-                <ContestCard key={contest.id} contest={contest} isPast={false}/>
-              ))
-            }
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Spinner />
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {contests
+                .filter(contest => contest.status !== 'Ended')
+                .map(contest => (
+                  <ContestCard key={contest.id} contest={contest} isPast={false}/>
+                ))
+              }
+              {contests.filter(contest => contest.status !== 'Ended').length === 0 && (
+                  <div className="text-center col-span-full">
+                  <p className="text-lg text-gray-500 dark:text-gray-400 font-medium mt-4">
+                    No upcoming contests found yet. Check back later!
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
         <TabsContent value="past">
           <div className="mb-4">
@@ -159,22 +160,43 @@ export function ContestsPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {contests
-              .filter(contest => {
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Spinner />
+            </div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {contests
+                .filter(contest => {
+                  if (filter === 'attended') {
+                    return contest.status === 'Ended' && contest.attended;
+                  } else if (filter === 'not-attended') {
+                    return contest.status === 'Ended' && !contest.attended;
+                  } else {
+                    return contest.status === 'Ended';
+                  }
+                })
+                .map(contest => (
+                  <ContestCard key={contest.id} contest={contest} isPast={true}/>
+                ))
+              }
+              {contests.filter(contest => {
                 if (filter === 'attended') {
-                  return contest.status === 'Ended' && contest.attended === true;
+                  return contest.status === 'Ended' && contest.attended;
                 } else if (filter === 'not-attended') {
-                  return contest.status === 'Ended' && contest.attended === false;
+                  return contest.status === 'Ended' && !contest.attended;
                 } else {
                   return contest.status === 'Ended';
                 }
-              })
-              .map(contest => (
-                <ContestCard key={contest.id} contest={contest} isPast={true}/>
-              ))
-            }
-          </div>
+              }).length === 0 && (                
+                <div className="text-center col-span-full">
+                  <p className="text-lg text-gray-500 dark:text-gray-400 font-medium mt-4">
+                    No contests found.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

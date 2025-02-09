@@ -19,6 +19,19 @@ export const createContest = async (Contest: ContestFormData) =>{
         throw new Error('Failed to create contest');
     }
 }
+export const getContestById = async(id: string|undefined) => {
+    try{
+        const {data} = await axios.get(`${server_url}/api/contest/${id}`, {
+            headers,
+            withCredentials: true
+        })
+
+        return data.contestData;
+    }catch(error){
+        console.error('Error fetching the contest', error);
+        throw new Error('Failed to get the contest');
+    }
+}
 
 export const getAllContests = async() => {
     try{
@@ -45,5 +58,19 @@ export const handleRegistration = async (contestId: string, isRegister: boolean)
     }catch(error){
         console.error('Error registering for the contest', error);
         throw new Error('Failed to register for the contest');
+    }
+}
+
+export const getLeaderboard = async (contestId: string) => {
+    try{
+        const {data} = await axios.get(`${server_url}/api/contest/${contestId}/leaderboard`, {
+            headers,
+            withCredentials: true
+        })
+
+        return data.leaderboard;
+    }catch(error){
+        console.error('Error fetching the leaderboard', error);
+        throw new Error('Failed to get the leaderboard');
     }
 }

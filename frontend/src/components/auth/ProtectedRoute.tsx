@@ -36,7 +36,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) 
     if (allowedRoles.includes(user.role)) {
       return <Outlet />;
     } else {
-      return <Navigate to="/forbidden" replace />;
+      return <Navigate to="/forbidden" state={{ errorMessage: "You are not authorized to access this page" }} />
     }
   } catch (error) {
     console.error('Invalid token:', error);

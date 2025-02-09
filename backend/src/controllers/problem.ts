@@ -110,8 +110,30 @@ const handleSubmitProblem = async (req:Request, res:Response) => {
     try {
         const { code, language_id } = req.body;
         const problem_id: string = req.params.id;
-        const user_id: string = "123";
+        const user_id: string = req.user.id;
 
+        const problem = await prisma.problem.findUnique({
+            where: {
+                id: problem_id
+            }
+        });
+
+        if(problem?.contestId){
+            const contest = await prisma.contest.findUnique({
+                where: {
+                    id: problem.contestId
+                },
+                select: {
+                    startTime: true,
+                    endTime: true
+                }
+            });
+
+            if(contest?.startTime && contest.startTime > new Date()){
+                return res.status(400).json({error: "Contest has not started yet"});
+            }
+        }
+        
         //getting all the testcases for the given problem
         const testcases = await prisma.testcase.findMany({
             where: {
@@ -153,7 +175,11 @@ const handleSubmitProblem = async (req:Request, res:Response) => {
                     }
                 })
 
-                const callback_url = `/api/submission/submitted_testcase/${sub_testcase_id.id}`;
+                let callback_url = `/api/submission/${sub_id.id}/submitted_testcase/${sub_testcase_id.id}`;
+
+                if(problem?.contestId){
+                    callback_url = `/api/submission/${sub_id.id}/contest/${problem.contestId}/submitted_testcase/${sub_testcase_id.id}`;
+                }
 
                 input_urls.push(input_url);
                 exp_output_urls.push(exp_output_url);
@@ -190,7 +216,7 @@ const handleRunProblem = async (req: Request, res: Response) => {
 }
 
 const handleCreateProblem  = async (req: Request, res:Response) =>{
-    const userId = "123";
+    const userId = req.user.id;
     const {
         title,
         description,
@@ -293,7 +319,7 @@ const handleCreateProblem  = async (req: Request, res:Response) =>{
     }
 }
 
-const handleGetAllProblem =  async (req: Request, res:Response) => {
+const handleAdminGetAllProblem =  async (req: Request, res:Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
@@ -303,6 +329,7 @@ const handleGetAllProblem =  async (req: Request, res:Response) => {
             take: limit,
             distinct: ['problemId'],
         });
+
         // console.log(problems);
         // const totalPages = Math.ceil(problems.length / limit);
         res.status(200).json({
@@ -315,7 +342,7 @@ const handleGetAllProblem =  async (req: Request, res:Response) => {
     }
 }
 
-const handleGetFilterProblems = async (req: Request, res: Response) => {
+const handleAdminGetFilterProblems = async (req: Request, res: Response) => {
     try {
         const {
             searchTerm,
@@ -384,6 +411,137 @@ const handleGetFilterProblems = async (req: Request, res: Response) => {
     }
 };
 
+const handleGetAllProblem =  async (req: Request, res:Response) => {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    //only show the problems that are not in the contest        
+    try{
+        
+        const problems = await prisma.queryTable.findMany({
+            skip,
+            take: limit,
+            distinct: ['problemId'],
+        });
+
+        //filter out the problems from problems table and only return the problems that are not in the contest using map
+        //extract all teh problems which has contestId set and store in a set
+        const contestProblems = await prisma.problem.findMany({
+            where:{
+                contestId: {
+                    not: null
+                }
+            },
+            select: {
+                id: true
+            }
+        })
+
+        const contestProblemsSet = new Set(contestProblems.map(problem => problem.id));
+
+        //filter out the problems from problems table and only return the problems that are not in the contest using map
+        const filteredProblems = problems.filter(problem => !contestProblemsSet.has(problem.problemId));
+
+        // console.log(problems);
+        // const totalPages = Math.ceil(problems.length / limit);
+        res.status(200).json({
+            problems: filteredProblems,
+            // totalPages
+        });
+    }catch (error) {
+        console.error('Error saving problem:', error);
+        res.status(500).json({ error: 'Internal server error.' });
+    }
+}
+
+const handleGetFilterProblems = async (req: Request, res: Response) => {
+    try {
+        const {
+            searchTerm,
+            difficulty,
+            topic,
+            company,
+            page,
+            pageSize,
+        } = req.query;
+
+        const pageNum = parseInt(page as string, 10) || 1;
+        const limit = parseInt(pageSize as string, 10) || 10;
+        const offset = (pageNum - 1) * limit;
+
+        const filter: any = {};
+
+        if (searchTerm) {
+            filter.title = { contains: searchTerm, mode: "insensitive" };
+        }
+
+        if (difficulty) {
+            filter.difficulty = difficulty as string; // Assuming difficulty is an enum
+        }
+
+        if (topic) {
+            const topics = Array.isArray(topic) ? topic : [topic];
+            filter.topicId = { in: topics };
+        }
+
+        if (company) {
+            const companies = Array.isArray(company) ? company : [company];
+            filter.companyId = { in: companies };
+        }
+
+        // if (
+        //     !searchTerm &&
+        //     !difficulty &&
+        //     !topic &&
+        //     !company
+        // ) {
+        //     return res.status(200).json({
+        //         problems: [],
+        //         totalPages: 0,
+        //         currentPage: pageNum,
+        //     });
+        // }
+
+        // Fetch filtered problems with pagination
+        const problems = await prisma.queryTable.findMany({
+            where: filter,
+            skip: offset,
+            take: limit,
+            distinct: ['problemId'],
+        });
+
+        //filter out the problems from problems table and only return the problems that are not in the contest using map
+        //extract all teh problems which has contestId set and store in a set
+        const contestProblems = await prisma.problem.findMany({
+            where:{
+                contestId: {
+                    not: null
+                }
+            },
+            select: {
+                id: true
+            }
+        })
+
+        const contestProblemsSet = new Set(contestProblems.map(problem => problem.id));
+
+        //filter out the problems from problems table and only return the problems that are not in the contest using map
+        const filteredProblems = problems.filter(problem => !contestProblemsSet.has(problem.problemId));
+
+        // const totalPages = Math.ceil(problems.length / limit);
+
+        res.status(200).json({
+            problems,
+            // totalPages,
+            currentPage: pageNum,
+        });
+    } catch (error) {
+        console.error("Error fetching problems:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
 const handleGetProblemById = async (req: Request, res: Response) => {
     try {
         const problem = await prisma.problem.findUnique({
@@ -396,7 +554,7 @@ const handleGetProblemById = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'Problem not found.' });
         }
 
-        res.status(200).json({ problem });
+        return res.status(200).json({ problem });
     } catch (error) {
         console.error('Error fetching problem:', error);
         res.status(500).json({ error: 'Internal server error.' });
@@ -436,15 +594,47 @@ const handleGetAllExampleTestcases = async (req: Request, res: Response) => {
 
 const handleGetSubmissions = async (req: Request, res: Response) => {
     try{
-        const userId = "123";
+        const userId = req.user.id;
+        console.log(userId);
         const problemId = req.params.id;
-
-        const submissions = await prisma.submission.findMany({
-            where:{
-                userId,
-                problemId
+        
+        const problem = await prisma.problem.findUnique({
+            where: {
+                id: problemId
+            },
+            select: {
+                contestId: true
             }
         })
+
+
+        //fetch all the submissions in the descending order of createdAt
+        let submissions = await prisma.submission.findMany({
+            where:{
+                userId,
+                problemId,
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        })
+
+        if(problem?.contestId){
+            const contest = await prisma.contest.findUnique({
+                where: {
+                    id: problem.contestId
+                },
+                select: {
+                    startTime: true,
+                }
+            })
+
+            submissions = submissions.filter(submission => {
+                if(contest?.startTime && contest.startTime <= submission.createdAt){
+                    return submission;
+                }
+            })
+        }
 
         res.status(200).json({
             success: true,
@@ -457,7 +647,6 @@ const handleGetSubmissions = async (req: Request, res: Response) => {
 }
 
 const handleEditProblem = async (req: Request, res: Response) => {
-    const userId = "123"; // Replace with actual user authentication logic
     const {
         problemId, // Retrieve problem ID from the request body
         description,
@@ -594,4 +783,4 @@ const handleDeleteProblem = async (req: Request, res: Response) => {
     }
 };
 
-export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleEditProblem, handleDeleteProblem, handleGetAllProblem, handleGetProblemById, handleGetAllExampleTestcases, handleGetSubmissions, handleGetFilterProblems };
+export { handleSubmitProblem, handleRunProblem, handleCreateProblem, handleEditProblem, handleDeleteProblem, handleGetAllProblem, handleGetProblemById, handleGetAllExampleTestcases, handleGetSubmissions, handleGetFilterProblems, handleAdminGetAllProblem, handleAdminGetFilterProblems };

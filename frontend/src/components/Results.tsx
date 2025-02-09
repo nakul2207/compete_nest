@@ -37,6 +37,7 @@ type LanguageMap = {
 };
 
 export function Results() {
+    const {user} = useAppSelector((state) => state.auth);
     const submission: Submission | null = useAppSelector((state) => state.problem.recent_submission)
     const [copied, setCopied] = useState(false)
 
@@ -89,8 +90,18 @@ export function Results() {
         })
     }
 
+    if(!user){
+        return (
+            <div className="flex justify-center items-center h-full">
+                <p className="text-gray-500">Please login to view results</p>
+            </div>
+        )
+    }
+    
     return (
-        <Card className="w-full">
+        <>
+            {user && (
+                <Card className="w-full">
             <CardHeader>
                 <CardTitle className="flex justify-between items-center">
                     <span>Submission Results</span>
@@ -155,9 +166,11 @@ export function Results() {
                             </>
                         )}
                     </Button>
-                </div>
-            </CardContent>
-        </Card>
+                    </div>
+                    </CardContent>
+                </Card>
+            )}
+        </>
     )
 }
 

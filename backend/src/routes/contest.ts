@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { handleCreateContest, handleDeleteContest, handleEditContest, handleGetContestByID, handleGetAll, handleContestRegister, handleContestUnregister } from "../controllers/contest";
+import { handleCreateContest, handleDeleteContest, handleEditContest, handleGetContestByID, handleGetAll, handleContestRegister, handleGetLeaderboard } from "../controllers/contest";
 import {authenticate, authorize} from "../middlewares/auth"
 
 const contestRouter = Router();
@@ -9,5 +9,6 @@ contestRouter.route('/:id').put(authenticate as any, authorize(['Organiser', 'Ad
 contestRouter.route('/all').get(authenticate as any, handleGetAll as any);
 contestRouter.route('/:id').get(authenticate as any, handleGetContestByID as any);
 contestRouter.route('/:id/register').get(authenticate as any, handleContestRegister as any);
+contestRouter.route('/:id/leaderboard').get(authenticate as any, handleGetLeaderboard as any);
 
 export default contestRouter;
