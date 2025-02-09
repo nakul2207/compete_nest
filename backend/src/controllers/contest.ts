@@ -103,7 +103,7 @@ const handleCreateContest = async(req:Request, res:Response)=>{
     }
 }
 
-const handleDeleteContest = async (req: Request, res: Response) => {
+const handleDeleteContest = async (_req: Request, res: Response) => {
     try {
         //delete contest logic
         //delete all the problems from the contestProblem table
@@ -119,7 +119,7 @@ const handleDeleteContest = async (req: Request, res: Response) => {
     }
 };
 
-const handleEditContest = async (req: Request, res: Response) => {
+const handleEditContest = async (_req: Request, res: Response) => {
     try {
         //edit contest logic
 
@@ -245,7 +245,7 @@ const handleGetAll = async (req: Request, res: Response) => {
         console.error("Error fetching contests:", error);
         res.status(500).json({
             message: "Error fetching contests",
-            error: error.message,
+            error: error instanceof Error ? error.message: "Unknown error occured",
         });
     }
 };
