@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { FileQuestion } from "lucide-react"
 
-export function NotFoundPage({ msg }: { msg: string }) {
+export function NotFoundPage({ msg }: { msg?: string }) {
     const navigate = useNavigate()
     const location = useLocation();
     const message = location.state?.errorMessage || msg || "Oops! The page you're looking for doesn't exist.";

@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { ShieldAlert } from "lucide-react"
 
-export function ForbiddenPage({ msg }: { msg: string }) {
+export function ForbiddenPage({ msg }: { msg?: string }) {
     const navigate = useNavigate();
     const location = useLocation();
     const message = location.state?.errorMessage || msg || "You are not authorized to access this page.";

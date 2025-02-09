@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Progress } from "@/components/ui/progress"
-import { Clock, Timer } from "lucide-react"
+import {Timer } from "lucide-react"
 
 interface ContestTimerProps {
   startTime: string

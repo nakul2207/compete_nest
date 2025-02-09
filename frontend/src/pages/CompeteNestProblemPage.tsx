@@ -120,7 +120,7 @@ export function CompeteNestProblemPage() {
                 </div>
               )
                 : (
-                  <Badge variant="outline" className={`text-md px-4 py-2 text-red-500`}>
+                  <Badge className="text-md px-4 py-2 text-red-500">
                     Ended
                   </Badge>
                 )
