@@ -22,12 +22,6 @@ interface CodeEditorProps {
     isFullScreen: boolean
     handleFullScreen: (isFullScreen: boolean) => void
 }
-interface User {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-}
 type Language = {
     name: string;
     is_archived: boolean;

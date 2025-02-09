@@ -3,7 +3,7 @@ import { useAppSelector } from "@/redux/hook"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
-import { Check, X, Clock, Copy } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { formatDistanceToNow, format } from 'date-fns'
@@ -38,7 +38,7 @@ type LanguageMap = {
 
 export function Results() {
     const {user} = useAppSelector((state) => state.auth);
-    const submission: Submission | null = useAppSelector((state) => state.problem.recent_submission)
+    const submission = useAppSelector((state) => state.problem.recent_submission as Submission | null);
     const [copied, setCopied] = useState(false)
 
     useEffect(() => {
@@ -60,11 +60,11 @@ export function Results() {
 
     const getStatusBadge = (status: number) => {
         if (status <= 2) {
-            return <Badge variant="secondary">{statuses[status]}</Badge>;
+            return <Badge variant="secondary">{statuses[status as keyof typeof statuses]}</Badge>;
         } else if (status === 3) {
-            return <Badge variant="success">{statuses[status]}</Badge>;
+            return <Badge variant="success">{statuses[status as keyof typeof statuses]}</Badge>;
         } else {
-            return <Badge variant="destructive">{statuses[status]}</Badge>;
+            return <Badge variant="destructive">{statuses[status as keyof typeof statuses]}</Badge>;
         }
     };
 
