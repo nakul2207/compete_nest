@@ -4,6 +4,17 @@ import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
 import {Difficulty, PrismaClient } from "@prisma/client";
 
+declare global{
+    namespace Express{
+        interface Request{
+            user: {
+                id: string
+                role: string
+            };
+        }
+    }
+}
+
 const prisma = new PrismaClient();
 
 const s3client = new S3Client({
