@@ -36,8 +36,8 @@ export function ContestsPage() {
   }, [])
 
   const handleRegister = (contestId: string, isRegister: boolean) => {
-    handleRegistration(contestId, isRegister).then((data) => {
-      toast.success(data.message);
+    handleRegistration(contestId, isRegister).then((_data) => {
+      toast.success(_data.message);
       setContests(prevContests => prevContests.map(contest => contest.id === contestId ? { ...contest, attended: isRegister } : contest));
     }).catch((err) => console.log(err))
   }
