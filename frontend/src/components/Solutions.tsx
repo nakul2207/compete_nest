@@ -18,8 +18,8 @@ type LanguageMap = {
   [key: string]: Language;
 };
 
-export function Solutions({show}: {show: boolean}) {
-  const solutionCode = useAppSelector((state) => state.problem.ownerCode);
+export function Solutions({ show }: { show: boolean }) {
+  const solutionCode = atob(useAppSelector((state) => state.problem.ownerCode));
   const solutionLanguage = useAppSelector((state) => state.problem.ownerCodeLanguage);
   const [copied, setCopied] = useState(false);
 
@@ -34,7 +34,7 @@ export function Solutions({show}: {show: boolean}) {
       "54": "cpp",
       "62": "java",
       "63": "javascript",
-      "35": "python"
+      "71": "python"
     };
     return languageMap[languageId] || "text";
   };
@@ -53,24 +53,24 @@ export function Solutions({show}: {show: boolean}) {
           <CardTitle className="flex justify-between items-center">
             <span>Solution: {getLanguageName(solutionLanguage)}</span>
             <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                    "transition-all",
-                    copied && "bg-green-500 text-white hover:bg-green-600"
-                )}
-                onClick={copyToClipboard}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "transition-all",
+                copied && "bg-green-500 text-white hover:bg-green-600"
+              )}
+              onClick={copyToClipboard}
             >
               {copied ? (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    Copied
-                  </>
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Copied
+                </>
               ) : (
-                  <>
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copy Code
-                  </>
+                <>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Code
+                </>
               )}
             </Button>
           </CardTitle>
@@ -78,14 +78,14 @@ export function Solutions({show}: {show: boolean}) {
         <CardContent>
           <div className="relative">
             <SyntaxHighlighter
-                language={getLanguageForPrism(solutionLanguage)}
-                style={vscDarkPlus}
-                customStyle={{
-                  margin: 0,
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                }}
-                showLineNumbers
+              language={getLanguageForPrism(solutionLanguage)}
+              style={vscDarkPlus}
+              customStyle={{
+                margin: 0,
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+              }}
+              showLineNumbers
             >
               {solutionCode}
             </SyntaxHighlighter>

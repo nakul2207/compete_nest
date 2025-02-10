@@ -13,9 +13,10 @@ import { PlusCircle, MinusCircle, Upload } from 'lucide-react'
 import { MultiSelect } from "@/components/ui/multi-select"
 import { MarkdownEditor } from '../ui/mdx-editor'
 import { problemSchema, ProblemFormData } from '../../schemas/problemSchema'
-import {saveProblem, uploadToS3} from "@/api/problemApi.ts";
-import {languages} from "@/assets/mapping.ts";
-import { useAppSelector} from "@/redux/hook.ts"
+import { saveProblem, uploadToS3 } from "@/api/problemApi.ts";
+import { languages } from "@/assets/mapping.ts";
+import { useAppSelector } from "@/redux/hook.ts"
+import { toast } from 'sonner'
 
 // Define Topic and Company interfaces here for clarity and type safety
 export interface Topic {
@@ -57,6 +58,7 @@ export function AddProblem() {
         // console.log(data)
         const formData = {
             ...data,
+            ownerCode: btoa(data.ownerCode),
             testCases: data.testCases.map((testCase: any) => testCase.isExample),
             resources: data.resources.map((resource: any) => resource.caption),
         };
@@ -86,11 +88,12 @@ export function AddProblem() {
             })
         );
 
+        toast.success('Problem created successfully');
         navigate('/admin/problems')
     };
 
     const handleMultiSelectChange = useCallback((field: 'topics' | 'companies', value: (Topic | Company)[]) => {
-        console.log(field, value);
+        // console.log(field, value);
         setValue(field, value);
     }, [setValue]);
 
@@ -248,7 +251,7 @@ export function AddProblem() {
                                 render={({ field }) => (
                                     <Select onValueChange={field.onChange} value={field.value}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select language"/>
+                                            <SelectValue placeholder="Select language" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {

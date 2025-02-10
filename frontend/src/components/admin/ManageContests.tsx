@@ -1,4 +1,4 @@
-import { useState, useMemo,useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -35,42 +35,41 @@ export function ManageContests() {
         return contests.filter(contest =>
             contest.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
             (statusFilter === 'all' ||
-            (statusFilter === 'upcoming' && new Date(contest.startTime) > now) ||
-            (statusFilter === 'past' && new Date(contest.endTime) <= now) ||
-            (statusFilter === 'ongoing' && new Date(contest.startTime) <= now && new Date(contest.endTime) > now))
+                (statusFilter === 'upcoming' && new Date(contest.startTime) > now) ||
+                (statusFilter === 'past' && new Date(contest.endTime) <= now) ||
+                (statusFilter === 'ongoing' && new Date(contest.startTime) <= now && new Date(contest.endTime) > now))
         )
-        .sort((a, b) => {
-            // Handle comparison differently based on the field (date vs. string)
-            let aValue, bValue;
-            if (sortBy === 'startTime' || sortBy === 'endTime') {
-            // Convert dates to timestamps for numerical comparison
-            aValue = new Date(a[sortBy]).getTime();
-            bValue = new Date(b[sortBy]).getTime();
-            } else if (sortBy === 'title') {
-            // Case-insensitive comparison for titles
-            aValue = a[sortBy].toLowerCase();
-            bValue = b[sortBy].toLowerCase();
-            } else {
-            aValue = a[sortBy];
-            bValue = b[sortBy];
-            }
+            .sort((a, b) => {
+                // Handle comparison differently based on the field (date vs. string)
+                let aValue, bValue;
+                if (sortBy === 'startTime' || sortBy === 'endTime') {
+                    // Convert dates to timestamps for numerical comparison
+                    aValue = new Date(a[sortBy]).getTime();
+                    bValue = new Date(b[sortBy]).getTime();
+                } else if (sortBy === 'title') {
+                    // Case-insensitive comparison for titles
+                    aValue = a[sortBy].toLowerCase();
+                    bValue = b[sortBy].toLowerCase();
+                } else {
+                    aValue = a[sortBy];
+                    bValue = b[sortBy];
+                }
 
-            // Determine the sort order
-            if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-            if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-            return 0;
-        })
+                // Determine the sort order
+                if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+                if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+                return 0;
+            })
     }, [contests, searchTerm, statusFilter, sortBy, sortOrder])
-    useEffect(()=>{
+    useEffect(() => {
         setIsLoading(true);
-        getAllContests().then((data)=>{
-            console.log(data);
+        getAllContests().then((data) => {
             setContests(data.contests);
             setIsLoading(false);
-        }).catch((err)=>{
+        }).catch((err) => {
             console.log(err);
         })
-    },[])
+    }, [])
 
     return (
         <Card>
@@ -132,40 +131,40 @@ export function ManageContests() {
                             {isloading ? (
                                 <TableRow>
                                     <TableCell colSpan={4} className="h-32 text-center">
-                                        <Spinner/>
+                                        <Spinner />
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                            filteredAndSortedContests.map((contest) => (
-                                <TableRow key={contest.id}>
-                                    <TableCell>{contest.title}</TableCell>
-                                    <TableCell>{new Date(contest.startTime).toLocaleString()}</TableCell>
-                                    <TableCell>
-                                    {(() => {
-                                        const durationMs = new Date(contest.endTime).getTime() - new Date(contest.startTime).getTime();
-                                        const durationSeconds = Math.floor(durationMs / 1000);
-                                        const hours = Math.floor(durationSeconds / 3600);
-                                        const minutes = Math.floor((durationSeconds % 3600) / 60);
-                                        const seconds = durationSeconds % 60;
+                                filteredAndSortedContests.map((contest) => (
+                                    <TableRow key={contest.id}>
+                                        <TableCell>{contest.title}</TableCell>
+                                        <TableCell>{new Date(contest.startTime).toLocaleString()}</TableCell>
+                                        <TableCell>
+                                            {(() => {
+                                                const durationMs = new Date(contest.endTime).getTime() - new Date(contest.startTime).getTime();
+                                                const durationSeconds = Math.floor(durationMs / 1000);
+                                                const hours = Math.floor(durationSeconds / 3600);
+                                                const minutes = Math.floor((durationSeconds % 3600) / 60);
+                                                const seconds = durationSeconds % 60;
 
-                                        return `${hours}h ${minutes}m ${seconds}s`;
-                                    })()}
-                                    </TableCell>
-                                    {/* <TableCell>{contest.participants}</TableCell> */}
-                                    <TableCell>
-                                        <div className="flex space-x-2">
-                                            <Button variant="outline" size="sm" asChild>
-                                                <Link to={`/admin/contests/edit/${contest.id}`}>
-                                                    <Pencil className="h-4 w-4 text-yellow-500"/>
-                                                </Link>
-                                            </Button>
-                                            <Button variant="outline" size="sm" onClick={() => handleDelete(contest.id)}>
-                                                <Trash2 className="h-4 w-4 text-red-500"/>
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            )))}
+                                                return `${hours}h ${minutes}m ${seconds}s`;
+                                            })()}
+                                        </TableCell>
+                                        {/* <TableCell>{contest.participants}</TableCell> */}
+                                        <TableCell>
+                                            <div className="flex space-x-2">
+                                                <Button variant="outline" size="sm" asChild>
+                                                    <Link to={`/admin/contests/edit/${contest.id}`}>
+                                                        <Pencil className="h-4 w-4 text-yellow-500" />
+                                                    </Link>
+                                                </Button>
+                                                <Button variant="outline" size="sm" onClick={() => handleDelete(contest.id)}>
+                                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                )))}
                         </TableBody>
                     </Table>
                 </div>

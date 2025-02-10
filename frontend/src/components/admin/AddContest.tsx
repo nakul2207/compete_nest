@@ -11,7 +11,9 @@ import { contestSchema, ContestFormData } from '@/schemas/contestSchema'
 import { ProblemSelectionTable } from './ProblemSelectionTable.tsx'
 import { X } from 'lucide-react'
 import { getAllProblems } from '@/api/problemApi'
-import {createContest} from "@/api/contestApi.ts";
+import { createContest } from "@/api/contestApi.ts";
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 
 interface Problem {
     id: string
@@ -34,14 +36,15 @@ export function AddContest() {
             problems: [],
         },
     })
+    const navigate = useNavigate();
 
     useEffect(() => {
         getAllProblems(1)
             .then((data) => {
                 setAllProblems(data.problems);
             }).catch((error) => {
-            console.error("Error fetching problems:", error);
-        });
+                console.error("Error fetching problems:", error);
+            });
     }, []);
 
     // console.log("render");
@@ -51,11 +54,13 @@ export function AddContest() {
     }, [selectedProblems, setValue])
 
     const onSubmit = async (data: ContestFormData) => {
-        console.log(data)
-
-        // Here you would typically send the data to your API
-        const result = await createContest(data);
-        console.log(result);
+        try {
+            await createContest(data);
+            toast.success('Contest created successfully');
+            navigate('/admin/contests');
+        } catch (error: any) {
+            toast.error(`Failed to create contest: ${error.message}`);
+        }
     }
 
     const handleProblemToggle = (problem: Problem) => {
@@ -123,8 +128,11 @@ export function AddContest() {
                                             id="startTime"
                                             label="Start Time"
                                             {...field}
-                                            value={field.value.toISOString().slice(0, 16)}
-                                            onChange={(e) => onChange(new Date(e.target.value))}
+                                            value={field.value.toISOString()}
+                                            onChange={(e) => {
+                                                const date = new Date(e.target.value);
+                                                onChange(date);
+                                            }}
                                         />
                                     )}
                                 />
@@ -140,8 +148,11 @@ export function AddContest() {
                                             id="endTime"
                                             label="End Time"
                                             {...field}
-                                            value={field.value.toISOString().slice(0, 16)}
-                                            onChange={(e) => onChange(new Date(e.target.value))}
+                                            value={field.value.toISOString()}
+                                            onChange={(e) => {
+                                                const date = new Date(e.target.value);
+                                                onChange(date);
+                                            }}
                                         />
                                     )}
                                 />
@@ -156,9 +167,9 @@ export function AddContest() {
                             <div className="flex flex-wrap gap-2 mb-4">
                                 {selectedProblems.map((problem) => (
                                     <div key={problem.problemId} className="flex items-center space-x-2">
-                                          <span
-                                              className="bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-1 rounded-full">
-                                                {problem.title}
+                                        <span
+                                            className="bg-yellow-100 text-yellow-800 text-xs font-medium mr-2 px-2.5 py-1 rounded-full">
+                                            {problem.title}
                                         </span>
                                         <Input
                                             type="number"

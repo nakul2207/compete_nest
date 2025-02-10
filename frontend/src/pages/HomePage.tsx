@@ -1,11 +1,11 @@
+"use client"
+
 import { useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import { motion, useInView, useAnimation } from "framer-motion"
 import { Github, Linkedin, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { TypeAnimation } from 'react-type-animation'
+import { TypeAnimation } from "react-type-animation"
 import img from "../assets/png-clipart-ai-generated-man-beard-tiktok-face-male-social-media-3d-character-candidphotocontest.png"
 
 interface FeatureCardProps {
@@ -24,7 +24,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon: Ico
       <motion.div
         className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary to-gray-600"
         initial={{ width: 0 }}
-        whileInView={{ width: '100%' }}
+        whileInView={{ width: "100%" }}
         transition={{ duration: 2, delay: 0.5 }}
       />
     </div>
@@ -48,18 +48,6 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon: Ico
       {description}
     </motion.p>
 
-    {/* <motion.div
-      className="absolute top-4 right-4 opacity-20 group-hover:opacity-100 group-hover:-translate-x-2 transition-all duration-300"
-      whileHover={{ scale: 1.2 }}
-    >
-      <svg className="w-12 h-12 text-gray-600" viewBox="0 0 24 24">
-        <path
-          fill="currentColor"
-          d="M14.6 16.6l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4m-5.2 0L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4z"
-        />
-      </svg>
-    </motion.div> */}
-
     <div className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
       <div className="absolute -inset-2 bg-gradient-to-br from-primary/20 to-cyan-400/10 blur-xl animate-tilt" />
     </div>
@@ -82,15 +70,31 @@ const TeamMember: React.FC<TeamMemberProps> = ({ name, role, intro, github, link
     animate={{ opacity: 1, scale: 1 }}
     transition={{ duration: 0.5 }}
   >
-    <img src={image || "/placeholder.svg"} alt={name} className="w-32 h-32 rounded-full mb-4 object-cover" />
-    <h3 className="text-xl font-semibold">{name}</h3>
-    <p className="text-muted-foreground mb-2">{role}</p>
-    <p className="text-sm mb-4">{intro}</p>
+    <img
+      src={image || "/placeholder.svg"}
+      alt={name}
+      className="w-32 h-32 rounded-full mb-4 object-cover shadow-lg border-2 border-primary"
+    />
+    <h3 className="text-xl font-semibold text-primary">{name}</h3>
+    <p className="text-muted-foreground mb-2 font-medium">{role}</p>
+    <p className="text-sm mb-4 max-w-xs">{intro}</p>
     <div className="flex space-x-4">
-      <a href={github} target="_blank" rel="noopener noreferrer" aria-label={`${name}'s GitHub`}>
+      <a
+        href={github}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`${name}'s GitHub`}
+        className="hover:text-primary transition-colors"
+      >
         <Github className="h-6 w-6" />
       </a>
-      <a href={linkedin} target="_blank" rel="noopener noreferrer" aria-label={`${name}'s LinkedIn`}>
+      <a
+        href={linkedin}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`${name}'s LinkedIn`}
+        className="hover:text-primary transition-colors"
+      >
         <Linkedin className="h-6 w-6" />
       </a>
     </div>
@@ -129,15 +133,14 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({ children }) => {
 
 export function HomePage() {
   return (
-    <div className="container mx-auto px-4 py-16 space-y-32 relative overflow-hidden">
-      {/* Animated background elements - Add color variation */}
+    <div className="w-full py-16 space-y-24 relative overflow-hidden">
       <motion.div
         className="absolute inset-0 opacity-10 pointer-events-none"
-        animate={{ backgroundPosition: ['0% 0%', '100% 100%'] }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+        transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
         style={{
           backgroundImage: `radial-gradient(circle, #2563eb 1px, #7c3aed 1px, transparent 1px)`,
-          backgroundSize: '40px 40px'
+          backgroundSize: "40px 40px",
         }}
       />
 
@@ -146,11 +149,11 @@ export function HomePage() {
           className="inline-block relative"
           initial={{ scale: 0.95 }}
           animate={{ scale: 1 }}
-          transition={{ duration: 2, repeat: Infinity, repeatType: 'mirror' }}
+          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatType: "mirror" }}
         >
           <div className="absolute inset-0 bg-primary/10 blur-3xl -z-10" />
           <motion.h1
-            className="text-6xl font-black bg-gradient-to-b from-primary to-foreground bg-clip-text text-transparent tracking-tighter mb-6"
+            className="text-6xl md:text-7xl lg:text-8xl font-black bg-gradient-to-b from-primary to-foreground bg-clip-text text-transparent tracking-tighter mb-6"
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -160,38 +163,35 @@ export function HomePage() {
         </motion.div>
 
         <motion.div
-          className="text-3xl text-muted-foreground font-mono h-10"
+          className="text-2xl md:text-3xl lg:text-4xl text-muted-foreground font-mono h-20"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.6 }}
         >
           <TypeAnimation
             sequence={[
-              'Elevate Your Coding Skills',
+              "Elevate Your Coding Skills",
               2000,
-              'Master Data Structures',
+              "Master Data Structures",
               2000,
-              'Conquer Algorithms',
+              "Conquer Algorithms",
               2000,
-              'Win Competitions',
+              "Win Competitions",
               2000,
             ]}
             wrapper="span"
             speed={50}
-            repeat={Infinity}
+            repeat={Number.POSITIVE_INFINITY}
           />
         </motion.div>
 
         <AnimatedSection>
           <div className="max-w-3xl mx-auto">
-            <motion.div
-              className="relative group"
-              whileHover={{ scale: 1.02 }}
-            >
-              {/* <div className="absolute -inset-1 bg-gradient-to-r from-primary to-gray-500 rounded-2xl opacity-20 blur transition duration-1000 group-hover:opacity-40" /> */}
+            <motion.div className="relative group" whileHover={{ scale: 1.05 }}>
+              {/* <div className="absolute -inset-1 bg-gradient-to-r from-primary to-gray-500 rounded-2xl opacity-70 blur transition duration-1000 group-hover:opacity-100 animate-tilt" /> */}
               <Button
                 size="lg"
-                className="text-lg px-12 py-6 rounded-2xl relative border border-primary/50 hover:border-primary"
+                className="relative text-lg px-8 py-4 rounded-full border-2 border-primary hover:border-primary bg-primary text-white hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 <Link to="/problems" className="font-mono tracking-tighter">
                   $ git start coding
@@ -203,7 +203,7 @@ export function HomePage() {
       </section>
 
       <AnimatedSection>
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+        <section className="grid mx-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
           <FeatureCard
             title="DSA Problem Set"
             description="Practice and improve your skills with our curated collection of Data Structures and Algorithms problems."
@@ -288,7 +288,7 @@ export function HomePage() {
       </AnimatedSection>
 
       <AnimatedSection>
-        <section className="text-center relative">
+        <section className="p-2 text-center relative">
           <h2 className="text-4xl font-bold mb-16 inline-block relative font-mono">
             <span className="bg-gradient-to-r from-primary to-gray-600 bg-clip-text text-transparent">
               git commit -m "Team"
@@ -316,52 +316,8 @@ export function HomePage() {
       </AnimatedSection>
 
       <AnimatedSection>
-        <section className="relative bg-gradient-to-br  backdrop-blur-lg border border-blue-200/10 rounded-3xl p-12 shadow-2xl">
-          <motion.div
-            className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-gray-600"
-            animate={{ opacity: [0.2, 1, 0.2] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-          <h2 className="text-4xl font-bold mb-12 font-mono bg-gradient-to-r from-primary to-foreground bg-clip-text text-transparent">
-            // Contact Form
-          </h2>
-          <div className="max-w-2xl mx-auto space-y-8">
-            <motion.div whileHover={{ scale: 1.02 }}>
-              <Input
-                className="h-16 text-lg rounded-2xl border-primary/20 bg-background/50 font-mono placeholder:text-muted-foreground/50"
-                placeholder="const name = "
-              />
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }}>
-              <Input
-                className="h-16 text-lg rounded-2xl border-primary/20 bg-background/50 font-mono placeholder:text-muted-foreground/50"
-                placeholder="let email = "
-              />
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }}>
-              <Textarea
-                className="text-lg rounded-2xl border-primary/20 bg-background/50 font-mono placeholder:text-muted-foreground/50 h-48"
-                placeholder="/* Your message */"
-              />
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button
-                type="submit"
-                className="w-full h-16 text-xl font-mono bg-primary/90 hover:bg-primary transition-all rounded-2xl shadow-lg"
-              >
-                Submit PR
-              </Button>
-            </motion.div>
-          </div>
-        </section>
-      </AnimatedSection>
-
-      <AnimatedSection>
         <motion.footer className="relative border-t border-cyan-400/20 mt-16 pt-12 bg-gradient-to-b from-blue-900/10 to-transparent">
-          <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-8 text-muted-foreground">
+          <div className="w-full p-2 grid grid-cols-1 md:grid-cols-4 gap-8 text-muted-foreground">
             <div className="space-y-4">
               <h4 className="text-lg font-semibold text-primary">CompeteNest</h4>
               <p className="text-sm font-mono">
@@ -372,28 +328,62 @@ export function HomePage() {
             <div className="space-y-4">
               <h5 className="text-sm font-semibold text-gray-600">Quick Links</h5>
               <ul className="space-y-2 font-mono text-sm">
-                <li><a href="/problems" className="hover:text-purple-300 transition-colors">Problems</a></li>
-                <li><a href="/contests" className="hover:text-purple-300 transition-colors">Contests</a></li>
-                <li><a href="/leaderboard" className="hover:text-purple-300 transition-colors">Leaderboard</a></li>
+                <li>
+                  <a href="/problems" className="hover:text-purple-300 transition-colors">
+                    Problems
+                  </a>
+                </li>
+                <li>
+                  <a href="/contests" className="hover:text-purple-300 transition-colors">
+                    Contests
+                  </a>
+                </li>
+                <li>
+                  <a href="/leaderboard" className="hover:text-purple-300 transition-colors">
+                    Leaderboard
+                  </a>
+                </li>
               </ul>
             </div>
 
             <div className="space-y-4">
               <h5 className="text-sm font-semibold">Resources</h5>
               <ul className="space-y-2 font-mono text-sm">
-                <li><a href="/docs" className="hover:text-primary transition-colors">Documentation</a></li>
-                <li><a href="/blog" className="hover:text-primary transition-colors">Blog</a></li>
-                <li><a href="/community" className="hover:text-primary transition-colors">Community</a></li>
+                <li>
+                  <a href="/docs" className="hover:text-primary transition-colors">
+                    Documentation
+                  </a>
+                </li>
+                <li>
+                  <a href="/blog" className="hover:text-primary transition-colors">
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a href="/community" className="hover:text-primary transition-colors">
+                    Community
+                  </a>
+                </li>
               </ul>
             </div>
 
             <div className="space-y-4">
               <h5 className="text-sm font-semibold">Connect</h5>
               <div className="flex space-x-4">
-                <a href="https://github.com" target="_blank" className="hover:text-primary transition-colors">
+                <a
+                  href="https://github.com"
+                  target="_blank"
+                  className="hover:text-primary transition-colors"
+                  rel="noreferrer"
+                >
                   <Github className="h-5 w-5" />
                 </a>
-                <a href="https://linkedin.com" target="_blank" className="hover:text-primary transition-colors">
+                <a
+                  href="https://linkedin.com"
+                  target="_blank"
+                  className="hover:text-primary transition-colors"
+                  rel="noreferrer"
+                >
                   <Linkedin className="h-5 w-5" />
                 </a>
                 <a href="mailto:contact@competenest.com" className="hover:text-primary transition-colors">
@@ -419,3 +409,4 @@ export function HomePage() {
     </div>
   )
 }
+

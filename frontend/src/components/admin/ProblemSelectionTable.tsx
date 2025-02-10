@@ -1,4 +1,4 @@
-import {useState, useEffect, useCallback} from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button'
 import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons'
 import { MultiSelect } from '@/components/ui/multi-select'
 import { fetchProblems } from '@/api/problemApi'
-import {useAppSelector} from "@/redux/hook.ts";
-import {X} from "lucide-react";
-import {Spinner} from "@/components/ui/Spinner.tsx";
+import { useAppSelector } from "@/redux/hook.ts";
+import { X } from "lucide-react";
+import { Spinner } from "@/components/ui/Spinner.tsx";
 
 interface Problem {
     id: string
@@ -35,17 +35,17 @@ interface ProblemSelectionTableProps {
 }
 
 export function ProblemSelectionTable({
-                                          problems,
-                                          selectedProblems,
-                                          onProblemToggle,
-                                      }: ProblemSelectionTableProps) {
+    problems,
+    selectedProblems,
+    onProblemToggle,
+}: ProblemSelectionTableProps) {
     const [currentPage, setCurrentPage] = useState(1)
     const [searchTerm, setSearchTerm] = useState('')
     const [difficultyFilter, setDifficultyFilter] = useState<string>('All')
     const [topicFilter, setTopicFilter] = useState<Topic[]>([])
     const [companyFilter, setCompanyFilter] = useState<Company[]>([])
     const [filteredProblems, setFilteredProblems] = useState<Problem[]>(problems)
-    const[isloading, setIsLoading] = useState(true);
+    const [isloading, setIsLoading] = useState(true);
 
     const topics: Topic[] = useAppSelector((state) => state.topics);
     const companies: Company[] = useAppSelector((state) => state.companies);
@@ -54,8 +54,13 @@ export function ProblemSelectionTable({
 
     useEffect(() => {
         setIsLoading(true);
-        handleFilter().then((data) => {console.log(data); setIsLoading(false);}).catch((error) => console.log(error));
-        
+        handleFilter().then((_data) => {
+            // console.log(data); 
+            setIsLoading(false);
+        }).catch((error) =>
+            console.log(error)
+        );
+
     }, [])
 
     const handlePageChange = (page: number) => {
@@ -103,7 +108,7 @@ export function ProblemSelectionTable({
                 />
                 <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
                     <SelectTrigger className="w-full sm:w-40">
-                        <SelectValue placeholder="Difficulty"/>
+                        <SelectValue placeholder="Difficulty" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="All">All Difficulties</SelectItem>
@@ -114,7 +119,7 @@ export function ProblemSelectionTable({
                 </Select>
                 <div className="w-full sm:w-40">
                     <MultiSelect
-                        options={topics.map(topic => ({id: topic.id, name: topic.name}))}
+                        options={topics.map(topic => ({ id: topic.id, name: topic.name }))}
                         selected={topicFilter.map(topic => topic.id)}
                         onChange={(values) => handleMultiSelectChange('topic', topics.filter(topic => values.includes(topic.id)))}
                         placeholder="Select topics"
@@ -123,7 +128,7 @@ export function ProblemSelectionTable({
                 </div>
                 <div className="w-full sm:w-40">
                     <MultiSelect
-                        options={companies.map(company => ({id: company.id, name: company.name}))}
+                        options={companies.map(company => ({ id: company.id, name: company.name }))}
                         selected={companyFilter.map(company => company.id)}
                         onChange={(values) => handleMultiSelectChange('company', companies.filter(company => values.includes(company.id)))}
                         placeholder="Select companies"
@@ -141,12 +146,12 @@ export function ProblemSelectionTable({
                                 onClick={() => removeFilter('topic', topic)}
                                 className="absolute -top-1 -left-1 bg-red-500 rounded-full w-4 h-4 flex items-center justify-center text-white text-xs"
                             >
-                                <X className="h-3 w-3"/>
+                                <X className="h-3 w-3" />
                             </button>
                             <span
                                 className="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-1 rounded-full">
-                                    {topic.name}
-                                </span>
+                                {topic.name}
+                            </span>
                         </div>
                     ))}
                     {companyFilter.map(company => (
@@ -155,12 +160,12 @@ export function ProblemSelectionTable({
                                 onClick={() => removeFilter('company', company)}
                                 className="absolute -top-1 -left-1 bg-red-500 rounded-full w-4 h-4 flex items-center justify-center text-white text-xs"
                             >
-                                <X className="h-3 w-3"/>
+                                <X className="h-3 w-3" />
                             </button>
                             <span
                                 className="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-1 rounded-full">
-                                    {company.name}
-                                </span>
+                                {company.name}
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -176,12 +181,12 @@ export function ProblemSelectionTable({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {isloading?(                     
-                        <TableRow>
+                        {isloading ? (
+                            <TableRow>
                                 <TableCell colSpan={4} className="h-32 text-center">
-                                    <Spinner/>
+                                    <Spinner />
                                 </TableCell>
-                                </TableRow>):
+                            </TableRow>) :
                             (filteredProblems.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={3} className="text-center py-4 text-gray-500">
@@ -198,12 +203,12 @@ export function ProblemSelectionTable({
                                     </TableCell>
                                     <TableCell className="font-medium">{problem.title}</TableCell>
                                     <TableCell>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold
+                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold
                                         ${problem.difficulty === 'Easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                        problem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
-                                        {problem.difficulty}
-                                    </span>
+                                                problem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+                                            {problem.difficulty}
+                                        </span>
                                     </TableCell>
                                 </TableRow>
                             )))}
@@ -220,7 +225,7 @@ export function ProblemSelectionTable({
                             size="sm"
                             disabled={currentPage === 1}
                         >
-                            <ChevronLeftIcon className="h-4 w-4"/>
+                            <ChevronLeftIcon className="h-4 w-4" />
                         </Button>
                         <span className="font-medium text-sm text-muted-foreground">Page {currentPage}</span>
                         <Button
@@ -229,7 +234,7 @@ export function ProblemSelectionTable({
                             size="sm"
                             disabled={filteredProblems.length < 10}
                         >
-                            <ChevronRightIcon className="h-4 w-4"/>
+                            <ChevronRightIcon className="h-4 w-4" />
                         </Button>
                     </div>
                 )

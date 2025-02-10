@@ -54,7 +54,7 @@ export function LeaderBoard() {
 
         if (!contest) {
             getContestById(contest_id).then((data) => {
-                console.log("Contest:", data);
+                // console.log("Contest:", data);
                 setContest(data);
             })
         }
@@ -66,7 +66,7 @@ export function LeaderBoard() {
 
             // Set up the listener for the 'update' event
             socket.on("update", (data) => {
-                console.log("UpdatedLeaderboard:", data);
+                // console.log("UpdatedLeaderboard:", data);
 
                 setParticipants(data.leaderboard);
                 setTotalPages(Math.ceil(data.leaderboard.length / itemsPerPage));
@@ -97,7 +97,7 @@ export function LeaderBoard() {
         //disconnect the socket when the component is unmounted, if the connection is active
         return () => {
             if (socket.connected) {
-                console.log("Disconnecting socket");
+                // console.log("Disconnecting socket");
                 socket.emit("leave", contest_id + "-leaderboard");
             }
         }

@@ -7,9 +7,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { MultiSelect } from "@/components/ui/multi-select"
 import { useAppSelector } from "@/redux/hook"
-import {deleteProblem, fetchProblems, getAllProblems} from "@/api/problemApi.ts"
+import { deleteProblem, fetchAdminProblems, getAdminAllProblems } from "@/api/problemApi.ts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {ChevronLeftIcon, ChevronRightIcon} from "@radix-ui/react-icons";
+import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 import { Spinner } from '../ui/Spinner.tsx'
 
 interface Company {
@@ -46,7 +46,7 @@ export function ManageProblems() {
 
     const topics: Topic[] = useAppSelector((state) => state.topics);
     const companies: Company[] = useAppSelector((state) => state.companies);
-    
+
 
     const handlePageChange = useCallback((page: number) => {
         setCurrentPage(page);
@@ -54,19 +54,19 @@ export function ManageProblems() {
 
     useEffect(() => {
         setIsLoading(true);
-        getAllProblems(currentPage)
+        getAdminAllProblems(currentPage)
             .then((data) => {
                 setProblems(data.problems);
                 setIsLoading(false);
             }).catch((error) => {
-            console.error("Error fetching problems:", error);
-        });
+                console.error("Error fetching problems:", error);
+            });
     }, []);
 
     const handleFilter = useCallback(async () => {
         const topicIds = topicFilter.map((topic) => topic.id);
         const companyIds = companyFilter.map((company) => company.id);
-        const data = await fetchProblems(searchTerm, difficultyFilter, topicIds, companyIds, currentPage);
+        const data = await fetchAdminProblems(searchTerm, difficultyFilter, topicIds, companyIds, currentPage);
         setProblems(data.problems);
     }, [refresh, currentPage, companyFilter, difficultyFilter, searchTerm, topicFilter]);
 
@@ -190,48 +190,48 @@ export function ManageProblems() {
                             <TableRow className="bg-muted/50">
                                 <TableHead className="font-semibold">Title</TableHead>
                                 <TableHead className="font-semibold">Difficulty</TableHead>
-                                <TableHead className="font-semibold">Submissions</TableHead>
+                                {/* <TableHead className="font-semibold">Submissions</TableHead> */}
                                 <TableHead className="font-semibold">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {isLoading?(                                
+                            {isLoading ? (
                                 <TableRow>
                                     <TableCell colSpan={4} className="h-32 text-center">
-                                        <Spinner/>
+                                        <Spinner />
                                     </TableCell>
-                                </TableRow>):
-                            (problems.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={4} className="text-center py-4 text-gray-500">
-                                        No problems found
-                                    </TableCell>
-                                </TableRow>
-                            ) : (problems.map((problem) => (
-                                <TableRow key={problem.id} className="hover:bg-muted/50 transition-colors">
-                                    <TableCell className="font-medium">{problem.title}</TableCell>
-                                    <TableCell>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-semibold
+                                </TableRow>) :
+                                (problems.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center py-4 text-gray-500">
+                                            No problems found
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (problems.map((problem) => (
+                                    <TableRow key={problem.id} className="hover:bg-muted/50 transition-colors">
+                                        <TableCell className="font-medium">{problem.title}</TableCell>
+                                        <TableCell>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold
                                             ${problem.difficulty === 'Easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                            problem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
-                                            {problem.difficulty}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell>{problem.submissions}</TableCell>
-                                    <TableCell>
-                                        <div className="flex justify-items-start gap-2 space-x-2">
-                                            <Pencil className="h-4 w-4 cursor-pointer" onClick={() => navigate(`/admin/problems/edit/${problem.problemId}`)} />
-                                            <Trash2 className="h-4 w-4 cursor-pointer" onClick={() => handleDelete(problem.problemId)} />
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))))
+                                                    problem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                                        'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+                                                {problem.difficulty}
+                                            </span>
+                                        </TableCell>
+                                        {/* <TableCell>{problem.submissions}</TableCell> */}
+                                        <TableCell>
+                                            <div className="flex justify-items-start gap-2 space-x-2">
+                                                <Pencil className="h-4 w-4 cursor-pointer" onClick={() => navigate(`/admin/problems/edit/${problem.problemId}`)} />
+                                                <Trash2 className="h-4 w-4 cursor-pointer" onClick={() => handleDelete(problem.problemId)} />
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))))
                             }
                         </TableBody>
                     </Table>
                 </div>
-                { !(problems.length === 0 && currentPage === 1) &&
+                {!(problems.length === 0 && currentPage === 1) &&
                     (
                         <div className="flex justify-center items-center gap-4 mt-6">
                             <Button
@@ -240,7 +240,7 @@ export function ManageProblems() {
                                 size="sm"
                                 disabled={currentPage === 1}
                             >
-                                <ChevronLeftIcon className="h-4 w-4"/>
+                                <ChevronLeftIcon className="h-4 w-4" />
                             </Button>
                             <span className="font-medium text-sm text-muted-foreground"> Page {currentPage} </span>
                             <Button
@@ -249,7 +249,7 @@ export function ManageProblems() {
                                 size="sm"
                                 disabled={problems.length < 10}
                             >
-                                <ChevronRightIcon className="h-4 w-4"/>
+                                <ChevronRightIcon className="h-4 w-4" />
                             </Button>
                         </div>
                     )

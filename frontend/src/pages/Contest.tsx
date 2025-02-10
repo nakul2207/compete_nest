@@ -199,7 +199,7 @@ const Contest: React.FC = () => {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {contest.problems.map((problem, index) => {
             const difficulty = getDifficultyConfig(problem.difficulty);
-            const isSolved = problem.solved.includes(problem.id) || false;
+            const isSolved = contest.registered && problem.solved.includes(problem.id) || false;
             const cardColor = isSolved ? "bg-green-500" : "bg-primary/10";
 
             return (

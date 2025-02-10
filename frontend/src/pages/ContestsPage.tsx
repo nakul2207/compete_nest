@@ -26,7 +26,6 @@ export function ContestsPage() {
 
   useEffect(() => {
     getAllContests().then((data) => {
-      console.log(data);
       setContests(data.contests);
       setLoading(false);
     }).catch((err) => {
@@ -37,7 +36,6 @@ export function ContestsPage() {
 
   const handleRegister = (contestId: string, isRegister: boolean) => {
     handleRegistration(contestId, isRegister).then((data) => {
-      console.log(data);
       setContests(prevContests => prevContests.map(contest => contest.id === contestId ? { ...contest, attended: isRegister } : contest));
     }).catch((err) => console.log(err))
   }
@@ -50,33 +48,33 @@ export function ContestsPage() {
         <CardTitle className="flex justify-between items-center">
           <span>{contest.title}</span>
           {isPast ? (
-              <span
-                  className={`text-sm px-2 py-1 rounded ${contest.attended ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
+            <span
+              className={`text-sm px-2 py-1 rounded ${contest.attended ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
               {contest.attended ? 'Attended' : 'Not Attended'}
             </span>
           )
-          : (
-            date > new Date() ? (
-              <span className="text-sm px-2 py-1 rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                Upcoming
-              </span>
-            ) : (
-              <span className="text-sm px-2 py-1 rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                Ongoing
-              </span>
+            : (
+              date > new Date() ? (
+                <span className="text-sm px-2 py-1 rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                  Upcoming
+                </span>
+              ) : (
+                <span className="text-sm px-2 py-1 rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                  Ongoing
+                </span>
+              )
             )
-          )
-        }
+          }
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-4">
           <div className="flex items-center">
-            <Calendar className="mr-2 h-4 w-4"/>
+            <Calendar className="mr-2 h-4 w-4" />
             <span>{date.toLocaleDateString()}</span>
           </div>
           <div className="flex items-center">
-            <Clock className="mr-2 h-4 w-4"/>
+            <Clock className="mr-2 h-4 w-4" />
             <span>{date.toLocaleTimeString()}</span>
           </div>
           <div>
@@ -92,7 +90,7 @@ export function ContestsPage() {
             </Link>
           ) : (
             date > new Date() ? (
-              <Button 
+              <Button
                 variant={contest.attended ? "destructive" : "default"}
                 onClick={() => { handleRegister(contest.id, !contest.attended) }}
               >
@@ -103,8 +101,8 @@ export function ContestsPage() {
                 <Link to={`/contest/${contest.id}`}>
                   <Button>
                     Open
-                </Button>
-              </Link>):(
+                  </Button>
+                </Link>) : (
                 <Button disabled>
                   You are not registered for this contest
                 </Button>
@@ -134,11 +132,11 @@ export function ContestsPage() {
               {contests
                 .filter(contest => contest.status !== 'Ended')
                 .map(contest => (
-                  <ContestCard key={contest.id} contest={contest} isPast={false}/>
+                  <ContestCard key={contest.id} contest={contest} isPast={false} />
                 ))
               }
               {contests.filter(contest => contest.status !== 'Ended').length === 0 && (
-                  <div className="text-center col-span-full">
+                <div className="text-center col-span-full">
                   <p className="text-lg text-gray-500 dark:text-gray-400 font-medium mt-4">
                     No upcoming contests found yet. Check back later!
                   </p>
@@ -177,7 +175,7 @@ export function ContestsPage() {
                   }
                 })
                 .map(contest => (
-                  <ContestCard key={contest.id} contest={contest} isPast={true}/>
+                  <ContestCard key={contest.id} contest={contest} isPast={true} />
                 ))
               }
               {contests.filter(contest => {
@@ -188,13 +186,13 @@ export function ContestsPage() {
                 } else {
                   return contest.status === 'Ended';
                 }
-              }).length === 0 && (                
-                <div className="text-center col-span-full">
-                  <p className="text-lg text-gray-500 dark:text-gray-400 font-medium mt-4">
-                    No contests found.
-                  </p>
-                </div>
-              )}
+              }).length === 0 && (
+                  <div className="text-center col-span-full">
+                    <p className="text-lg text-gray-500 dark:text-gray-400 font-medium mt-4">
+                      No contests found.
+                    </p>
+                  </div>
+                )}
             </div>
           )}
         </TabsContent>
