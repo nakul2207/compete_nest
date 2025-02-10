@@ -7,6 +7,7 @@ import { Calendar, Clock } from 'lucide-react'
 import { getAllContests, handleRegistration } from "@/api/contestApi.ts";
 import { Link } from 'react-router-dom'
 import { Spinner } from "../components/ui/Spinner"
+import { toast } from "sonner"
 
 interface Contest {
   id: string;
@@ -36,6 +37,7 @@ export function ContestsPage() {
 
   const handleRegister = (contestId: string, isRegister: boolean) => {
     handleRegistration(contestId, isRegister).then((data) => {
+      toast.success(data.message);
       setContests(prevContests => prevContests.map(contest => contest.id === contestId ? { ...contest, attended: isRegister } : contest));
     }).catch((err) => console.log(err))
   }
