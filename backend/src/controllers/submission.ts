@@ -154,20 +154,32 @@ const handleSubmissionCallback = async (req: Request, res: Response) => {
             },
           });
 
-          //update the problems solved by user
-          await tx.user.update({
+          // Check for existing accepted submission excluding the current one
+          const alreadySolved = await tx.submission.findFirst({
             where: {
-              id: updatedSubmission.userId,
-            },
-            data: {
-              problemsSolved: {
-                push: JSON.stringify({
-                  id: updatedSubmission.problemId,
-                  type: problem?.difficulty || "Easy",
-                }),
+              userId: updatedSubmission.userId,
+              problemId: updatedSubmission.problemId,
+              status: 3,
+              NOT: {
+                id: updatedSubmission.id, // Exclude current submission
               },
             },
+            select: { id: true }, // Only get ID for existence check
           });
+
+          if (!alreadySolved) {
+            await tx.user.update({
+              where: { id: updatedSubmission.userId },
+              data: {
+                problemsSolved: {
+                  push: JSON.stringify({
+                    id: updatedSubmission.problemId,
+                    type: problem?.difficulty || Difficulty.Easy, // Use enum instead of string literal
+                  }),
+                },
+              },
+            });
+          }
         }
 
         return {
@@ -335,20 +347,32 @@ const handleContestSubmissionCallback = async (req: Request, res: Response) => {
             },
           });
 
-          //update the problems solved by user
-          await tx.user.update({
+          // Check for existing accepted submission excluding the current one
+          const alreadySolved = await tx.submission.findFirst({
             where: {
-              id: updatedSubmission.userId,
-            },
-            data: {
-              problemsSolved: {
-                push: JSON.stringify({
-                  id: updatedSubmission.problemId,
-                  type: problem?.difficulty || "Easy",
-                }),
+              userId: updatedSubmission.userId,
+              problemId: updatedSubmission.problemId,
+              status: 3,
+              NOT: {
+                id: updatedSubmission.id, // Exclude current submission
               },
             },
+            select: { id: true }, // Only get ID for existence check
           });
+
+          if (!alreadySolved) {
+            await tx.user.update({
+              where: { id: updatedSubmission.userId },
+              data: {
+                problemsSolved: {
+                  push: JSON.stringify({
+                    id: updatedSubmission.problemId,
+                    type: problem?.difficulty || Difficulty.Easy, // Use enum instead of string literal
+                  }),
+                },
+              },
+            });
+          }
 
           const participant = await tx.contestParticipants.findFirst({
             where: {
