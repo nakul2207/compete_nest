@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -17,6 +17,7 @@ import { saveProblem, uploadToS3 } from "@/api/problemApi.ts";
 import { languages } from "@/assets/mapping.ts";
 import { useAppSelector } from "@/redux/hook.ts"
 import { toast } from 'sonner'
+import { Loader } from 'lucide-react';
 
 // Define Topic and Company interfaces here for clarity and type safety
 export interface Topic {
@@ -35,6 +36,7 @@ export function AddProblem() {
     const navigate = useNavigate();
     const topics: Topic[] = useAppSelector((state) => state.topics);
     const companies: Company[] = useAppSelector((state) => state.companies);
+    const [submitting,setsubmitting] = useState(false);
 
     const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<ProblemFormData>({
         resolver: zodResolver(problemSchema),
@@ -56,40 +58,49 @@ export function AddProblem() {
 
     const onSubmit = async (data: ProblemFormData) => {
         // console.log(data)
-        const formData = {
-            ...data,
-            ownerCode: btoa(data.ownerCode),
-            testCases: data.testCases.map((testCase: any) => testCase.isExample),
-            resources: data.resources.map((resource: any) => resource.caption),
-        };
-        // console.log(formData);
-
-        const results = await saveProblem(formData);
-        // console.log(results);
-
-        await Promise.all(
-            data.testCases.map(async (testCase, index) => {
-                const urls = results.testcasesURLs[index];
-                if (testCase.input && urls.inputUrl) {
-                    await uploadToS3(urls.inputUrl, testCase.input, testCase.input.type);
-                }
-                if (testCase.output && urls.outputUrl) {
-                    await uploadToS3(urls.outputUrl, testCase.output, testCase.output.type);
-                }
-            })
-        );
-
-        await Promise.all(
-            data.resources.map(async (resource, index) => {
-                const url = results.resourceURLs[index];
-                if (resource.file && url) {
-                    await uploadToS3(url, resource.file, resource.file.type);
-                }
-            })
-        );
-
-        toast.success('Problem created successfully');
-        navigate('/admin/problems')
+        try{
+            setsubmitting(true);
+            const formData = {
+                ...data,
+                ownerCode: btoa(data.ownerCode),
+                testCases: data.testCases.map((testCase: any) => testCase.isExample),
+                resources: data.resources.map((resource: any) => resource.caption),
+            };
+            // console.log(formData);
+    
+            const results = await saveProblem(formData);
+            // console.log(results);
+    
+            await Promise.all(
+                data.testCases.map(async (testCase, index) => {
+                    const urls = results.testcasesURLs[index];
+                    if (testCase.input && urls.inputUrl) {
+                        await uploadToS3(urls.inputUrl, testCase.input, testCase.input.type);
+                    }
+                    if (testCase.output && urls.outputUrl) {
+                        await uploadToS3(urls.outputUrl, testCase.output, testCase.output.type);
+                    }
+                })
+            );
+    
+            await Promise.all(
+                data.resources.map(async (resource, index) => {
+                    const url = results.resourceURLs[index];
+                    if (resource.file && url) {
+                        await uploadToS3(url, resource.file, resource.file.type);
+                    }
+                })
+            );
+    
+            toast.success('Problem created successfully');
+            navigate('/admin/problems')
+        }
+        catch(error){
+            console.log("Error in submitting problem");
+            toast.error("Problem Submission Failed!!");
+        }finally{
+            setsubmitting(false);
+        }
     };
 
     const handleMultiSelectChange = useCallback((field: 'topics' | 'companies', value: (Topic | Company)[]) => {
@@ -379,7 +390,9 @@ export function AddProblem() {
                             Add Image
                         </Button>
                     </div>
-                    <Button type="submit">Create Problem</Button>
+                    <Button type="submit"  disabled={submitting}>
+                        {submitting ? <Loader className="animate-spin h-4 w-4" /> : "Create Problem"}
+                    </Button>
                 </form>
             </CardContent>
         </Card>

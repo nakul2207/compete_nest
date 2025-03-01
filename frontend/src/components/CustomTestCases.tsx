@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react'
 import { ScrollArea } from "./ui/scroll-area"
+import { Loader } from "lucide-react"
 
 // Define the type for codeOutput
 type CodeOutput = {
@@ -18,6 +19,7 @@ export function CustomTestCases() {
     const [testCase, setTestCase] = useState("")
     const [output, setOutput] = useState("")
     const problem = useAppSelector((state) => state.problem)
+    const [IsRunning,setIsRunning] = useState(false);
 
     useEffect(() => {
         // console.log("Testcase tab is triggered")
@@ -33,7 +35,7 @@ export function CustomTestCases() {
             setOutput("Please provide input first")
             return
         }
-
+        setIsRunning(true);
         setOutput("Running code...")
 
         const data = {
@@ -53,6 +55,8 @@ export function CustomTestCases() {
 
         } catch (error) {
             setOutput("Error running code: " + (error instanceof Error ? error.message : String(error)))
+        }finally{
+            setIsRunning(false);
         }
     }
 
@@ -152,7 +156,11 @@ export function CustomTestCases() {
                                 className="w-full resize-none"
                             />
                         </div>
-                        <Button onClick={runTestCase}>Run Test Case</Button>
+                        <Button onClick={runTestCase} disabled={IsRunning} className="min-w-[150px]">
+                            {
+                                IsRunning? <Loader className="animate-spin h-4 w-4" /> : "Run Test Case"
+                            }
+                            </Button>
                         <div>
                             <h3 className="text-lg font-medium mb-2">Output:</h3>
                             <pre className="bg-muted p-2 rounded-md overflow-x-auto min-h-[100px]">{output}</pre>
