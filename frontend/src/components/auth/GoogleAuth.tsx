@@ -10,7 +10,7 @@ const GoogleAuth: React.FC = () => {
   const dispatch = useAppDispatch();
   const onSuccess = async (credentialResponse: any) => {
     try {
-      const data  = await AuthenticateWithGoogle(credentialResponse.credential)
+      const data = await AuthenticateWithGoogle(credentialResponse.credential)
       dispatch(setIsAuthenticated(true));
       dispatch(setUser(data.user));
       navigate(-1);
@@ -24,7 +24,7 @@ const GoogleAuth: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className='flex justify-center items-center'>
       <GoogleLogin
         onSuccess={onSuccess}
         onError={onError}

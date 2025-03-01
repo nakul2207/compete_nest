@@ -17,6 +17,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { ProblemProgressCard } from '@/components/ProblemProgressCard'
 import { getUserProgress } from '@/api/userApi'
 import React from 'react'
+import { toast } from 'sonner'
 
 interface Company {
   id: string;
@@ -96,21 +97,22 @@ export function ProblemsPage() {
 
   useEffect(() => {
     setIsLoading(true);
-    getAllProblems(currentPage)
-      .then((data) => {
-        setProblems(data.problems);
-
-        if (isAuthenticated) {
-          getUserProgress().then((progressData) => {
-            setSolved(progressData.solvedProblems);
-            setTotalProblems(progressData.totalProblems);
-          });
+    Promise.all([
+      getAllProblems(currentPage),
+      isAuthenticated ? getUserProgress() : null
+    ])
+      .then(([problemsData, progressData]) => {
+        setProblems(problemsData.problems);
+        if (progressData) {
+          setSolved(progressData.solvedProblems);
+          setTotalProblems(progressData.totalProblems);
         }
-        setIsLoading(false)
-      }).catch((error) => {
-        console.error("Error fetching problems:", error);
-      });
-  }, []);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        toast.error(`Error in fetching problems: ${err.message}`)
+      })
+  }, [currentPage, isAuthenticated]);
 
   const handleFilter = async () => {
     const topicIds = topicFilter.map(topic => topic.id);
