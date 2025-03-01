@@ -8,6 +8,7 @@ import { Moon, Sun, RotateCcw, Maximize2, Minimize2, Play } from 'lucide-react'
 import { Editor, useMonaco } from "@monaco-editor/react"
 import { languages } from "@/assets/mapping"
 import {createSubmission} from "@/api/problemApi.ts";
+import {Loader} from "lucide-react";
 
 type Language = {
     name: string;
@@ -40,6 +41,7 @@ export function OnlineCompiler() {
     const [input, setInput] = useState("")
     const [theme, setTheme] = useState<'vs-dark' | 'light'>('vs-dark')
     const [isFullScreen, setIsFullScreen] = useState(false)
+    const [IsRunning,setIsRunning] = useState(false);
     const editorRef = useRef<any>(null)
     const monaco = useMonaco()
 
@@ -56,6 +58,7 @@ export function OnlineCompiler() {
 
     const handleRunCode = async () => {
         try {
+            setIsRunning(true);
             setOutput("Code is running...");
 
             // Process each input asynchronously
@@ -76,6 +79,8 @@ export function OnlineCompiler() {
             }
         } catch (error) {
             console.error("Error running the code", error);
+        }finally{
+            setIsRunning(false)
         }
     }
 
@@ -166,11 +171,18 @@ export function OnlineCompiler() {
                                         )}
                                     </Button>
                                     <Button
-                                        className="bg-orange-500 hover:bg-orange-600 text-white"
+                                        className="bg-blue-500 hover:bg-blue-600 text-white min-w-[120px]"
                                         onClick={handleRunCode}
-                                    >
-                                        <Play className="h-4 w-4 mr-2" />
-                                        Run Code
+                                        disabled={IsRunning}
+                                        
+                                    >{
+                                        IsRunning ? (<Loader className="animate-spin h-4 w-4" size={20} />): (    
+                                            <>
+                                                <Play className="h-4 w-4 mr-2" />
+                                                Run Code
+                                            </>                                    
+                                            )
+                                    }
                                     </Button>
                                 </div>
                             </div>

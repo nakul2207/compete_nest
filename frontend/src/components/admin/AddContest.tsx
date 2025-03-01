@@ -14,6 +14,7 @@ import { getAllProblems } from '@/api/problemApi'
 import { createContest } from "@/api/contestApi.ts";
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { Loader } from 'lucide-react';
 
 interface Problem {
     id: string
@@ -25,6 +26,7 @@ interface Problem {
 export function AddContest() {
     const [allProblems, setAllProblems] = useState<Problem[]>([])
     const [selectedProblems, setSelectedProblems] = useState<(Problem & { score: number })[]>([])
+    const [submitting, setSubmitting] = useState(false);
 
     const { control, handleSubmit, formState: { errors }, setValue } = useForm<ContestFormData>({
         resolver: zodResolver(contestSchema),
@@ -55,11 +57,14 @@ export function AddContest() {
 
     const onSubmit = async (data: ContestFormData) => {
         try {
+            setSubmitting(true);
             await createContest(data);
             toast.success('Contest created successfully');
             navigate('/admin/contests');
         } catch (error: any) {
             toast.error(`Failed to create contest: ${error.message}`);
+        }finally{
+            setSubmitting(false);
         }
     }
 
@@ -199,7 +204,9 @@ export function AddContest() {
                             onProblemToggle={handleProblemToggle}
                         />
 
-                        <Button type="submit">Create Contest</Button>
+                        <Button type="submit" disabled={submitting}>
+                        {submitting ? <Loader className="animate-spin h-4 w-4" /> : "Create Contest"}
+                        </Button>
                     </form>
                 </CardContent>
             </Card>
