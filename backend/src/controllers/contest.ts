@@ -197,9 +197,9 @@ const handleDeleteContest = async (req: Request, res: Response) => {
       //delete the jobs scheduled for this contest from all queues
       if (contest?.jobIds) {
         const jobIds: JobIds = JSON.parse(contest.jobIds);
-        if (jobIds.startJobId) await removeContestStartJob(jobIds.startJobId);
-        if (jobIds.endJobId) await removeContestEndJob(jobIds.endJobId);
-        if (jobIds.emailJobId) await removeContestEmailJob(jobIds.emailJobId);
+        if (jobIds.startJobId) await removeContestStartJob(String(jobIds.startJobId));
+        if (jobIds.endJobId) await removeContestEndJob(String(jobIds.endJobId));
+        if (jobIds.emailJobId) await removeContestEmailJob(String(jobIds.emailJobId));
       }
 
       //now delete the contest from the contest table
