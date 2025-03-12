@@ -13,7 +13,7 @@ createRoot(document.getElementById('root')!).render(
       <Provider store={store}>
         <ThemeProvider>
           <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID!}>
-            <Toaster position="top-right" richColors />
+            <Toaster position="top-center" richColors />
             <App />
           </GoogleOAuthProvider> 
         </ThemeProvider>

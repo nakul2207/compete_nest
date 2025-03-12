@@ -13,7 +13,7 @@ interface ProgressItemProps {
     color: string
 }
 
-const ProgressItem: React.FC<ProgressItemProps> = ({ label, solved, total, color }) => {
+export const ProgressItem: React.FC<ProgressItemProps> = ({ label, solved, total, color }) => {
     const solvedProblems = solved.filter(problem =>
         JSON.parse(problem).type === label
     ).length;
@@ -28,7 +28,7 @@ const ProgressItem: React.FC<ProgressItemProps> = ({ label, solved, total, color
             </div>
             <Progress
                 value={total > 0 ? (solvedProblems / total) * 100 : 0}
-                className={`h-2 ${color}`}
+                className={`h-3 ${color}`}
             />
         </div>
     );

@@ -24,7 +24,7 @@ declare global {
 
 const prisma = new PrismaClient();
 
-const s3client = new S3Client({
+export const s3client = new S3Client({
   region: process.env.AWS_REGION as string,
   credentials: {
     accessKeyId: process.env.ACCESS_KEY_ID as string,
@@ -68,7 +68,7 @@ async function getObjectURL(key: string) {
   return getSignedUrl(s3client, command);
 }
 
-async function putObjectURL(key: string) {
+export async function putObjectURL(key: string) {
   const command = new PutObjectCommand({
     Bucket: "compete-nest",
     Key: key,

@@ -67,3 +67,79 @@ export const getUserProgress = async () => {
     throw error;
   }
 };
+export const GetProfile = async (username:string) => {
+  try {
+    const { data } = await axios.get(`${server_url}/api/user/profile/${username}`, {
+      headers,
+      withCredentials: true,
+    });
+    return data;
+  } catch (error) {
+    console.error("Failed to get profile:", error);
+    throw error;
+  }
+}
+
+export const GetSolvedProblems = async (username:string,page: number) => {
+  try {
+    const  data  = await axios.get(`${server_url}/api/user/${username}/solvedProblems?page=${page}`, {
+      headers,
+      withCredentials: true,
+    });
+    return data;
+  } catch (error) {
+    console.error("Failed to get solved problems:", error);
+    throw error;
+  }
+}
+
+export const GetContestParticipated = async (username:string,page: number) => {
+  try {
+    const  data  = await axios.get(`${server_url}/api/user/${username}/contestParticipated?page=${page}`, {
+      headers,
+      withCredentials: true,
+    });
+    return data;
+  } catch (error) {
+    console.error("Failed to get contest solved:", error);
+    throw error;
+  }
+}
+
+export const getUser = async () => {
+  try {
+    const  {data}  = await axios.get(`${server_url}/api/user/userdetails`, {
+      headers,
+      withCredentials: true,
+    });
+    return data;
+  } catch (error) {
+    console.error("Failed to get user:", error);
+    throw error;
+  }
+}
+export const UpdateProfile = async (data: any) => {
+  try {
+    const  response  = await axios.put(`${server_url}/api/user/updateProfile`, data, {
+      headers,
+      withCredentials: true,
+    });
+    return response;
+  } catch (error) {
+    console.error("Failed to update profile:", error);
+    throw error;
+  }
+}
+
+export const ChangePassword = async (data: any) => {
+  try {
+    const  response  = await axios.put(`${server_url}/api/user/changePassword`, data, {
+      headers,
+      withCredentials: true,
+    });
+    return response;
+  } catch (error) {
+    console.error("Failed to change password:", error);
+    throw error;
+  }
+}

@@ -26,6 +26,8 @@ import { NotFoundPage } from "@/pages/NotFoundPage.tsx";
 import { Loader } from "./components/Loader.tsx"
 import Contest from "./pages/Contest.tsx"
 import { LeaderBoard } from "./components/LeaderBoard.tsx"
+import ProfilePage from "./pages/Profile.tsx"
+import { SettingsPage } from "./pages/SettingsPage.tsx"
 
 function App() {
   const dispatch = useAppDispatch();
@@ -55,6 +57,8 @@ function App() {
                 <Route path="/admin" element={<AdminPortal />} />
               </Route>
               <Route path="/" element={<HomePage />} />
+              <Route path="/profile/:user_id" element={<ProfilePage/>} />
+              <Route path="/settings/:user_id" element={<SettingsPage/>} />
               <Route path="/problems" element={<ProblemsPage />} />
               <Route path="/problems/:problem_id" element={<CompeteNestProblemPage />} />
               <Route element={<ProtectedRoute allowedRoles={['User', 'Organiser', 'Admin']} />}>

@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import { motion, useInView, useAnimation } from "framer-motion"
@@ -16,13 +14,13 @@ interface FeatureCardProps {
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon: Icon }) => (
   <motion.div
-    className="bg-background/10 backdrop-blur-lg border border-primary/20 rounded-2xl p-8 shadow-2xl hover:shadow-primary/20 relative overflow-hidden group transition-all duration-300"
+    className="bg-background/90 backdrop-blur-lg border border-primary/20 rounded-2xl p-8 shadow-2xl hover:shadow-primary relative overflow-hidden group transition-all duration-300"
     whileHover={{ y: -10, scale: 1.02 }}
   >
     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
       <motion.div
-        className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary to-gray-600"
+        className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-primary to-white"
         initial={{ width: 0 }}
         whileInView={{ width: "100%" }}
         transition={{ duration: 2, delay: 0.5 }}
@@ -36,9 +34,9 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, description, icon: Ico
       <Icon className="h-8 w-8 text-primary text-gray-600 animate-pulse transition-colors" />
     </motion.div>
 
-    <h3 className="text-2xl font-bold mb-3 font-mono bg-gradient-to-r from-primary to-gray-600 bg-clip-text text-transparent relative inline-block">
+    <h3 className="text-2xl font-bold mb-3 font-mono bg-white bg-clip-text text-transparent relative inline-block">
       <span className="absolute inset-0 bg-gradient-to-r from-primary/30 to-cyan-400/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-full h-full -skew-x-12" />
-      {title}
+      <span className="text-primary dark:text-white">{title}</span>
     </h3>
 
     <motion.p
@@ -133,17 +131,10 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({ children }) => {
 
 export function HomePage() {
   return (
-    <div className="w-full py-16 space-y-24 relative overflow-hidden">
-      <motion.div
-        className="absolute inset-0 opacity-10 pointer-events-none"
-        animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
-        transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-        style={{
-          backgroundImage: `radial-gradient(circle, #2563eb 1px, #7c3aed 1px, transparent 1px)`,
-          backgroundSize: "40px 40px",
-        }}
-      />
-
+    <div className="w-full py-16 space-y-44 relative overflow-hidden">
+      <div className="h-10 bg-primary w-full absolute top-0 left-0 z-0 text-center text-white flex items-center justify-center font-semibold shadow-md">
+        One of the best platforms to improve your coding skills!!
+      </div>
       <section className="text-center space-y-12 relative z-10">
         <motion.div
           className="inline-block relative"
@@ -203,94 +194,46 @@ export function HomePage() {
       </section>
 
       <AnimatedSection>
-        <section className="grid mx-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+        <div className=" grid grid-cols-1 md:grid-cols-2 gap-8 bg-primary">
+          <div className="flex flex-col justify-center p-8 space-y-4">
+            <h2 className="text-4xl font-bold font-mono bg-white bg-clip-text text-transparent relative inline-block">
+              <span className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-full h-full -skew-x-12" />
+              Why CompeteNest?
+            </h2>
+            <p className="text-muted-foreground font-mono text-lg text-black">
+              CompeteNest is a platform to help you improve your coding skills through interactive
+              problems, competitive contests, and community support.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
           <FeatureCard
-            title="DSA Problem Set"
-            description="Practice and improve your skills with our curated collection of Data Structures and Algorithms problems."
-            icon={() => (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-12 h-12 text-gray-600"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6.429 9.75L2.25 12l4.179 2.25m0-4.5l5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0l4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0l-5.571 3-5.571-3"
-                />
-              </svg>
-            )}
+            title="Interactive Problems"
+            description="Solve coding challenges with real-time feedback and detailed solutions."
+            icon={Github}
           />
           <FeatureCard
-            title="Inbuilt Editor"
-            description="Code seamlessly with our powerful and feature-rich integrated development environment."
-            icon={() => (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-12 h-12 text-gray-600"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"
-                />
-              </svg>
-            )}
+            title="Competitive Contests"
+            description="Participate in weekly contests and compete with other developers."
+            icon={Linkedin}
           />
           <FeatureCard
-            title="Online Compiler"
-            description="Compile and run your code instantly with support for multiple programming languages."
-            icon={() => (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-12 h-12 text-gray-600"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"
-                />
-              </svg>
-            )}
+            title="Leaderboard Rankings"
+            description="Track your progress and compare your skills with other developers."
+            icon={Mail}
           />
           <FeatureCard
-            title="Dynamic Contests"
-            description="Participate in coding contests and compete against others with real-time leaderboards."
-            icon={() => (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-12 h-12 text-gray-600"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"
-                />
-              </svg>
-            )}
+            title="Community Support"
+            description="Join our community to discuss problems, contests, and more."
+            icon={Github}
           />
-        </section>
+          </div>
+        </div>
       </AnimatedSection>
 
       <AnimatedSection>
         <section className="p-2 text-center relative">
           <h2 className="text-4xl font-bold mb-16 inline-block relative font-mono">
-            <span className="bg-gradient-to-r from-primary to-gray-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary to-white bg-clip-text text-transparent">
               git commit -m "Team"
             </span>
           </h2>
@@ -316,7 +259,43 @@ export function HomePage() {
       </AnimatedSection>
 
       <AnimatedSection>
-        <motion.footer className="relative border-t border-cyan-400/20 mt-16 pt-12 bg-gradient-to-b from-blue-900/10 to-transparent">
+      <div>
+            <div className="relative w-full h-16 overflow-hidden bg-primary text-white">
+              <motion.div
+              className="absolute top-0 left-0 w-full h-full flex items-center"
+              animate={{ x: ["100%", "-100%"] }}
+              transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+              >
+              <div className="flex space-x-64 whitespace-nowrap">
+                <div className="flex items-center space-x-2">
+                <span className="text-2xl font-bold">Innovate</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                <span className="text-2xl font-bold">Create</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                <span className="text-2xl font-bold">Collaborate</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                <span className="text-2xl font-bold">Inspire</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                <span className="text-2xl font-bold">Learn</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                <span className="text-2xl font-bold">Grow</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                <span className="text-2xl font-bold">Achieve</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                <span className="text-2xl font-bold">Succeed</span>
+                </div>
+              </div>
+              </motion.div>
+            </div>
+        </div>
+        <motion.footer className="relative border-t border-cyan-400/20  pt-12 bg-gradient-to-b from-blue-900/10 to-transparent">
           <div className="w-full p-2 grid grid-cols-1 md:grid-cols-4 gap-8 text-muted-foreground">
             <div className="space-y-4">
               <h4 className="text-lg font-semibold text-primary">CompeteNest</h4>
