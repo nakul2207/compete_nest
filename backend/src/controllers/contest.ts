@@ -17,9 +17,9 @@ interface Problem {
 }
 
 interface JobIds {
-  startJobId: string;
-  endJobId: string;
-  emailJobId: string;
+  startJobId?: string | number;
+  endJobId?: string | number;
+  emailJobId?: string | number;
 }
 
 const handleStartContest = async (contestId: string) => {
