@@ -101,13 +101,17 @@ const ProfilePage: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-6">
           <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-32"></div>
           <div className="px-6 py-4 relative">
-            <div className="absolute -top-16 left-6 border-4 border-white dark:border-gray-800 rounded-full overflow-hidden">
-              <img src={user.avatar ? getCacheBustedUrl(user.avatar) : img} alt={user.name} className="h-32 w-32 object-cover" />
+            <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 border-4 border-white dark:border-gray-800 rounded-full overflow-hidden md:left-6 md:translate-x-0 md:-top-16">
+              <img
+                src={user.avatar ? getCacheBustedUrl(user.avatar) : img}
+                alt={user.name}
+                className="h-32 w-32 object-cover"
+              />
             </div>
 
-            <div className="ml-36 flex flex-col md:flex-row md:justify-between md:items-center">
-              <div>
-                <div className="flex items-center">
+            <div className="mt-16 md:mt-0 flex flex-col items-center md:flex-row md:justify-between md:items-center">
+              <div className="md:ml-36 text-center md:text-left">
+                <div className="flex items-center justify-center md:justify-start">
                   <h1 className="text-2xl font-bold">{user.name}</h1>
                   <CheckCircle className="h-5 w-5 text-blue-500 ml-2" />
                 </div>
@@ -115,9 +119,9 @@ const ProfilePage: React.FC = () => {
                 <p className="text-gray-700 dark:text-gray-300 mt-1">{user.bio}</p>
               </div>
 
-              <div className="mt-4 md:mt-0 flex items-center space-x-4">
+              <div className="mt-4 md:mt-0 flex items-center space-x-4 md:space-x-4 md:flex-row md:justify-start">
                 <a
-                  href={user.github || "https://github.com"}
+                  href={user.github || 'https://github.com'}
                   target="_blank"
                   className="hover:text-primary transition-colors"
                   rel="noreferrer"
@@ -125,7 +129,7 @@ const ProfilePage: React.FC = () => {
                   <Github className="h-5 w-5" />
                 </a>
                 <a
-                  href={user.linkedin || "https://linkedin.com"}
+                  href={user.linkedin || 'https://linkedin.com'}
                   target="_blank"
                   className="hover:text-primary transition-colors"
                   rel="noreferrer"
@@ -142,13 +146,16 @@ const ProfilePage: React.FC = () => {
                     <Globe className="h-5 w-5" />
                   </a>
                 )}
-                <a href={`mailto:${user.email}` || "mailto:contact@competenest.com"} className="hover:text-primary transition-colors">
+                <a
+                  href={`mailto:${user.email}` || 'mailto:contact@competenest.com'}
+                  className="hover:text-primary transition-colors"
+                >
                   <Mail className="h-5 w-5" />
                 </a>
               </div>
             </div>
 
-            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400 text-center md:text-left">
               <Calendar className="inline h-4 w-4 mr-1" /> {user.joinDate}
             </div>
           </div>
