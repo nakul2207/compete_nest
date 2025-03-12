@@ -50,6 +50,7 @@ import { BullMQAdapter } from "@bull-board/api/bullMQAdapter.js";
 import {
   contestStartQueue,
   contestEndQueue,
+  emailQueue,
 } from "./bullmq/queues/contestQueues";
 
 const serverAdapter = new ExpressAdapter();
@@ -58,6 +59,7 @@ createBullBoard({
   queues: [
     new BullMQAdapter(contestStartQueue),
     new BullMQAdapter(contestEndQueue),
+    new BullMQAdapter(emailQueue)
   ],
   serverAdapter,
 });

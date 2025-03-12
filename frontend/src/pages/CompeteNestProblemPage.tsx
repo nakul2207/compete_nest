@@ -27,6 +27,7 @@ interface Contest {
   endTime: string;
   problems: string[];
   registered: boolean;
+  server_time: string
 }
 
 export function CompeteNestProblemPage() {
@@ -41,6 +42,7 @@ export function CompeteNestProblemPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
+  const [timeOffset, setTimeOffset] = useState<number>(0);
 
   useEffect(() => {
     const fetchProblem = async () => {
@@ -51,8 +53,15 @@ export function CompeteNestProblemPage() {
         if (user && problemData.contestId) {
           const contest = await getContestById(problemData.contestId);
           if (contest) {
-            const contestStartTime = new Date(contest.startTime);
-            if (contestStartTime <= new Date()) {
+            //calculate time offset between server and client
+            const serverTimestamp = new Date(contest.server_time).getTime();
+            const clientTimestamp = Date.now();
+            setTimeOffset(serverTimestamp - clientTimestamp);
+
+            const currentServerTime = Date.now() + timeOffset;
+            const contestStartTime = new Date(contest.startTime).getTime();
+
+            if (contestStartTime <= currentServerTime) {
               if (contest.registered) {
                 //check for contest start time
                 setContest(contest);
@@ -94,6 +103,19 @@ export function CompeteNestProblemPage() {
     return <Navigate to="/forbidden" state={{ errorMessage: isError }} />
   }
 
+  // Add time-based status calculation
+  const getContestStatus = () => {
+    if (!contest) return 'Ended';
+
+    const currentServerTime = Date.now() + timeOffset;
+    const start = new Date(contest.startTime).getTime();
+    const end = new Date(contest.endTime).getTime();
+
+    if (currentServerTime < start) return 'Upcoming';
+    if (currentServerTime >= start && currentServerTime < end) return 'In Progress';
+    return 'Ended';
+  };
+
   return (
     <div className="h-[calc(100vh-3.5rem)]">
       {
@@ -110,11 +132,12 @@ export function CompeteNestProblemPage() {
             </div>
 
             {
-              (contest && contest.status !== 'Ended') ? (
+              getContestStatus() !== 'Ended' ? (
                 <div className="text-md">
                   <ContestTimer
                     startTime={contest.startTime}
                     endTime={contest.endTime}
+                    timeOffset={timeOffset}  // Pass time offset to timer
                     onEnd={() => setShowEndedPopup(true)}
                   />
                 </div>

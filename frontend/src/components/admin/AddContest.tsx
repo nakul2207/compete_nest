@@ -63,7 +63,7 @@ export function AddContest() {
             navigate('/admin/contests');
         } catch (error: any) {
             toast.error(`Failed to create contest: ${error.message}`);
-        }finally{
+        } finally {
             setSubmitting(false);
         }
     }
@@ -205,7 +205,7 @@ export function AddContest() {
                         />
 
                         <Button type="submit" disabled={submitting}>
-                        {submitting ? <Loader className="animate-spin h-4 w-4" /> : "Create Contest"}
+                            {submitting ? <Loader className="animate-spin h-4 w-4 min-w-[90px]" /> : "Create Contest"}
                         </Button>
                     </form>
                 </CardContent>

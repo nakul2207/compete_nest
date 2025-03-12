@@ -3,6 +3,10 @@ import { PrismaClient } from "@prisma/client";
 import {
   addContestStartJob,
   addContestEndJob,
+  removeContestStartJob,
+  removeContestEndJob,
+  addContestEmailJob,
+  removeContestEmailJob
 } from "../bullmq/queues/contestQueues";
 
 const prisma = new PrismaClient();
@@ -10,6 +14,12 @@ const prisma = new PrismaClient();
 interface Problem {
   id: string;
   score: number;
+}
+
+interface JobIds {
+  startJobId: string;
+  endJobId: string;
+  emailJobId: string;
 }
 
 const handleStartContest = async (contestId: string) => {
@@ -52,52 +62,75 @@ const handleCreateContest = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    //create record in contest table
-    const contest = await prisma.contest.create({
-      data: {
-        title,
-        description,
-        startTime,
-        endTime,
-        problems: problems.map((problem: Problem) => problem.id),
-        userId: req.user.id,
-      },
-      select: {
-        id: true,
-      },
+    const contest = await prisma.$transaction(async (prisma) => {
+      const createdContest = await prisma.contest.create({
+        data: {
+          title,
+          description,
+          startTime,
+          endTime,
+          problems: problems.map((problem: Problem) => problem.id),
+          userId: req.user.id,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!createdContest || !createdContest.id) {
+        throw new Error("Failed to create contest.");
+      }
+
+      await Promise.all(
+        problems.map(async (problem: Problem) => {
+          await prisma.contestProblem.create({
+            data: {
+              contestId: createdContest.id,
+              problemId: problem.id,
+              score: problem.score,
+            },
+          });
+
+          await prisma.problem.update({
+            where: {
+              id: problem.id,
+            },
+            data: {
+              contestId: createdContest.id,
+            },
+          });
+        })
+      );
+
+      return createdContest;
     });
 
-    // Ensure the contest is created before proceeding
-    if (!contest || !contest.id) {
-      throw new Error("Failed to create contest.");
-    }
-
-    //create record in contestProblem table
-    await Promise.all(
-      problems.map(async (problem: Problem) => {
-        await prisma.contestProblem.create({
-          data: {
-            contestId: contest.id,
-            problemId: problem.id,
-            score: problem.score,
-          },
-        });
-
-        //add the contestid field to the problem table
-        await prisma.problem.update({
-          where: {
-            id: problem.id,
-          },
-          data: {
-            contestId: contest.id,
-          },
-        });
-      })
-    );
-
     //adding the contest to the queue for scheduling
-    await addContestStartJob(contest.id, new Date(startTime));
-    await addContestEndJob(contest.id, new Date(endTime));
+    const contestStartJobId = await addContestStartJob(contest.id, new Date(startTime));
+    const contestEndJobId = await addContestEndJob(contest.id, new Date(endTime));
+
+    // Determine notification time
+    const parsedStartTime = new Date(startTime);
+    let notificationTime = new Date(parsedStartTime.getTime() - 10 * 60000);
+
+    if (parsedStartTime.getTime() - Date.now() < 10 * 60000) {
+      notificationTime = new Date();
+    }
+    const contestEmailJobId  = await addContestEmailJob(contest.id, notificationTime);
+
+    //adding the queue id's to the contest table -> (later used for deleting the scheduled jobs)
+    const jobIds: JobIds = {
+      startJobId: contestStartJobId as string,
+      endJobId: contestEndJobId as string,
+      emailJobId: contestEmailJobId as string,
+    };
+
+    await prisma.contest.update({
+      where: { id: contest.id },
+      data: {
+        jobIds: JSON.stringify(jobIds),
+      },
+    });
 
     res
       .status(201)
@@ -108,22 +141,83 @@ const handleCreateContest = async (req: Request, res: Response) => {
   }
 };
 
-const handleDeleteContest = async (_req: Request, res: Response) => {
+//not completed
+const handleDeleteContest = async (req: Request, res: Response) => {
   try {
-    //delete contest logic
-    //delete all the problems from the contestProblem table
+    //getting the contestId from parameters
+    const contestId = req.params.id;
 
-    //delete all the users from the contestParticipants table
+    const contest = await prisma.contest.findUnique({
+      where: {
+        id: contestId,
+      },
+    });
 
-    //now delete the contest from the contest table
+    if (!contest) {
+      return res.status(404).json({
+        message: "No such contest found.",
+      });
+    }
 
-    res.status(200).json({ message: "Contest deleted successfully" });
+    // if the user is organiser, then the owner or the contest must be the same user to delete it
+    if (req.user?.role === "Organiser" && contest?.userId !== req.user.id) {
+      return res.status(403).json({
+        message: "You aren't authorized to delete this contest.",
+      });
+    }
+
+    //deleting the contest id from the problems in the problem table
+    await prisma.$transaction(async (prisma) => {
+      //deleting the contest id from the problems in the problem table
+      await Promise.all(contest.problems.map(async (problemId: string) => {
+        await prisma.problem.update({
+          where: {
+            id: problemId,
+          },
+          data: {
+            contestId: null,
+          },
+        });
+      }));
+
+      //delete all the problems from the contestProblem table
+      await prisma.contestProblem.deleteMany({
+        where: {
+          contestId,
+        },
+      });
+
+      //delete all the users from the contestParticipants table
+      await prisma.contestParticipants.deleteMany({
+        where: {
+          contestId,
+        },
+      });
+
+      //delete the jobs scheduled for this contest from all queues
+      if (contest?.jobIds) {
+        const jobIds: JobIds = JSON.parse(contest.jobIds);
+        if (jobIds.startJobId) await removeContestStartJob(jobIds.startJobId);
+        if (jobIds.endJobId) await removeContestEndJob(jobIds.endJobId);
+        if (jobIds.emailJobId) await removeContestEmailJob(jobIds.emailJobId);
+      }
+
+      //now delete the contest from the contest table
+      await prisma.contest.delete({
+        where: {
+          id: contestId,
+        },
+      });
+    });
+
+    return res.status(200).json({ message: `${contest?.title} contest deleted successfully` });
   } catch (error) {
     console.error("Error deleting contest:", error);
-    res.status(500).json({ message: "Error deleting contest", error });
+    return res.status(500).json({ message: "Error deleting contest", error });
   }
 };
 
+//not completed
 const handleEditContest = async (_req: Request, res: Response) => {
   try {
     //edit contest logic
@@ -216,6 +310,7 @@ const handleGetContestByID = async (req: Request, res: Response) => {
         participants,
         registered: isRegistered ? true : false,
         problems: problemDetails,
+        server_time: new Date().toISOString(),
       },
     });
   } catch (error) {
@@ -251,6 +346,7 @@ const handleGetAll = async (req: Request, res: Response) => {
     // Add isAttended field to each contest
     const enrichedContests = contests.map((contest) => ({
       ...contest,
+      server_time: new Date().toISOString(),
       attended: userAttended.has(contest.id),
     }));
 
@@ -303,7 +399,7 @@ const handleContestRegister = async (req: Request, res: Response) => {
 
       return res.status(200).json({
         message:
-          "Contest registration successful. You will be notified 10 minutes before starting the contest.",
+          "Contest registration successful.",
       });
     } else {
       await prisma.contestParticipants.deleteMany({

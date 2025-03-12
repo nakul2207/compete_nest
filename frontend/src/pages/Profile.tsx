@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Calendar, CheckCircle} from "lucide-react";
+import { Calendar, CheckCircle } from "lucide-react";
 import { Github, Linkedin, Mail, Globe } from "lucide-react";
 import { ProgressItem } from "@/components/ProblemProgressCard";
 import { useParams } from "react-router-dom";
@@ -13,12 +13,12 @@ import { ForbiddenPage } from "./ForbiddenPage.tsx";
 interface ProfileData {
   user: {
     name: string;
-    email:string;
+    email: string;
     avatar: string;
     bio: string;
-    linkedin:string;
-    github:string;
-    extraURL:string;
+    linkedin: string;
+    github: string;
+    extraURL: string;
     joinDate: string;
   };
   stats: {
@@ -59,7 +59,7 @@ const ProfilePage: React.FC = () => {
   const total = easy + medium + hard;
 
   useEffect(() => {
-    if(!user_id) return;
+    if (!user_id) return;
     GetProfile(user_id)
       .then((data: ProfileData) => {
         setUser(data.user);
@@ -90,17 +90,17 @@ const ProfilePage: React.FC = () => {
       <div className="flex justify-center min-h-screen">
         {/* <Spinner></Spinner> */}
         <Loader></Loader>
-        
+
       </div>
     );
-    if(!user_id) return <ForbiddenPage msg="Invalid User!!"/>
+  if (!user_id) return <ForbiddenPage msg="Invalid User!!" />
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Profile Header */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden mb-6">
           <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-32"></div>
-            <div className="px-6 py-4 relative">
+          <div className="px-6 py-4 relative">
             <div className="absolute -top-16 left-6 border-4 border-white dark:border-gray-800 rounded-full overflow-hidden">
               <img src={user.avatar ? getCacheBustedUrl(user.avatar) : img} alt={user.name} className="h-32 w-32 object-cover" />
             </div>
@@ -117,7 +117,7 @@ const ProfilePage: React.FC = () => {
 
               <div className="mt-4 md:mt-0 flex items-center space-x-4">
                 <a
-                  href= {user.github || "https://github.com"}
+                  href={user.github || "https://github.com"}
                   target="_blank"
                   className="hover:text-primary transition-colors"
                   rel="noreferrer"
@@ -134,16 +134,16 @@ const ProfilePage: React.FC = () => {
                 </a>
                 {user.extraURL && (
                   <a
-                  href={user.extraURL}
-                  target="_blank"
-                  className="hover:text-primary transition-colors"
-                  rel="noreferrer"
+                    href={user.extraURL}
+                    target="_blank"
+                    className="hover:text-primary transition-colors"
+                    rel="noreferrer"
                   >
-                  <Globe className="h-5 w-5" />
+                    <Globe className="h-5 w-5" />
                   </a>
                 )}
-                <a href={`mailto:${user.email}` ||"mailto:contact@competenest.com"} className="hover:text-primary transition-colors">
-                  <Mail className="h-5 w-5" /> 
+                <a href={`mailto:${user.email}` || "mailto:contact@competenest.com"} className="hover:text-primary transition-colors">
+                  <Mail className="h-5 w-5" />
                 </a>
               </div>
             </div>
@@ -157,25 +157,22 @@ const ProfilePage: React.FC = () => {
         {/* Tabs */}
         <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
           <button
-            className={`py-2 px-4 font-medium ${
-              activeTab === "overview" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 dark:text-gray-400"
-            }`}
+            className={`py-2 px-4 font-medium ${activeTab === "overview" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 dark:text-gray-400"
+              }`}
             onClick={() => setActiveTab("overview")}
           >
             Overview
           </button>
           <button
-            className={`py-2 px-4 font-medium ${
-              activeTab === "problems" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 dark:text-gray-400"
-            }`}
+            className={`py-2 px-4 font-medium ${activeTab === "problems" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 dark:text-gray-400"
+              }`}
             onClick={() => setActiveTab("problems")}
           >
             Problems
           </button>
           <button
-            className={`py-2 px-4 font-medium ${
-              activeTab === "contests" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 dark:text-gray-400"
-            }`}
+            className={`py-2 px-4 font-medium ${activeTab === "contests" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-600 dark:text-gray-400"
+              }`}
             onClick={() => setActiveTab("contests")}
           >
             Contests
@@ -249,25 +246,25 @@ const ProfilePage: React.FC = () => {
               </div>
 
               <h2 className="text-lg font-semibold mt-6 mb-4">Skills</h2>
-                <div className="space-y-4">
+              <div className="space-y-4">
                 {stats.skills.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                  {stats.skills.map((skill, index) => (
-                    <span key={index} className="bg-purple-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium">
-                    {skill}
-                    </span>
-                  ))}
+                    {stats.skills.map((skill, index) => (
+                      <span key={index} className="bg-purple-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium">
+                        {skill}
+                      </span>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-gray-600 dark:text-gray-400">No skills added</p>
                 )}
-                </div>
+              </div>
             </div>
 
             {/* Recent Activity */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
               <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-              { stats.recentActivity.length === 0 ? (<p className="text-gray-600 dark:text-gray-400">No recent activity</p>) : (
+              {stats.recentActivity.length === 0 ? (<p className="text-gray-600 dark:text-gray-400">No recent activity</p>) : (
                 <div className="space-y-4">
                   {stats.recentActivity.map((activity, index) => (
                     <div key={index} className="flex">
@@ -314,7 +311,7 @@ const ProfilePage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <ContestParticipated username={user_id}/>
+            <ContestParticipated username={user_id} />
           </div>
         )}
       </div>

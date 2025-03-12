@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { getContestById, getLeaderboard } from "@/api/contestApi"
 import { io } from "socket.io-client";
 import { NotFoundPage } from "@/pages/NotFoundPage"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 const server_url = import.meta.env.VITE_SERVER_URL;
 const socket = io(server_url, { transports: ["websocket"] });
 
@@ -30,6 +31,7 @@ interface Contest {
     startTime: string
     endTime: string
     status: string
+    server_time: string
 }
 
 export function LeaderBoard() {
@@ -39,10 +41,14 @@ export function LeaderBoard() {
     const [participants, setParticipants] = useState<Participant[]>([])
     const [currentUser, setCurrentUser] = useState<Participant | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [timeOffset, setTimeOffset] = useState(0)
+    const [showEndedPopup, setShowEndedPopup] = useState(false)
     const { user } = useAppSelector((state) => state.auth)
     const [currentPage, setCurrentPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
     const itemsPerPage = 10
+
+    console.log("leaderboard");
 
     useEffect(() => {
         setIsLoading(true);
@@ -52,33 +58,71 @@ export function LeaderBoard() {
             return;
         }
 
+        const fetchContestData = async () => {
+            const contestData = await getContestById(contest_id)
+            // Calculate server-client time offset
+            const serverTimestamp = new Date(contestData.server_time).getTime()
+            const clientTimestamp = Date.now()
+            setTimeOffset(serverTimestamp - clientTimestamp)
+
+            // Check if contest has ended
+            const currentServerTime = Date.now() + (serverTimestamp - clientTimestamp)
+            const endTime = new Date(contestData.endTime).getTime()
+            if (currentServerTime >= endTime) {
+                setShowEndedPopup(true)
+            }
+
+            return contestData
+        }
+
         if (!contest) {
-            getContestById(contest_id).then((data) => {
-                // console.log("Contest:", data);
-                setContest(data);
-            })
+            fetchContestData().then(setContest)
         }
 
-        //connection should be done only when the contest is active
-        if (contest && (contest.status === "Ongoing" || (new Date() >= new Date(contest.startTime) && new Date() < new Date(contest.endTime)))) {
-            // Join the socket room with the UID
-            socket.emit("join", contest.id + "-leaderboard");
+        const connectSocket = () => {
+            const currentServerTime = Date.now() + timeOffset
+            const startTime = contest ? new Date(contest.startTime).getTime() : 0
+            const endTime = contest ? new Date(contest.endTime).getTime() : 0
 
-            // Set up the listener for the 'update' event
-            socket.on("update", (data) => {
-                // console.log("UpdatedLeaderboard:", data);
-
-                setParticipants(data.leaderboard);
-                setTotalPages(Math.ceil(data.leaderboard.length / itemsPerPage));
-                setCurrentUser(data.leaderboard.find((participant: Participant, index: number) => {
-                    if (participant.userId === user?.id) {
-                        participant.rank = index + 1;
-                        return true;
-                    }
-                    return false;
-                }));
-            });
+            if (currentServerTime >= startTime && currentServerTime < endTime) {
+                socket.emit("join", contest_id + "-leaderboard");
+                socket.on("update", handleSocketUpdate);
+            }
         }
+
+        const handleSocketUpdate = (data: any) => {
+            setParticipants(data.leaderboard)
+            setTotalPages(Math.ceil(data.leaderboard.length / itemsPerPage))
+
+            setCurrentUser(data.leaderboard.find((participant: Participant, index: number) => {
+                if (participant.userId === user?.id) {
+                    participant.rank = index + 1;
+                    return true;
+                }
+                return false;
+            }));
+        }
+
+        // //connection should be done only when the contest is active
+        // if (contest && (contest.status === "Ongoing" || (new Date() >= new Date(contest.startTime) && new Date() < new Date(contest.endTime)))) {
+        //     // Join the socket room with the UID
+        //     socket.emit("join", contest.id + "-leaderboard");
+
+        //     // Set up the listener for the 'update' event
+        //     socket.on("update", (data) => {
+        //         // console.log("UpdatedLeaderboard:", data);
+
+        //         setParticipants(data.leaderboard);
+        //         setTotalPages(Math.ceil(data.leaderboard.length / itemsPerPage));
+        //         setCurrentUser(data.leaderboard.find((participant: Participant, index: number) => {
+        //             if (participant.userId === user?.id) {
+        //                 participant.rank = index + 1;
+        //                 return true;
+        //             }
+        //             return false;
+        //         }));
+        //     });
+        // }
 
         getLeaderboard(contest_id).then((leaderboard) => {
             setParticipants(leaderboard);
@@ -90,19 +134,37 @@ export function LeaderBoard() {
                 }
                 return false;
             }));
-
-            setIsLoading(false);
+            setIsLoading(false)
         });
+
+        connectSocket()
 
         //disconnect the socket when the component is unmounted, if the connection is active
         return () => {
             if (socket.connected) {
                 // console.log("Disconnecting socket");
                 socket.emit("leave", contest_id + "-leaderboard");
+                socket.off("update", handleSocketUpdate)
             }
         }
-    }, []) // Added currentPage to dependencies
+    }, [contest_id, timeOffset]) // Added currentPage to dependencies
 
+    // Add contest end check
+    useEffect(() => {
+        if (!contest) return
+
+        const endTime = new Date(contest.endTime).getTime()
+        const timeUntilEnd = endTime - (Date.now() + timeOffset)
+
+        if (timeUntilEnd > 0) {
+            const timeout = setTimeout(() => {
+                setShowEndedPopup(true)
+                window.location.reload()
+            }, timeUntilEnd)
+
+            return () => clearTimeout(timeout)
+        }
+    }, [contest, timeOffset])
 
     const getRankBadge = (rank: number) => {
         switch (rank) {
@@ -268,6 +330,26 @@ export function LeaderBoard() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Add contest ended dialog */}
+            <Dialog open={showEndedPopup} onOpenChange={setShowEndedPopup}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl">Contest Ended</DialogTitle>
+                        <DialogDescription className="text-lg">
+                            The contest has ended. Final results are now available.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex justify-center">
+                        <Button
+                            onClick={() => setShowEndedPopup(false)}
+                            className="mt-4"
+                        >
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

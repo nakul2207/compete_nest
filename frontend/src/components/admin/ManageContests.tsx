@@ -3,20 +3,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import { Pencil, Trash2, Plus } from 'lucide-react'
+import { Trash2, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { getAllContests } from '@/api/contestApi'
 import { Spinner } from '../ui/Spinner.tsx'
-
+import { deleteContest } from '@/api/contestApi'
+import { toast } from "sonner"
 
 interface Contest {
-    id: number
+    id: string
     title: string
     startTime: string
     endTime: string
 }
-
 
 export function ManageContests() {
     const [contests, setContests] = useState<Contest[]>([]);
@@ -26,8 +26,13 @@ export function ManageContests() {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
     const [isloading, setIsLoading] = useState(true)
 
-    const handleDelete = (id: number) => {
-        setContests(contests.filter(contest => contest.id !== id))
+    const handleDelete = (id: string) => {
+        deleteContest(id).then((data) => {
+            toast.success(data.message);
+            setContests(contests.filter(contest => contest.id !== id))
+        }).catch((err) => {
+            toast.error(`Error in deleting the contest: ${err.message}`);
+        })
     }
 
     const filteredAndSortedContests = useMemo(() => {
@@ -153,13 +158,13 @@ export function ManageContests() {
                                         {/* <TableCell>{contest.participants}</TableCell> */}
                                         <TableCell>
                                             <div className="flex space-x-2">
-                                                <Button variant="outline" size="sm" asChild>
+                                                {/* <Button variant="outline" size="sm" asChild>
                                                     <Link to={`/admin/contests/edit/${contest.id}`}>
                                                         <Pencil className="h-4 w-4 text-yellow-500" />
                                                     </Link>
-                                                </Button>
-                                                <Button variant="outline" size="sm" onClick={() => handleDelete(contest.id)}>
-                                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                                </Button> */}
+                                                <Button className='hover:text-red-500' variant="outline" size="sm" onClick={() => handleDelete(contest.id)}>
+                                                    <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         </TableCell>

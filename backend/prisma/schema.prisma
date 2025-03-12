@@ -136,6 +136,7 @@ model Contest {
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   endTime             DateTime              @default(now())
+  jobIds              Json                  @default("{}")
   createdBy           User                  @relation("UserContests", fields: [userId], references: [id], onDelete: Cascade)
   contestParticipants ContestParticipants[]
   contestProblems     ContestProblem[]

@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Loader } from "@/components/Loader"
-import { getContestById } from "@/api/contestApi"
+import { getContestById, handleRegistration } from "@/api/contestApi"
 import { Calendar, Clock, Trophy, Users, AlertTriangle, ChevronRight, Star, ArrowLeft } from "lucide-react"
 import { ContestTimer } from "@/components/ContestTimer"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-
+import { toast } from "sonner"
 
 interface Contest {
   id: string
@@ -32,8 +32,8 @@ interface Contest {
     score: number
     solved: string[]
   }[]
+  server_time: string
 }
-
 
 interface ContestStatus {
   color: string
@@ -51,15 +51,21 @@ const Contest: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const { isAuthenticated } = useAppSelector((state) => state.auth)
   const [showEndedPopup, setShowEndedPopup] = useState(false)
+  const [timeOffset, setTimeOffset] = useState<number>(0)
 
   useEffect(() => {
     const fetchContest = async () => {
       setIsLoading(true)
       const contestData = await getContestById(contest_id);
       setContest(contestData)
-      if (new Date(contestData.endTime) < new Date()) {
-        setShowEndedPopup(true);
-      }
+
+      // Calculate time offset between server and client
+      const serverTimestamp = new Date(contestData.server_time).getTime()
+      const clientTimestamp = Date.now()
+      setTimeOffset(serverTimestamp - clientTimestamp)
+      // if (new Date(contestData.endTime) < new Date()) {
+      //   setShowEndedPopup(true);
+      // }
       setIsLoading(false)
     }
 
@@ -74,23 +80,21 @@ const Contest: React.FC = () => {
     return <div>Contest not found</div>
   }
 
-  const isContestActive = new Date() >= new Date(contest.startTime) && new Date() < new Date(contest.endTime)
-  const isContestEnded = new Date() >= new Date(contest.endTime)
+  // Calculate all times using server-based timing
+  const currentServerTime = Date.now() + timeOffset
+  const startTime = new Date(contest.startTime).getTime()
+  const endTime = new Date(contest.endTime).getTime()
+
+  const isContestActive = currentServerTime >= startTime && currentServerTime < endTime
+  const isContestEnded = currentServerTime >= endTime
 
   const getContestStatus = (): ContestStatus => {
-    if (!contest) return { color: "gray", text: "Unknown" }
-
-    const now = new Date()
-    const start = new Date(contest.startTime)
-    const end = new Date(contest.endTime)
-
-    if (now < start) {
+    if (currentServerTime < startTime) {
       return { color: "text-yellow-500", text: "Upcoming" }
-    } else if (now >= start && now < end) {
+    } else if (currentServerTime >= startTime && currentServerTime < endTime) {
       return { color: "text-green-500", text: "In Progress" }
-    } else {
-      return { color: "text-red-500", text: "Ended" }
     }
+    return { color: "text-red-500", text: "Ended" }
   }
 
   const getDifficultyConfig = (difficulty: string): DifficultyConfig => {
@@ -110,6 +114,19 @@ const Contest: React.FC = () => {
         <p>You must be logged in to view this contest.</p>
       </div>
     )
+  }
+
+  const handleRegister = (contestId: string, isRegister: boolean) => {
+    handleRegistration(contestId, isRegister).then((_data) => {
+      toast.success(_data.message);
+      setContest((prevContest) => {
+        if (!prevContest) return null; // Handle undefined state
+        return { ...prevContest, registered: !prevContest.registered };
+      });
+
+    }).catch((err) => {
+      toast.error(`Error in registering: ${err.message}. Please try after sometime.`);
+    })
   }
 
   return (
@@ -138,6 +155,7 @@ const Contest: React.FC = () => {
               <ContestTimer
                 startTime={contest.startTime}
                 endTime={contest.endTime}
+                timeOffset={timeOffset}  // Pass time offset to timer
                 onEnd={() => setShowEndedPopup(true)}
               />
             ) : (
@@ -196,77 +214,103 @@ const Contest: React.FC = () => {
           Problem Set
         </h2>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {contest.problems.map((problem, index) => {
-            const difficulty = getDifficultyConfig(problem.difficulty);
-            const isSolved = contest.registered && problem.solved.includes(problem.id) || false;
-            const cardColor = isSolved ? "bg-green-500" : "bg-primary/10";
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {
+            (isContestEnded || (isContestActive && contest.registered)) ? (
+              contest.problems.map((problem, index) => {
+                const difficulty = getDifficultyConfig(problem.difficulty);
+                const isSolved = contest.registered && problem.solved.includes(problem.id) || false;
+                const cardColor = isSolved ? "bg-green-500" : "bg-primary/10";
 
-            return (
-              <motion.div
-                key={problem.id || index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-              >
-                <Card className="group hover:border-primary transition-all duration-300 hover:shadow-lg">
-                  <CardHeader>
-                    <CardTitle className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-primary ${cardColor}`}>
-                          {String.fromCharCode(65 + index)}
-                        </div>
-                        <div className="flex flex-col">
+                return (
+                  <motion.div
+                    key={problem.id || index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
+                    <Card className="max-w-[350px] group hover:border-primary transition-all duration-300 hover:shadow-lg">
+                      <CardHeader>
+                        <CardTitle className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-primary ${cardColor}`}>
+                              {String.fromCharCode(65 + index)}
+                            </div>
+                            <div className="flex flex-col">
 
-                          <span className="text-lg">{problem.title}</span>
-                          <span className={`text-sm ${difficulty.color}`}>
-                            {difficulty.label}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className={`text-xs`}>
-                          {problem.score} points
-                        </Badge>
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Button
-                      asChild
-                      className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                    >
-                      <Link to={`/contest/${contest_id}/problem/${problem.id}`} className="flex items-center justify-center gap-2">
-                        {isSolved ? "View Problem" : "Solve Problem"}
-                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
+                              <span className="text-lg">{problem.title}</span>
+                              <span className={`text-sm ${difficulty.color}`}>
+                                {difficulty.label}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className={`text-xs`}>
+                              {problem.score} points
+                            </Badge>
+                          </div>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <Button
+                          asChild
+                          className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                        >
+                          <Link to={`/contest/${contest_id}/problem/${problem.id}`} className="flex items-center justify-center gap-2">
+                            {isSolved ? "View Problem" : "Solve Problem"}
+                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })
+            ) : (
+              (!isContestActive && !isContestEnded) ? (
+                <div className="text-center space-y-4">
+                  <p className="text-lg">The contest has not been started yet.</p>
+                  <Button
+                    variant={contest.registered ? "destructive" : "default"}
+                    onClick={() => handleRegister(contest.id, !contest.registered)}
+                    className="px-4 py-2"
+                  >
+                    {contest.registered ? "Unregister" : "Register"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center space-y-4">
+                  <Button disabled variant="secondary" className="px-4 py-2">
+                    You havn't Registered for this Contest
+                  </Button>
+                </div>
+              )
+            )
+          }
         </div>
       </div>
 
-      <div className="mt-8 flex justify-center gap-4">
-        <Button asChild size="lg" className="min-w-[200px]">
-          <Link to={`/contest/${contest_id}/leaderboard`}
-            state={{
-              contest: {
-                id: contest.id,
-                title: contest.title,
-                startTime: contest.startTime,
-                endTime: contest.endTime,
-                status: contest.status
-              }
-            }}
-          >
-            <Trophy className="w-5 h-5 mr-1" />
-            View Leaderboard
-          </Link>
-        </Button>
-      </div>
+      {
+        (isContestEnded || (isContestActive && contest.registered)) &&
+        <div className="mt-8 flex justify-center gap-4">
+          <Button asChild size="lg" className="min-w-[200px]">
+            <Link to={`/contest/${contest_id}/leaderboard`}
+              state={{
+                contest: {
+                  id: contest.id,
+                  title: contest.title,
+                  startTime: contest.startTime,
+                  endTime: contest.endTime,
+                  status: contest.status
+                }
+              }}
+            >
+              <Trophy className="w-5 h-5 mr-1" />
+              View Leaderboard
+            </Link>
+          </Button>
+        </div>
+      }
 
       <Dialog open={showEndedPopup} onOpenChange={setShowEndedPopup}>
         <DialogContent>
@@ -274,7 +318,7 @@ const Contest: React.FC = () => {
             <DialogTitle className="text-2xl">Contest Ended</DialogTitle>
           </DialogHeader>
           <DialogDescription className="text-lg">
-            The contest has ended.
+            The contest ended at: {new Date(endTime).toLocaleString()}
           </DialogDescription>
           <DialogFooter className="flex justify-center items-center w-full">
             <Button
