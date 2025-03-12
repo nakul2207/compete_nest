@@ -17,9 +17,9 @@ interface Problem {
 }
 
 interface JobIds {
-  startJobId?: string | number;
-  endJobId?: string | number;
-  emailJobId?: string | number;
+  startJobId?: string; // Change to string, as job IDs are strings
+  endJobId?: string;
+  emailJobId?: string;
 }
 
 const handleStartContest = async (contestId: string) => {
@@ -119,10 +119,10 @@ const handleCreateContest = async (req: Request, res: Response) => {
     const contestEmailJobId  = await addContestEmailJob(contest.id, notificationTime);
 
     //adding the queue id's to the contest table -> (later used for deleting the scheduled jobs)
-    const jobIds: JobIds = {
-      startJobId: contestStartJobId as string,
-      endJobId: contestEndJobId as string,
-      emailJobId: contestEmailJobId as string,
+    const jobIds = {
+      startJobId: contestStartJobId,
+      endJobId: contestEndJobId,
+      emailJobId: contestEmailJobId,
     };
 
     await prisma.contest.update({
@@ -195,11 +195,11 @@ const handleDeleteContest = async (req: Request, res: Response) => {
       });
 
       //delete the jobs scheduled for this contest from all queues
-      if (contest?.jobIds) {
-        const jobIds: JobIds = JSON.parse(contest.jobIds);
-        if (jobIds.startJobId) await removeContestStartJob(String(jobIds.startJobId));
-        if (jobIds.endJobId) await removeContestEndJob(String(jobIds.endJobId));
-        if (jobIds.emailJobId) await removeContestEmailJob(String(jobIds.emailJobId));
+      if (contest.jobIds) {
+        const jobIds: JobIds = JSON.parse(contest.jobIds as string); // Type assertion, as jobIds is Json type
+        if (jobIds.startJobId) await removeContestStartJob(jobIds.startJobId);
+        if (jobIds.endJobId) await removeContestEndJob(jobIds.endJobId);
+        if (jobIds.emailJobId) await removeContestEmailJob(jobIds.emailJobId);
       }
 
       //now delete the contest from the contest table
