@@ -13,10 +13,17 @@ model User {
   email               String                @unique
   token               String?
   password            String
-  problemsSolved      String[]              @default([])
   role                Role                  @default(User)
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
+  problemsSolved      String[]              @default([])
+  skills              String[]
+  username            String?               @unique
+  github              String?
+  linkedin            String?
+  bio                 String?
+  extraURL            String?
+  avatar              String?
   contests            Contest[]             @relation("UserContests")
   contestParticipants ContestParticipants[]
   problems            Problem[]             @relation("UserProblems")

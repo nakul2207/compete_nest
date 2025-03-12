@@ -55,7 +55,6 @@ export const deleteUser = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Missing userId in request" });
     }
 
-    // Delete the user
     const deletedUser = await prisma.user.delete({
       where: { id: userId },
     });

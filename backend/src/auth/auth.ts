@@ -37,10 +37,11 @@ export const handleSignup = async (req: Request, res: Response) => {
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
+    const username = email.split('@')[0];
 
     // Create the new user
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword },
+      data: { name, email, username ,password: hashedPassword },
       select: { id: true, name: true, email: true, role: true },
     });
 
@@ -256,3 +257,29 @@ export const handleVerifyOTP = async (req: Request, res: Response) => {
   delete otpStore[email];
   res.status(200).json({ message: 'OTP verified successfully' });
 };
+
+export const changePassword = async (req:Request, res:Response) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const userId = req.user?.id as string;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if(!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const validPassword = await bcrypt.compare(oldPassword, user.password);
+    if (!validPassword) {
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    });
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+}

@@ -23,6 +23,7 @@ export function Header() {
   const { theme, setTheme } = useTheme()
   const dispatch = useAppDispatch()
   const { isAuthenticated, user } = useAppSelector((state) => state.auth)
+  const username = user?.email.split('@')[0];
 
   const handleLogout = async () => {
     await LogoutUser();
@@ -35,7 +36,7 @@ export function Header() {
         <div className="container flex h-14 items-center">
           <div className="mr-4 hidden md:flex">
             <Link to="/" className="mr-6 flex items-center space-x-2">
-              <span className="hidden font-bold sm:inline-block">Compete Nest</span>
+              <span className="hidden font-bold sm:inline-block">CompeteNest</span>
             </Link>
             <nav className="flex items-center space-x-6 text-sm font-medium">
               <Link to="/" className="transition-colors hover:text-foreground/80 text-foreground">
@@ -84,9 +85,8 @@ export function Header() {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">Profile</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer">Dashboard</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">Settings</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate(`/profile/${username}`)} className="cursor-pointer">Profile</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate(`/settings/${username}`)} className="cursor-pointer">Settings</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
                       <LogOut className="h-3 w-4" />
