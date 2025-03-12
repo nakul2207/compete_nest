@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import { Input } from "../components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table"
 import { Button } from '@/components/ui/button'
@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom"
 import { getAllProblems, fetchProblems } from "@/api/problemApi.ts"
 import { useAppDispatch, useAppSelector } from "@/redux/hook.ts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X } from 'lucide-react'
+import { X, CheckCircleIcon, Circle } from 'lucide-react'
 import { MultiSelect } from "@/components/ui/multi-select.tsx";
 import { ChevronLeftIcon, ChevronRightIcon } from '@radix-ui/react-icons'
 import { getAllTopics } from '@/api/topicApi'
@@ -67,7 +67,7 @@ export function ProblemsPage() {
     Medium: 0,
     Hard: 0,
   });
-  const [solved, setSolved] = useState([]);
+  const [solved, setSolved] = useState<string[]>([]);
 
   const dispatch = useAppDispatch();
 
@@ -97,22 +97,32 @@ export function ProblemsPage() {
 
   useEffect(() => {
     setIsLoading(true);
-    Promise.all([
-      getAllProblems(currentPage),
-      isAuthenticated ? getUserProgress() : null
-    ])
-      .then(([problemsData, progressData]) => {
+    getAllProblems(currentPage)
+      .then((problemsData) => {
         setProblems(problemsData.problems);
-        if (progressData) {
-          setSolved(progressData.solvedProblems);
-          setTotalProblems(progressData.totalProblems);
-        }
         setIsLoading(false);
       })
       .catch((err) => {
         toast.error(`Error in fetching problems: ${err.message}`)
       })
-  }, [currentPage, isAuthenticated]);
+  }, [currentPage]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      getUserProgress()
+        .then((progressData) => {
+          setSolved(progressData.solvedProblems);
+          setTotalProblems(progressData.totalProblems);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  }, [isAuthenticated])
+
+  const solvedProblemsMap = useMemo(() => {
+    return new Map(solved.map(item => [JSON.parse(item).id, true]));
+  }, [solved]);
 
   const handleFilter = async () => {
     const topicIds = topicFilter.map(topic => topic.id);
@@ -230,10 +240,9 @@ export function ProblemsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
+                  <TableHead className="font-semibold">Status</TableHead>
                   <TableHead className="font-semibold">Title</TableHead>
                   <TableHead className="font-semibold">Difficulty</TableHead>
-                  <TableHead className="font-semibold">Acceptance</TableHead>
-                  {/*<TableHead className="font-semibold">Status</TableHead>*/}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -252,6 +261,10 @@ export function ProblemsPage() {
                   ) : (
                     problems.map((problem) => (
                       <TableRow key={problem.id} className="hover:bg-muted/50 transition-colors">
+                        <TableCell>
+                          {solvedProblemsMap.has(problem.problemId) ?
+                            <CheckCircleIcon className="text-green-500 h-4 w-4" /> : <Circle className="text-gray-500 h-4 w-4" />}
+                        </TableCell>
                         <TableCell className="font-medium cursor-pointer" onClick={() => navigate(`/problems/${problem.problemId}`)}>{problem.title}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-semibold
@@ -261,10 +274,6 @@ export function ProblemsPage() {
                             {problem.difficulty}
                           </span>
                         </TableCell>
-                        <TableCell>{20}</TableCell>
-                        {/*<TableCell>*/}
-                        {/*  <span>unsolved</span>*/}
-                        {/*</TableCell>*/}
                       </TableRow>
                     )))
                   )}
@@ -310,7 +319,7 @@ export function ProblemsPage() {
                   navigate("/auth")
                 }}
               >
-                Sign up
+                Sign In
               </Button>
             </div>
           )
