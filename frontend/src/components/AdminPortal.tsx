@@ -4,18 +4,18 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Users, FileText, Trophy, Building, Tag, ChevronLeft, ChevronRight } from 'lucide-react'
-import {getAllTopics} from "@/api/topicApi.ts";
-import {setTopics} from "@/redux/slice/topicSlice.tsx";
-import {getAllCompanies} from "@/api/companyApi.ts";
-import {setCompanies} from "@/redux/slice/companySlice.tsx";
-import {useAppDispatch} from "@/redux/hook.ts";
+import { getAllTopics } from "@/api/topicApi.ts";
+import { setTopics } from "@/redux/slice/topicSlice.tsx";
+import { getAllCompanies } from "@/api/companyApi.ts";
+import { setCompanies } from "@/redux/slice/companySlice.tsx";
+import { useAppDispatch } from "@/redux/hook.ts";
 
 const menuItems = [
-    { icon: Users, label: 'Manage Users', path: '/admin/users' },
-    { icon: FileText, label: 'Manage Problems', path: '/admin/problems' },
-    { icon: Trophy, label: 'Manage Contests', path: '/admin/contests' },
-    { icon: Building, label: 'Manage Companies', path: '/admin/companies' },
-    { icon: Tag, label: 'Manage Topics', path: '/admin/topics' },
+    { icon: Users, label: 'Manage Users', path: '/dashboard/users' },
+    { icon: FileText, label: 'Manage Problems', path: '/dashboard/problems' },
+    { icon: Trophy, label: 'Manage Contests', path: '/dashboard/contests' },
+    { icon: Building, label: 'Manage Companies', path: '/dashboard/companies' },
+    { icon: Tag, label: 'Manage Topics', path: '/dashboard/topics' },
 ]
 
 export function AdminPortal() {
@@ -33,7 +33,7 @@ export function AdminPortal() {
         getAllTopics().then((topics) => {
             // console.log(topics);
             dispatch(setTopics(topics));
-        }).catch((error)=>{
+        }).catch((error) => {
             console.log(error);
         })
     }, []);
@@ -42,15 +42,13 @@ export function AdminPortal() {
         getAllCompanies().then((companies) => {
             // console.log(companies);
             dispatch(setCompanies(companies));
-        }).catch((error)=>{
+        }).catch((error) => {
             console.log(error);
         })
     }, []);
 
-    // console.log("Portal Updated");
-
-    if (location.pathname === '/admin') {
-        return <Navigate to="/admin/users" replace />
+    if (location.pathname === '/dashboard') {
+        return <Navigate to="/dashboard/users" replace />
     }
 
     return (
@@ -62,8 +60,8 @@ export function AdminPortal() {
                         expanded ? "w-64" : "w-16"
                     )}
                 >
-                    <div className="flex items-center justify-between p-4">
-                        {expanded && <h2 className="text-lg font-semibold">Admin Portal</h2>}
+                    <div className="flex items-center justify-between p-2">
+                        {expanded && <h2 className="text-xl font-bold ml-2">Dashboard</h2>}
                         <Button
                             variant="ghost"
                             size="icon"
@@ -74,13 +72,13 @@ export function AdminPortal() {
                         </Button>
                     </div>
                     <ScrollArea className="flex-1">
-                        <nav className="flex flex-col gap-2 p-2">
+                        <nav className="flex flex-col gap-2 py-2 md: p-2">
                             {menuItems.map((item) => (
                                 <Link
                                     key={item.path}
                                     to={item.path}
                                     className={cn(
-                                        "flex items-center rounded-lg px-3 py-2 transition-all hover:bg-accent",
+                                        "flex items-center rounded-lg py-2 px-1 md:px-2 transition-all hover:bg-accent",
                                         location.pathname === item.path ? "bg-accent text-accent-foreground" : "text-muted-foreground",
                                         !expanded && "justify-center"
                                     )}
@@ -94,7 +92,7 @@ export function AdminPortal() {
                 </div>
 
                 <main className="flex-1 overflow-y-auto">
-                    <div className="container mx-auto py-6">
+                    <div className="container mx-auto p-2 md:p-4">
                         <Outlet />
                     </div>
                 </main>

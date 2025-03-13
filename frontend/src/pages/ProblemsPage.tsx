@@ -153,11 +153,11 @@ export function ProblemsPage() {
   }, []);
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto p-4 md:p-8">
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="lg:w-3/4">
           <h1 className="text-3xl font-bold mb-6">Problems</h1>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex flex-wrap gap-4 mb-6">
             <Input
               placeholder="Search problems..."
               value={searchTerm}
@@ -165,14 +165,14 @@ export function ProblemsPage() {
               className="md:w-1/3"
             />
             <Select onValueChange={(value) => setDifficultyFilter(value)}>
-              <SelectTrigger className="md:w-1/5">
-                <SelectValue placeholder="Difficulty" />
+              <SelectTrigger className="max-w-fit md:w-1/5">
+                <SelectValue placeholder="Difficulty&nbsp;" className='p-2' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="All">All Difficulties</SelectItem>
-                <SelectItem value="Easy">Easy</SelectItem>
-                <SelectItem value="Medium">Medium</SelectItem>
-                <SelectItem value="Hard">Hard</SelectItem>
+                <SelectItem value="All">All Difficulties&nbsp;</SelectItem>
+                <SelectItem value="Easy">Easy&nbsp; </SelectItem>
+                <SelectItem value="Medium">Medium&nbsp;</SelectItem>
+                <SelectItem value="Hard">Hard&nbsp;</SelectItem>
               </SelectContent>
             </Select>
             {/* <Select onValueChange={(value) => setStatusFilter(value)}>
@@ -186,7 +186,7 @@ export function ProblemsPage() {
                 <SelectItem value="Unsolved">Unsolved</SelectItem>
               </SelectContent>
             </Select> */}
-            <div className="md:w-1/5">
+            <div className="grow md:w-1/5">
               <MultiSelect
                 options={topics.map(topic => ({ id: topic.id, name: topic.name }))}
                 selected={topicFilter.map(topic => topic.id)}
@@ -195,7 +195,7 @@ export function ProblemsPage() {
                 label="Topics"
               />
             </div>
-            <div className="md:w-1/5">
+            <div className="grow md:w-1/5">
               <MultiSelect
                 options={companies.map(company => ({ id: company.id, name: company.name }))}
                 selected={companyFilter.map(company => company.id)}
@@ -204,7 +204,7 @@ export function ProblemsPage() {
                 label="Companies"
               />
             </div>
-            <Button onClick={handleFilter}>Filter</Button>
+            <Button className='grow' onClick={handleFilter}>Filter</Button>
           </div>
           <div className="border rounded-lg p-4 mb-4">
             <div className="flex flex-wrap gap-2">
@@ -240,9 +240,9 @@ export function ProblemsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold">Title</TableHead>
+                  <TableHead className="font-semibold md:pl-4">Title</TableHead>
                   <TableHead className="font-semibold">Difficulty</TableHead>
+                  <TableHead className="font-semibold text-center">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -261,11 +261,10 @@ export function ProblemsPage() {
                   ) : (
                     problems.map((problem) => (
                       <TableRow key={problem.id} className="hover:bg-muted/50 transition-colors">
-                        <TableCell>
-                          {solvedProblemsMap.has(problem.problemId) ?
-                            <CheckCircleIcon className="text-green-500 h-4 w-4" /> : <Circle className="text-gray-500 h-4 w-4" />}
+                        <TableCell className="font-medium cursor-pointer md:pl-4 hover:text-blue-600" onClick={() => navigate(`/problems/${problem.problemId}`)}>
+                          {problem.title}
                         </TableCell>
-                        <TableCell className="font-medium cursor-pointer" onClick={() => navigate(`/problems/${problem.problemId}`)}>{problem.title}</TableCell>
+
                         <TableCell>
                           <span className={`px-2 py-1 rounded-full text-xs font-semibold
                                 ${problem.difficulty === 'Easy' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
@@ -273,6 +272,11 @@ export function ProblemsPage() {
                                 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
                             {problem.difficulty}
                           </span>
+                        </TableCell>
+
+                        <TableCell className='flex justify-center'>
+                          {solvedProblemsMap.has(problem.problemId) ?
+                            <CheckCircleIcon className="text-green-500 h-4 w-4" /> : <Circle className="text-gray-500 h-4 w-4" />}
                         </TableCell>
                       </TableRow>
                     )))

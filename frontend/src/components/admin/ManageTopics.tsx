@@ -1,15 +1,15 @@
-import {useState} from 'react'
+import { useState } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Pencil, Trash2, Plus, X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import {Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle} from '../ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Label } from '../ui/label'
 import { ScrollArea } from '../ui/scroll-area'
-import {useAppDispatch, useAppSelector} from "@/redux/hook.ts";
-import {createTopics, deleteTopic, getAllTopics, updateTopic} from "@/api/topicApi.ts";
-import {editTopic, setTopics, removeTopic} from "@/redux/slice/topicSlice.tsx";
+import { useAppDispatch, useAppSelector } from "@/redux/hook.ts";
+import { createTopics, deleteTopic, getAllTopics, updateTopic } from "@/api/topicApi.ts";
+import { editTopic, setTopics, removeTopic } from "@/redux/slice/topicSlice.tsx";
 
 interface Topic {
     id: string;
@@ -17,7 +17,7 @@ interface Topic {
 }
 
 export function ManageTopics() {
-    const topics: Topic[]  = useAppSelector((state) => state.topics);
+    const topics: Topic[] = useAppSelector((state) => state.topics);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [newTopics, setNewTopics] = useState([''])
@@ -60,7 +60,7 @@ export function ManageTopics() {
             getAllTopics().then((topics) => {
                 // console.log(topics);
                 dispatch(setTopics(topics));
-            }).catch((error)=>{
+            }).catch((error) => {
                 console.log(error);
             })
 
@@ -108,11 +108,11 @@ export function ManageTopics() {
                                     <TableCell className="font-medium pl-2">{topic.name}</TableCell>
                                     <TableCell>
                                         <div className="flex justify-end space-x-2">
-                                            <Button variant="ghost" size="icon" onClick={() => { setEditingTopic(topic); setIsEditModalOpen(true); }}>
-                                                <Pencil className="h-4 w-4 text-yellow-500" />
+                                            <Button className='hover:text-yellow-500' variant="outline" size="icon" onClick={() => { setEditingTopic(topic); setIsEditModalOpen(true); }}>
+                                                <Pencil className="h-4 w-4" />
                                             </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => handleDelete(topic.id)}>
-                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                            <Button className='hover:text-red-500' variant="outline" size="icon" onClick={() => handleDelete(topic.id)}>
+                                                <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
                                     </TableCell>

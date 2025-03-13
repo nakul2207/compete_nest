@@ -114,7 +114,7 @@ export function ManageProblems() {
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="flex flex-wrap gap-4 mb-6">
                     <Input
                         placeholder="Search problems..."
                         value={searchTerm}
@@ -122,17 +122,17 @@ export function ManageProblems() {
                         className="md:w-1/3"
                     />
                     <Select onValueChange={setDifficultyFilter} defaultValue="All">
-                        <SelectTrigger className="md:w-1/5">
+                        <SelectTrigger className="max-w-fit md:w-1/5">
                             <SelectValue placeholder="Difficulty" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="All">All Difficulties</SelectItem>
-                            <SelectItem value="Easy">Easy</SelectItem>
-                            <SelectItem value="Medium">Medium</SelectItem>
-                            <SelectItem value="Hard">Hard</SelectItem>
+                            <SelectItem value="All">All Difficulties &nbsp;</SelectItem>
+                            <SelectItem value="Easy">Easy &nbsp;</SelectItem>
+                            <SelectItem value="Medium">Medium &nbsp;</SelectItem>
+                            <SelectItem value="Hard">Hard &nbsp;</SelectItem>
                         </SelectContent>
                     </Select>
-                    <div className="md:w-1/5">
+                    <div className="md:w-1/5 grow">
                         <MultiSelect
                             options={topics.map(topic => ({ id: topic.id, name: topic.name }))}
                             selected={topicFilter.map(topic => topic.id)}
@@ -141,7 +141,7 @@ export function ManageProblems() {
                             label="Topics"
                         />
                     </div>
-                    <div className="md:w-1/5">
+                    <div className="md:w-1/5 grow">
                         <MultiSelect
                             options={companies.map(company => ({ id: company.id, name: company.name }))}
                             selected={companyFilter.map(company => company.id)}
@@ -150,7 +150,7 @@ export function ManageProblems() {
                             label="Companies"
                         />
                     </div>
-                    <Button onClick={handleFilter} className="w-full md:w-1/5">Filter</Button>
+                    <Button onClick={handleFilter} className="grow">Filter</Button>
                 </div>
 
                 <div className="border rounded-lg p-4 mb-4">
@@ -221,8 +221,8 @@ export function ManageProblems() {
                                         {/* <TableCell>{problem.submissions}</TableCell> */}
                                         <TableCell>
                                             <div className="flex justify-items-start gap-2 space-x-2">
-                                                <Pencil className="h-4 w-4 cursor-pointer" onClick={() => navigate(`/admin/problems/edit/${problem.problemId}`)} />
-                                                <Trash2 className="h-4 w-4 cursor-pointer" onClick={() => handleDelete(problem.problemId)} />
+                                                <Pencil className="h-4 w-4 cursor-pointer hover:text-yellow-500" onClick={() => navigate(`/admin/problems/edit/${problem.problemId}`)} />
+                                                <Trash2 className="h-4 w-4 cursor-pointer hover:text-red-500" onClick={() => handleDelete(problem.problemId)} />
                                             </div>
                                         </TableCell>
                                     </TableRow>

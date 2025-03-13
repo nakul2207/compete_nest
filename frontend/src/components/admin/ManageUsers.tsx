@@ -45,9 +45,9 @@ export function ManageUsers() {
     useEffect(() => {
         setLoading(true)
         GetUsers().then((data) => {
-            if(data){
+            if (data) {
                 setUsers(data.users)
-            }else{
+            } else {
                 setUsers([])
             }
             setLoading(false)
@@ -93,18 +93,18 @@ export function ManageUsers() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Manage Users</CardTitle>
+                <CardTitle className="text-2xl font-bold">Manage Users</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="flex flex-wrap gap-4 mb-6">
                     <Input
                         placeholder="Search users..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="sm:w-[300px]"
+                        className="sm:w-[300px] grow"
                     />
                     <Select value={roleFilter} onValueChange={setRoleFilter}>
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-[180px] grow">
                             <SelectValue placeholder="Filter by role" />
                         </SelectTrigger>
                         <SelectContent>
@@ -115,7 +115,7 @@ export function ManageUsers() {
                         </SelectContent>
                     </Select>
                     <Select value={sortBy} onValueChange={(value) => setSortBy(value as keyof User)}>
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-[180px] grow">
                             <SelectValue placeholder="Sort by" />
                         </SelectTrigger>
                         <SelectContent>
@@ -134,46 +134,47 @@ export function ManageUsers() {
                             <TableRow>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Email</TableHead>
-                                <TableHead>Role</TableHead>
-
+                                {/* <TableHead>Role</TableHead> */}
                                 <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {loading?(
+                            {loading ? (
                                 <TableRow>
-                                <TableCell colSpan={4} className="h-32 text-center">
-                                    <Spinner/>
-                                </TableCell>
+                                    <TableCell colSpan={4} className="h-32 text-center">
+                                        <Spinner />
+                                    </TableCell>
                                 </TableRow>
-                            ):
-                            (filteredAndSortedUsers.map((user) => (
-                                <TableRow key={user.id}>
-                                    <TableCell>{user.name}</TableCell>
-                                    <TableCell>{user.email}</TableCell>
-                                    <TableCell>{user.role}</TableCell>
+                            ) :
+                                (filteredAndSortedUsers.map((user) => (
+                                    <TableRow key={user.id}>
+                                        <TableCell>{user.name}</TableCell>
+                                        <TableCell>{user.email}</TableCell>
+                                        {/* <TableCell>{user.role}</TableCell> */}
 
                                         <TableCell className='flex flex-row gap-2 items-center'>
-                                            <Select 
-                                                defaultValue={user.role} 
+                                            <Select
+                                                defaultValue={user.role}
                                                 onValueChange={(value) => handleRoleChange(user.id, value)}
                                             >
-                                                <SelectTrigger className="w-[120px]">
+                                                <SelectTrigger className="w-[80px]">
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="User">User</SelectItem>
-                                                    <SelectItem value="Admin">Admin</SelectItem>
-                                                    <SelectItem value="Organiser">Organiser</SelectItem>
+                                                    <SelectItem value="User">User&nbsp;</SelectItem>
+                                                    <SelectItem value="Admin">Admin&nbsp;</SelectItem>
+                                                    <SelectItem value="Organiser">Organiser&nbsp;</SelectItem>
                                                 </SelectContent>
                                             </Select>
-                                            <Trash2 
-                                                className="h-4 w-4 cursor-pointer text-red-500" 
-                                                onClick={() => setDeleteDialog({ isOpen: true, userId: user.id })} 
-                                            />
+                                            <Button className='hover:text-red-500' variant="outline" size='icon'>
+                                                <Trash2
+                                                    className="h-4 w-4"
+                                                    onClick={() => setDeleteDialog({ isOpen: true, userId: user.id })}
+                                                />
+                                            </Button>
                                         </TableCell>
-                                </TableRow>
-                            )))}
+                                    </TableRow>
+                                )))}
                         </TableBody>
                     </Table>
                 </div>

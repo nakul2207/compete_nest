@@ -132,7 +132,7 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({ children }) => {
 export function HomePage() {
   return (
     <div className="w-full py-16 space-y-44 relative overflow-hidden">
-      <div className="h-10 bg-primary w-full absolute top-0 left-0 z-0 text-center text-white flex items-center justify-center font-semibold shadow-md">
+      <div className="h-10 bg-primary w-full absolute top-0 left-0 z-0 text-sm md:text:lg text-center text-white flex items-center justify-center font-semibold shadow-md">
         One of the best platforms to improve your coding skills!!
       </div>
       <section className="text-center space-y-12 relative z-10">
@@ -182,7 +182,7 @@ export function HomePage() {
               {/* <div className="absolute -inset-1 bg-gradient-to-r from-primary to-gray-500 rounded-2xl opacity-70 blur transition duration-1000 group-hover:opacity-100 animate-tilt" /> */}
               <Button
                 size="lg"
-                className="relative text-lg px-8 py-4 rounded-full border-2 border-primary hover:border-primary bg-primary text-white hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl"
+                className="relative text-lg px-8 py-4 rounded-2xl border-2 border-primary hover:border-primary bg-primary text-white hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 <Link to="/problems" className="font-mono tracking-tighter">
                   $ git start coding
@@ -200,32 +200,32 @@ export function HomePage() {
               <span className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-full h-full -skew-x-12" />
               Why CompeteNest?
             </h2>
-            <p className="text-muted-foreground font-mono text-lg text-black">
+            <p className="text-muted-foreground font-mono text-lg text-white">
               CompeteNest is a platform to help you improve your coding skills through interactive
               problems, competitive contests, and community support.
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
-          <FeatureCard
-            title="Interactive Problems"
-            description="Solve coding challenges with real-time feedback and detailed solutions."
-            icon={Github}
-          />
-          <FeatureCard
-            title="Competitive Contests"
-            description="Participate in weekly contests and compete with other developers."
-            icon={Linkedin}
-          />
-          <FeatureCard
-            title="Leaderboard Rankings"
-            description="Track your progress and compare your skills with other developers."
-            icon={Mail}
-          />
-          <FeatureCard
-            title="Community Support"
-            description="Join our community to discuss problems, contests, and more."
-            icon={Github}
-          />
+            <FeatureCard
+              title="Interactive Problems"
+              description="Solve coding challenges with real-time feedback and detailed solutions."
+              icon={Github}
+            />
+            <FeatureCard
+              title="Competitive Contests"
+              description="Participate in weekly contests and compete with other developers."
+              icon={Linkedin}
+            />
+            <FeatureCard
+              title="Leaderboard Rankings"
+              description="Track your progress and compare your skills with other developers."
+              icon={Mail}
+            />
+            <FeatureCard
+              title="Community Support"
+              description="Join our community to discuss problems, contests, and more."
+              icon={Github}
+            />
           </div>
         </div>
       </AnimatedSection>
@@ -259,41 +259,41 @@ export function HomePage() {
       </AnimatedSection>
 
       <AnimatedSection>
-      <div>
-            <div className="relative w-full h-16 overflow-hidden bg-primary text-white">
-              <motion.div
+        <div>
+          <div className="relative w-full h-16 overflow-hidden bg-primary text-white">
+            <motion.div
               className="absolute top-0 left-0 w-full h-full flex items-center"
               animate={{ x: ["100%", "-100%"] }}
               transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-              >
+            >
               <div className="flex space-x-64 whitespace-nowrap">
                 <div className="flex items-center space-x-2">
-                <span className="text-2xl font-bold">Innovate</span>
+                  <span className="text-2xl font-bold">Innovate</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                <span className="text-2xl font-bold">Create</span>
+                  <span className="text-2xl font-bold">Create</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                <span className="text-2xl font-bold">Collaborate</span>
+                  <span className="text-2xl font-bold">Collaborate</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                <span className="text-2xl font-bold">Inspire</span>
+                  <span className="text-2xl font-bold">Inspire</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                <span className="text-2xl font-bold">Learn</span>
+                  <span className="text-2xl font-bold">Learn</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                <span className="text-2xl font-bold">Grow</span>
+                  <span className="text-2xl font-bold">Grow</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                <span className="text-2xl font-bold">Achieve</span>
+                  <span className="text-2xl font-bold">Achieve</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                <span className="text-2xl font-bold">Succeed</span>
+                  <span className="text-2xl font-bold">Succeed</span>
                 </div>
               </div>
-              </motion.div>
-            </div>
+            </motion.div>
+          </div>
         </div>
         <motion.footer className="relative border-t border-cyan-400/20  pt-12 bg-gradient-to-b from-blue-900/10 to-transparent">
           <div className="w-full p-2 grid grid-cols-1 md:grid-cols-4 gap-8 text-muted-foreground">

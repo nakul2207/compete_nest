@@ -1,4 +1,4 @@
-import { useState} from 'react'
+import { useState } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog'
 import { Label } from '../ui/label'
 import { ScrollArea } from '../ui/scroll-area'
-import {createCompanies, deleteCompany, getAllCompanies, updateCompany} from '@/api/companyApi.ts'
-import {useAppDispatch, useAppSelector} from "@/redux/hook.ts";
-import {editCompany, setCompanies, removeCompany} from "@/redux/slice/companySlice.tsx";
+import { createCompanies, deleteCompany, getAllCompanies, updateCompany } from '@/api/companyApi.ts'
+import { useAppDispatch, useAppSelector } from "@/redux/hook.ts";
+import { editCompany, setCompanies, removeCompany } from "@/redux/slice/companySlice.tsx";
 
 interface Company {
     id: string;
@@ -17,7 +17,7 @@ interface Company {
 }
 
 export function ManageCompanies() {
-    const companies: Company[]  = useAppSelector((state) => state.companies);
+    const companies: Company[] = useAppSelector((state) => state.companies);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
     const [newCompanies, setNewCompanies] = useState([''])
@@ -61,7 +61,7 @@ export function ManageCompanies() {
             getAllCompanies().then((companies) => {
                 // console.log(companies);
                 dispatch(setCompanies(companies));
-            }).catch((error)=>{
+            }).catch((error) => {
                 console.log(error);
             })
 
@@ -109,11 +109,11 @@ export function ManageCompanies() {
                                     <TableCell className="font-medium">{company.name}</TableCell>
                                     <TableCell>
                                         <div className="flex justify-end space-x-2">
-                                            <Button variant="ghost" size="icon" onClick={() => { setEditingCompany(company); setIsEditModalOpen(true); }}>
-                                                <Pencil className="h-4 w-4 text-yellow-500" />
+                                            <Button className='hover:text-yellow-500' variant="outline" size="icon" onClick={() => { setEditingCompany(company); setIsEditModalOpen(true); }}>
+                                                <Pencil className="h-4 w-4" />
                                             </Button>
-                                            <Button variant="ghost" size="icon" onClick={() => handleDelete(company.id)}>
-                                                <Trash2 className="h-4 w-4 text-red-500" />
+                                            <Button className='hover:text-red-500' variant="outline" size="icon" onClick={() => handleDelete(company.id)}>
+                                                <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
                                     </TableCell>

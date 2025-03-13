@@ -54,11 +54,20 @@ function App() {
                   <Route path="/problems" element={<ProblemsPage/>} />
                 </Route> */}
               <Route element={<ProtectedRoute allowedRoles={['Organiser', 'Admin']} />}>
-                <Route path="/admin" element={<AdminPortal />} />
+                <Route path="/dashboard" element={<AdminPortal />}>
+                  <Route path="users" element={<ManageUsers />} />
+                  <Route path="problems" element={<ManageProblems />} />
+                  <Route path="problems/add" element={<AddProblem />} />
+                  <Route path="problems/edit/:id" element={<EditProblem />} />
+                  <Route path="contests" element={<ManageContests />} />
+                  <Route path="contests/add" element={<AddContest />} />
+                  <Route path="companies" element={<ManageCompanies />} />
+                  <Route path="topics" element={<ManageTopics />} />
+                </Route>
               </Route>
               <Route path="/" element={<HomePage />} />
-              <Route path="/profile/:user_id" element={<ProfilePage/>} />
-              <Route path="/settings/:user_id" element={<SettingsPage/>} />
+              <Route path="/profile/:user_id" element={<ProfilePage />} />
+              <Route path="/settings/:user_id" element={<SettingsPage />} />
               <Route path="/problems" element={<ProblemsPage />} />
               <Route path="/problems/:problem_id" element={<CompeteNestProblemPage />} />
               <Route element={<ProtectedRoute allowedRoles={['User', 'Organiser', 'Admin']} />}>
@@ -68,16 +77,7 @@ function App() {
                 <Route path="/contest/:contest_id/leaderboard" element={<LeaderBoard />} />
               </Route>
               <Route path="/compiler" element={<OnlineCompiler />} />
-              <Route path="/admin" element={<AdminPortal />}>
-                <Route path="users" element={<ManageUsers />} />
-                <Route path="problems" element={<ManageProblems />} />
-                <Route path="problems/add" element={<AddProblem />} />
-                <Route path="problems/edit/:id" element={<EditProblem />} />
-                <Route path="contests" element={<ManageContests />} />
-                <Route path="contests/add" element={<AddContest />} />
-                <Route path="companies" element={<ManageCompanies />} />
-                <Route path="topics" element={<ManageTopics />} />
-              </Route>
+
               <Route path="/forbidden" element={<ForbiddenPage />} />
               <Route path="*" element={<NotFoundPage />} />
               <Route path="/loader" element={<Loader />} />

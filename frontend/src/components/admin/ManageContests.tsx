@@ -79,7 +79,7 @@ export function ManageContests() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Manage Contests</CardTitle>
+                <CardTitle className="text-2xl font-bold">Manage Contests</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="flex flex-col sm:flex-row flex-wrap gap-4 mb-6">
@@ -163,7 +163,7 @@ export function ManageContests() {
                                                         <Pencil className="h-4 w-4 text-yellow-500" />
                                                     </Link>
                                                 </Button> */}
-                                                <Button className='hover:text-red-500' variant="outline" size="sm" onClick={() => handleDelete(contest.id)}>
+                                                <Button className='hover:text-red-500' variant="outline" size="icon" onClick={() => handleDelete(contest.id)}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>

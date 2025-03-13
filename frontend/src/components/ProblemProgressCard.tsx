@@ -43,7 +43,7 @@ export function ProblemProgressCard({ totalProblems, solved }: { totalProblems: 
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <Card className="w-full max-w-md mx-auto overflow-hidden">
+            <Card className="w-full max-w-md min-w-[300px] mx-auto overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
                     <CardTitle className="text-xl font-bold">Your Progress</CardTitle>
                 </CardHeader>
