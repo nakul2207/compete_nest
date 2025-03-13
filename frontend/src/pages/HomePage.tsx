@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import { motion, useInView, useAnimation } from "framer-motion"
-import { Github, Linkedin, Mail } from "lucide-react"
+import { Github, Linkedin, Mail, CodeXml, Trophy, Medal, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TypeAnimation } from "react-type-animation"
-import img from "../assets/png-clipart-ai-generated-man-beard-tiktok-face-male-social-media-3d-character-candidphotocontest.png"
+// import img from "../assets/png-clipart-ai-generated-man-beard-tiktok-face-male-social-media-3d-character-candidphotocontest.png"
+import Dinesh from "../assets/developers/Dinesh.jpg"
+import Nakul from "../assets/developers/Nakul.jpg"
 
 interface FeatureCardProps {
   title: string
@@ -133,7 +135,7 @@ export function HomePage() {
   return (
     <div className="w-full py-16 space-y-44 relative overflow-hidden">
       <div className="h-10 bg-primary w-full absolute top-0 left-0 z-0 text-sm md:text:lg text-center text-white flex items-center justify-center font-semibold shadow-md">
-        One of the best platforms to improve your coding skills!!
+        One of the best platforms to improve your coding skills!
       </div>
       <section className="text-center space-y-12 relative z-10">
         <motion.div
@@ -144,7 +146,7 @@ export function HomePage() {
         >
           <div className="absolute inset-0 bg-primary/10 blur-3xl -z-10" />
           <motion.h1
-            className="text-6xl md:text-7xl lg:text-8xl font-black bg-gradient-to-b from-primary to-foreground bg-clip-text text-transparent tracking-tighter mb-6"
+            className="text-5xl md:text-7xl lg:text-8xl font-black bg-gradient-to-b from-primary to-foreground bg-clip-text text-transparent tracking-tighter mb-6"
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -154,7 +156,7 @@ export function HomePage() {
         </motion.div>
 
         <motion.div
-          className="text-2xl md:text-3xl lg:text-4xl text-muted-foreground font-mono h-20"
+          className="text-xl md:text-3xl lg:text-4xl text-muted-foreground font-mono h-20"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.6 }}
@@ -185,7 +187,7 @@ export function HomePage() {
                 className="relative text-lg px-8 py-4 rounded-2xl border-2 border-primary hover:border-primary bg-primary text-white hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 <Link to="/problems" className="font-mono tracking-tighter">
-                  $ git start coding
+                  $ start coding
                 </Link>
               </Button>
             </motion.div>
@@ -194,9 +196,9 @@ export function HomePage() {
       </section>
 
       <AnimatedSection>
-        <div className=" grid grid-cols-1 md:grid-cols-2 gap-8 bg-primary">
-          <div className="flex flex-col justify-center p-8 space-y-4">
-            <h2 className="text-4xl font-bold font-mono bg-white bg-clip-text text-transparent relative inline-block">
+        <div className=" grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 bg-primary">
+          <div className="flex flex-col justify-center p-6 md:p-8 space-y-2 md:space-y-4">
+            <h2 className="text-3xl md:text-4xl font-bold font-mono bg-white bg-clip-text text-transparent relative inline-block">
               <span className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-full h-full -skew-x-12" />
               Why CompeteNest?
             </h2>
@@ -205,26 +207,26 @@ export function HomePage() {
               problems, competitive contests, and community support.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 md:p-8">
             <FeatureCard
               title="Interactive Problems"
               description="Solve coding challenges with real-time feedback and detailed solutions."
-              icon={Github}
+              icon={CodeXml}
             />
             <FeatureCard
               title="Competitive Contests"
               description="Participate in weekly contests and compete with other developers."
-              icon={Linkedin}
+              icon={Trophy}
             />
             <FeatureCard
               title="Leaderboard Rankings"
               description="Track your progress and compare your skills with other developers."
-              icon={Mail}
+              icon={Medal}
             />
             <FeatureCard
               title="Community Support"
               description="Join our community to discuss problems, contests, and more."
-              icon={Github}
+              icon={Users}
             />
           </div>
         </div>
@@ -232,19 +234,19 @@ export function HomePage() {
 
       <AnimatedSection>
         <section className="p-2 text-center relative">
-          <h2 className="text-4xl font-bold mb-16 inline-block relative font-mono">
+          <h2 className="text-4xl font-bold mb-10 md:mb-16 inline-block relative font-mono">
             <span className="bg-gradient-to-r from-primary to-white bg-clip-text text-transparent">
-              git commit -m "Team"
+              Meet the "Developers"
             </span>
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
             <TeamMember
               name="Dinesh Kumar"
               role="Lead Developer"
               intro="Passionate about creating efficient algorithms and scalable systems."
               github="https://github.com/DineshK3012/"
               linkedin="https://www.linkedin.com/in/dinesh-kumar-06ab741ba/"
-              image={img}
+              image={Dinesh}
             />
             <TeamMember
               name="Nakul Gupta"
@@ -252,7 +254,7 @@ export function HomePage() {
               intro="Dedicated to crafting intuitive and beautiful user experiences."
               github="https://github.com/nakul2207"
               linkedin="https://www.linkedin.com/in/nakul-gupta-321893203/"
-              image={img}
+              image={Nakul}
             />
           </div>
         </section>
@@ -295,30 +297,34 @@ export function HomePage() {
             </motion.div>
           </div>
         </div>
-        <motion.footer className="relative border-t border-cyan-400/20  pt-12 bg-gradient-to-b from-blue-900/10 to-transparent">
-          <div className="w-full p-2 grid grid-cols-1 md:grid-cols-4 gap-8 text-muted-foreground">
+        <motion.footer className="relative border-t border-cyan-400/20  pt-10 bg-gradient-to-b from-blue-900/10 to-transparent">
+          <div className="w-full px-4 pt-0 pb-2 grid grid-cols-1 md:grid-cols-4 gap-8 text-muted-foreground">
             <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-primary">CompeteNest</h4>
+              <Link to="/">
+                <h4 className="text-2xl font-semibold text-primary">
+                  CompeteNest
+                </h4>
+              </Link>
               <p className="text-sm font-mono">
                 Level up your coding skills with interactive challenges and real-world projects.
               </p>
             </div>
 
             <div className="space-y-4">
-              <h5 className="text-sm font-semibold text-gray-600">Quick Links</h5>
+              <h5 className="text-sm font-semibold">Quick Links</h5>
               <ul className="space-y-2 font-mono text-sm">
                 <li>
-                  <a href="/problems" className="hover:text-purple-300 transition-colors">
+                  <a href="/problems" className="hover:text-primary transition-colors">
                     Problems
                   </a>
                 </li>
                 <li>
-                  <a href="/contests" className="hover:text-purple-300 transition-colors">
+                  <a href="/contests" className="hover:text-primary transition-colors">
                     Contests
                   </a>
                 </li>
                 <li>
-                  <a href="/leaderboard" className="hover:text-purple-300 transition-colors">
+                  <a href="/contests" className="hover:text-primary transition-colors">
                     Leaderboard
                   </a>
                 </li>
@@ -329,7 +335,7 @@ export function HomePage() {
               <h5 className="text-sm font-semibold">Resources</h5>
               <ul className="space-y-2 font-mono text-sm">
                 <li>
-                  <a href="/docs" className="hover:text-primary transition-colors">
+                  <a href="/docshttps://github.com/DineshK3012/compete_nest" className="hover:text-primary transition-colors">
                     Documentation
                   </a>
                 </li>
@@ -350,7 +356,7 @@ export function HomePage() {
               <h5 className="text-sm font-semibold">Connect</h5>
               <div className="flex space-x-4">
                 <a
-                  href="https://github.com"
+                  href="https://github.com/DineshK3012/compete_nest"
                   target="_blank"
                   className="hover:text-primary transition-colors"
                   rel="noreferrer"
@@ -358,30 +364,31 @@ export function HomePage() {
                   <Github className="h-5 w-5" />
                 </a>
                 <a
-                  href="https://linkedin.com"
+                  href="https://www.linkedin.com/in/dinesh-kumar-06ab741ba/"
                   target="_blank"
                   className="hover:text-primary transition-colors"
                   rel="noreferrer"
                 >
                   <Linkedin className="h-5 w-5" />
                 </a>
-                <a href="mailto:contact@competenest.com" className="hover:text-primary transition-colors">
+                <a href="mailto:competenest@gmail.com" className="hover:text-primary transition-colors">
                   <Mail className="h-5 w-5" />
                 </a>
               </div>
-              <p className="text-xs font-mono mt-4 opacity-75">
-                © {new Date().getFullYear()} CompeteNest. All rights reserved.
-              </p>
+              {/* <p className="text-center text-sm font-mono mt-4 opacity-75">
+                &#169; {new Date().getFullYear()} CompeteNest. All rights reserved.
+              </p> */}
             </div>
           </div>
 
           <motion.div
-            className="mt-12 pt-8 border-t border-border/20 text-center text-xs font-mono opacity-50"
+            className="mt-6 border-t border-border/20 text-center text-sm font-mono opacity-75"
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.5 }}
             transition={{ delay: 0.5 }}
           >
-            <span className="animate-pulse">🚀</span> Powered by TypeScript, React, and Tailwind CSS
+            {/* <span className="animate-pulse">🚀</span> Powered by TypeScript, React, and Tailwind CSS */}
+            <span className="text-lg animate-pulse">&copy;</span> {new Date().getFullYear()} CompeteNest. All rights reserved.
           </motion.div>
         </motion.footer>
       </AnimatedSection>

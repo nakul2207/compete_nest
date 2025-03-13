@@ -7,28 +7,28 @@ import LoginForm from '../components/auth/LoginForm'
 import GoogleAuth from '../components/auth/GoogleAuth'
 import { useAppDispatch, useAppSelector } from '@/redux/hook'
 import { setIsLoginPage } from '@/redux/slice/toggleSlice'
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export function Auth() {
   const isLoginPage = useAppSelector((state) => state.toggle.value);
-  const user = useAppSelector((state)=> state.auth.user)
+  const user = useAppSelector((state) => state.auth.user)
   const dispatch = useAppDispatch()
   const navigate = useNavigate();
 
-  if(user){
+  if (user) {
     navigate('/');
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="mt-8 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 pb-4">
           <CardTitle className="text-2xl font-bold tracking-tight">
             {isLoginPage ? 'Welcome back' : 'Create an account'}
           </CardTitle>
           <CardDescription>
-            {isLoginPage 
-              ? 'Enter your credentials to sign in to your account' 
+            {isLoginPage
+              ? 'Enter your credentials to sign in to your account'
               : 'Enter your information to create a new account'}
           </CardDescription>
         </CardHeader>
@@ -52,8 +52,8 @@ export function Auth() {
               className="w-full text-sm"
               onClick={() => dispatch(setIsLoginPage(!isLoginPage))}
             >
-              {isLoginPage 
-                ? "Don't have an account? Sign up" 
+              {isLoginPage
+                ? "Don't have an account? Sign up"
                 : "Already have an account? Sign in"}
             </Button>
 

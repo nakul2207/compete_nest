@@ -7,8 +7,9 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { Moon, Sun, RotateCcw, Maximize2, Minimize2, Play } from 'lucide-react'
 import { Editor, useMonaco } from "@monaco-editor/react"
 import { languages } from "@/assets/mapping"
-import {createSubmission} from "@/api/problemApi.ts";
-import {Loader} from "lucide-react";
+import { createSubmission } from "@/api/problemApi.ts";
+import { Loader } from "lucide-react";
+import { useTheme } from "./ThemeProvider.tsx"
 
 type Language = {
     name: string;
@@ -37,11 +38,12 @@ const monacoLanguageMap: { [key: string]: string } = {
 export function OnlineCompiler() {
     const [languageId, setLanguageId] = useState("54") // Default to C++
     const [code, setCode] = useState(() => atob(getLanguageBoilerplate(languageId)))
+    const { theme } = useTheme()
     const [output, setOutput] = useState("")
     const [input, setInput] = useState("")
-    const [theme, setTheme] = useState<'vs-dark' | 'light'>('vs-dark')
+    const [editorTheme, setEditorTheme] = useState<'vs-dark' | 'light'>(theme == 'light' ? 'light' : 'vs-dark');
     const [isFullScreen, setIsFullScreen] = useState(false)
-    const [IsRunning,setIsRunning] = useState(false);
+    const [IsRunning, setIsRunning] = useState(false);
     const editorRef = useRef<any>(null)
     const monaco = useMonaco()
 
@@ -79,7 +81,7 @@ export function OnlineCompiler() {
             }
         } catch (error) {
             console.error("Error running the code", error);
-        }finally{
+        } finally {
             setIsRunning(false)
         }
     }
@@ -90,7 +92,7 @@ export function OnlineCompiler() {
     }, [])
 
     const handleThemeChange = useCallback(() => {
-        setTheme(prevTheme => prevTheme === 'vs-dark' ? 'light' : 'vs-dark')
+        setEditorTheme(prevTheme => prevTheme === 'vs-dark' ? 'light' : 'vs-dark')
     }, [])
 
     const toggleFullScreen = useCallback(() => {
@@ -112,12 +114,12 @@ export function OnlineCompiler() {
         fontFamily: "monospace"
     }), [])
 
-    // Update Monaco editor theme when our theme changes
+    // Update Monaco editor editorTheme when our editorTheme changes
     useEffect(() => {
         if (monaco) {
-            monaco.editor.setTheme(theme)
+            monaco.editor.setTheme(editorTheme)
         }
-    }, [monaco, theme])
+    }, [monaco, editorTheme, theme])
 
     return (
         <div className={`w-full h-[calc(100vh-4rem)] ${isFullScreen ? 'fixed inset-0 z-50 bg-background' : ''}`}>
@@ -146,7 +148,7 @@ export function OnlineCompiler() {
                                         size="icon"
                                         onClick={handleThemeChange}
                                     >
-                                        {theme === 'vs-dark' ? (
+                                        {editorTheme === 'vs-dark' ? (
                                             <Sun className="h-4 w-4" />
                                         ) : (
                                             <Moon className="h-4 w-4" />
@@ -174,15 +176,15 @@ export function OnlineCompiler() {
                                         className="bg-blue-500 hover:bg-blue-600 text-white min-w-[120px]"
                                         onClick={handleRunCode}
                                         disabled={IsRunning}
-                                        
+
                                     >{
-                                        IsRunning ? (<Loader className="animate-spin h-4 w-4" size={20} />): (    
-                                            <>
-                                                <Play className="h-4 w-4 mr-2" />
-                                                Run Code
-                                            </>                                    
+                                            IsRunning ? (<Loader className="animate-spin h-4 w-4" size={20} />) : (
+                                                <>
+                                                    <Play className="h-4 w-4 mr-2" />
+                                                    Run Code
+                                                </>
                                             )
-                                    }
+                                        }
                                     </Button>
                                 </div>
                             </div>
@@ -190,7 +192,7 @@ export function OnlineCompiler() {
                         <CardContent className="p-0 h-[calc(100vh-4rem)]">
                             <Editor
                                 height="100%"
-                                theme={theme}
+                                theme={editorTheme}
                                 language={monacoLanguageMap[languageId]}
                                 value={code}
                                 onChange={(value) => setCode(value || "")}

@@ -48,7 +48,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="flex h-14 md:h-16 items-center justify-between p-2 md:p-6">
         {/* Logo - visible on all screen sizes */}
         <Link to="/" className="flex items-center space-x-2">
           <motion.div
@@ -61,7 +61,7 @@ export function Header() {
               <img
                 src={theme === 'light' ? Competenest_light : Competenest_dark}
                 alt="CompeteNest"
-                className="h-10 md:h-12"
+                className="h-9 md:h-12"
               />
             </span>
           </motion.div>
@@ -86,21 +86,7 @@ export function Header() {
         </nav>
 
         {/* Right side controls */}
-        <div className="flex items-center space-x-2">
-          {/* Theme toggle button */}
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            >
-              <Sun className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <Moon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
-          </motion.div>
-
+        <div className="flex items-center space-x-1 md:space-x-2">
           {/* User menu or auth buttons */}
           {isAuthenticated ? (
             <DropdownMenu>
@@ -128,14 +114,14 @@ export function Header() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <LogOut className="h-4 w-4" />
+                  Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center space-x-2">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <div className="flex items-center space-x-1 md:space-x-2">
+              {/* <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   onClick={() => {
                     dispatch(setIsLoginPage(true))
@@ -147,7 +133,7 @@ export function Header() {
                 >
                   Log in
                 </Button>
-              </motion.div>
+              </motion.div> */}
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   onClick={() => {
@@ -162,6 +148,20 @@ export function Header() {
               </motion.div>
             </div>
           )}
+
+          {/* Theme toggle button */}
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            >
+              <Sun className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <Moon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+          </motion.div>
 
           {/* Mobile menu button */}
           <Button
