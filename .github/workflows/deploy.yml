@@ -23,19 +23,12 @@ jobs:
             cd /home/${{ secrets.AWS_EC2_USER }}/compete-nest
             git pull origin main
 
-            cd backend
+            cd backend/src
             npm install
             npm run build
 
             # Restart the main backend server
-            sudo pm2 stop competenest || true
-            sudo pm2 delete competenest || true
-            sudo pm2 start src/server.ts --name competenest --interpreter ts-node
-
-            # Restart the contest worker
-            sudo pm2 stop contest-worker || true
-            sudo pm2 delete contest-worker || true
-            sudo pm2 start ts-node --name contest-worker -- src/bullmq/workers/contestWorkers.ts
+            sudo pm2 restart competenest || true
 
             # Save PM2 process list
             sudo pm2 save
