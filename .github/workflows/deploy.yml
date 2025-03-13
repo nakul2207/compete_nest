@@ -27,7 +27,7 @@ jobs:
             npm install
             npm run build
 
-            # Restart the main backend server
+            #Restart the main backend server
             sudo pm2 restart competenest || true
 
             # Save PM2 process list
