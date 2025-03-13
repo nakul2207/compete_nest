@@ -18,8 +18,8 @@ import {
 import { LogoutUser } from "@/api/authApi.ts"
 import { logout } from "@/redux/slice/authSlice.tsx"
 import { motion } from "framer-motion"
-import Competenest_dark from "../../public/logo/Competenest_dark.png";
-import Competenest_light from "../../public/logo/Competenest_light.png";
+import Competenest_dark from "../assets/logo/Competenest_dark.png";
+import Competenest_light from "../assets/logo/Competenest_light.png";
 
 export function Header() {
   const navigate = useNavigate()
