@@ -60,7 +60,7 @@ export function AddContest() {
             setSubmitting(true);
             await createContest(data);
             toast.success('Contest created successfully');
-            navigate('/admin/contests');
+            navigate('/dashboard/contests');
         } catch (error: any) {
             toast.error(`Failed to create contest: ${error.message}`);
         } finally {

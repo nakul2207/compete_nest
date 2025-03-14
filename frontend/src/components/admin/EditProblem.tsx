@@ -90,7 +90,7 @@ export function EditProblem() {
                 );
             }
 
-            navigate('/admin/problems'); 
+            navigate('/dashboard/problems'); 
         } catch (error) {
             console.error("Error saving problem:", error);
         } finally {

@@ -93,7 +93,7 @@ export function AddProblem() {
             );
     
             toast.success('Problem created successfully');
-            navigate('/admin/problems')
+            navigate('/dashboard/problems')
         }
         catch(error){
             console.log("Error in submitting problem");

@@ -106,7 +106,7 @@ export function ManageProblems() {
                 <CardTitle className="text-2xl font-bold flex flex-wrap justify-between items-center gap-4">
                     Manage Problems
                     <Button asChild>
-                        <Link to="/admin/problems/add">
+                        <Link to="/dashboard/problems/add">
                             <Plus className="mr-2 h-4 w-4" />
                             Add Problem
                         </Link>
