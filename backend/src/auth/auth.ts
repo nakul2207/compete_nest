@@ -223,6 +223,10 @@ export const handleValidation = async (req: Request, res: Response) => {
 export const handleSendOTP = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user) {
+      return res.status(404).json({ error: 'User ' + email + ' already exists' });
+    }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiry = Date.now() + 10 * 60 * 1000;
