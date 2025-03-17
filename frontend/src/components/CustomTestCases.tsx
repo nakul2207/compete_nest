@@ -50,7 +50,10 @@ export function CustomTestCases() {
             if(result.status.id === 3){
                 setOutput(atob(result.stdout))
             } else {
-                setOutput(result.status.description)
+                const decodedOutput = new TextDecoder("utf-8").decode(
+                    Uint8Array.from(atob(result.compile_output), (c) => c.charCodeAt(0))
+                  );
+                setOutput(result.status.description+"\n"+decodedOutput)
             }
 
         } catch (error) {

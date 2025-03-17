@@ -120,9 +120,12 @@ export function CodeEditor({ handleTab, isFullScreen, handleFullScreen }: CodeEd
                                 output: atob(result.stdout),
                             };
                         } else {
+                            const decodedOutput = new TextDecoder("utf-8").decode(
+                                Uint8Array.from(atob(result.compile_output), (c) => c.charCodeAt(0))
+                              );
                             return {
                                 status: result.status.description,
-                                output: null,
+                                output: result.status.description+"\n"+decodedOutput,
                             };
                         }
                     } catch (submissionError) {
