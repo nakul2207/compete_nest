@@ -39,12 +39,12 @@ export default function SignupForm() {
   const handleSendOtp = async () => {
     setIsLoading(true)
     try {
-      await SendOTP(email)
+      await SendOTP(email);
       setIsOtpSent(true)
       toast.success('OTP sent to your email!')
     } catch (error) {
-      console.error('Failed to send OTP:', error)
-      toast.error('Failed to send OTP. Please try again.')
+      console.error('Failed to send OTP:',(error as any).response?.data?.error)
+      toast.error('Failed to send OTP: '+(error as any).response?.data?.error)
     } finally {
       setIsLoading(false)
     }

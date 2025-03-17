@@ -243,7 +243,7 @@ export function HomePage() {
             <TeamMember
               name="Dinesh Kumar"
               role="Lead Developer"
-              intro="Passionate about creating efficient algorithms and scalable systems."
+              intro="Bridging the gap between elegant user experiences and powerful backend systems."
               github="https://github.com/DineshK3012/"
               linkedin="https://www.linkedin.com/in/dinesh-kumar-06ab741ba/"
               image={Dinesh}
@@ -251,7 +251,7 @@ export function HomePage() {
             <TeamMember
               name="Nakul Gupta"
               role="Lead Developer"
-              intro="Dedicated to crafting intuitive and beautiful user experiences."
+              intro="Engineering full-stack solutions with scalable backends and seamless frontends."
               github="https://github.com/nakul2207"
               linkedin="https://www.linkedin.com/in/nakul-gupta-321893203/"
               image={Nakul}

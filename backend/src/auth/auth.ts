@@ -225,7 +225,7 @@ export const handleSendOTP = async (req: Request, res: Response) => {
     const { email } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
     if (user) {
-      return res.status(404).json({ error: 'User ' + email + ' already exists' });
+      return res.status(409).json({ error: 'User already exists!!' });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
