@@ -136,19 +136,13 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({ children }) => {
 export function HomePage() {
   return (
     <div className="w-full py-16 space-y-44 relative overflow-hidden">
-  <div
-    className="h-10 bg-primary w-full absolute top-0 left-0 z-0 text-sm md:text-lg text-center text-white flex items-center justify-center font-semibold shadow-md"
-    style={{
-      WebkitMaskImage: 'radial-gradient(ellipse at center, black, transparent 150%)',
-      maskImage: 'radial-gradient(ellipse at center, black, transparent 150%)'
-    }}
-  >
-    One of the best platforms to improve your coding skills!
-  </div>
+    <div className="h-10 bg-primary w-full absolute top-0 left-0 z-0 text-sm md:text-lg text-center text-white flex items-center justify-center font-semibold shadow-md ">
+      One of the best platforms to improve your coding skills!
+    </div>
       <div>
           <div
           className={cn(
-            "absolute inset-0 top-10",
+            "absolute inset-0 top-10 bottom-80",
             "[background-size:40px_40px]",
             "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
             "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]",
