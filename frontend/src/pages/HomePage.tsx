@@ -4,6 +4,8 @@ import { motion, useInView, useAnimation } from "framer-motion"
 import { Github, Linkedin, Mail, CodeXml, Trophy, Medal, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TypeAnimation } from "react-type-animation"
+import {cn} from "@/lib/utils"
+
 // import img from "../assets/png-clipart-ai-generated-man-beard-tiktok-face-male-social-media-3d-character-candidphotocontest.png"
 import Dinesh from "../assets/developers/Dinesh.jpg"
 import Nakul from "../assets/developers/Nakul.jpg"
@@ -134,8 +136,26 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({ children }) => {
 export function HomePage() {
   return (
     <div className="w-full py-16 space-y-44 relative overflow-hidden">
-      <div className="h-10 bg-primary w-full absolute top-0 left-0 z-0 text-sm md:text:lg text-center text-white flex items-center justify-center font-semibold shadow-md">
-        One of the best platforms to improve your coding skills!
+  <div
+    className="h-10 bg-primary w-full absolute top-0 left-0 z-0 text-sm md:text-lg text-center text-white flex items-center justify-center font-semibold shadow-md"
+    style={{
+      WebkitMaskImage: 'radial-gradient(ellipse at center, black, transparent 150%)',
+      maskImage: 'radial-gradient(ellipse at center, black, transparent 150%)'
+    }}
+  >
+    One of the best platforms to improve your coding skills!
+  </div>
+      <div>
+          <div
+          className={cn(
+            "absolute inset-0 top-10",
+            "[background-size:40px_40px]",
+            "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
+            "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]",
+          )}
+        />
+        {/* Radial gradient for the container to give a faded look */}
+        <div className="pointer-events-none absolute inset-0 top-10 flex items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_55%,black)] dark:bg-black"></div>
       </div>
       <section className="text-center space-y-12 relative z-10">
         <motion.div
