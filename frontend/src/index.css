@@ -4,17 +4,16 @@
 
 @layer base {
     :root {
-
-        --background: 0 0% 100%;
+        --background: 30 33% 95%;        /* Warm cream */
         --foreground: 0 0% 3.9%;
         
-        --card: 0 0% 100%;
+        --card: 30 33% 95%;              /* Warm cream */
         --card-foreground: 0 0% 3.9%;
         
-        --popover: 0 0% 100%; 
+        --popover: 30 33% 95%;           /* Warm cream */
         --popover-foreground: 0 0% 3.9%;
         
-        --primary: 215 90% 50%;
+        --primary: 215 90% 50%;          /* Keeping your blue primary */
         --primary-foreground: 0 0% 100%;
         
         --secondary: 210 40% 96.1%;
@@ -28,28 +27,26 @@
         
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 0 0% 98%;
-
-        --border: 214 32% 91%;
-        --input: 214 32% 91%;
+    
+        --border: 35 20% 80%;            /* Slightly warmer border */
+        --input: 35 20% 80%;
         --ring: 215 90% 50%;
         
         --radius: 0.5rem;
-
-      
+    
         --chart-1: 215 90% 50%;
         --chart-2: 155 60% 45%;
         --chart-3: 25 85% 55%;
         --chart-4: 275 70% 60%;
         --chart-5: 335 80% 55%;
-
-   
-        --sidebar-background: 210 40% 98%;
+    
+        --sidebar-background: 30 33% 95%;    /* Warm sidebar */
         --sidebar-foreground: 215 25% 27%;
         --sidebar-primary: 215 90% 50%;
         --sidebar-primary-foreground: 0 0% 100%;
         --sidebar-accent: 210 40% 96%;
         --sidebar-accent-foreground: 215 25% 27%;
-        --sidebar-border: 214 32% 91%;
+        --sidebar-border: 35 20% 80%;
         --sidebar-ring: 215 90% 50%;
     }
 

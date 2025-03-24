@@ -249,7 +249,7 @@ export function HomePage() {
       <AnimatedSection>
         <section className="p-2 text-center relative">
           <h2 className="text-4xl font-bold mb-10 md:mb-16 inline-block relative font-mono">
-            <span className="bg-gradient-to-r from-primary to-white bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary to-primary dark:from-primary dark:to-white bg-clip-text text-transparent">
               Meet the "Developers"
             </span>
           </h2>
