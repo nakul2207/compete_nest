@@ -142,10 +142,13 @@ export function HomePage() {
       <div>
           <div
           className={cn(
-            "absolute inset-0 top-10 bottom-80",
-            "[background-size:40px_40px]",
-            "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
-            "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]",
+        "absolute inset-0 top-10",
+        "bottom-[16%]",      // Adjust this based on footer height
+        "sm:bottom-[17%]",
+        "md:bottom-[13%]", 
+        "[background-size:40px_40px]",
+        "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
+        "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]",
           )}
         />
         {/* Radial gradient for the container to give a faded look */}
