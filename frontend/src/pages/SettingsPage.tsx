@@ -473,7 +473,12 @@ export const SettingsPage: React.FC = () => {
                   </div>
 
                   <div className="mb-8">
-                    <h3 className="text-lg font-medium mb-4">Change Password</h3>
+                    <h3 className="text-lg font-medium mb-4">
+                      Change Password
+                        <span className="text-sm text-gray-500 ml-2">
+                        (If you're using a Google account, your username serves as the default password)
+                        </span>
+                    </h3>
                     <form onSubmit={updatePassword} className="space-y-4">
                       <div>
                         <label htmlFor="current-password" className="block text-sm font-medium mb-2">

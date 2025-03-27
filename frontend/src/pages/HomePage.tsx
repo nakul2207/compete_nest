@@ -197,14 +197,14 @@ export function HomePage() {
 
         <AnimatedSection>
           <div className="max-w-3xl mx-auto">
-            <motion.div className="relative group" whileHover={{ scale: 1.05 }}>
-              {/* <div className="absolute -inset-1 bg-gradient-to-r from-primary to-gray-500 rounded-2xl opacity-70 blur transition duration-1000 group-hover:opacity-100 animate-tilt" /> */}
+            <motion.div className="relative inline-block" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+              <div className="absolute -inset-1 bg-primary rounded-2xl opacity-90 blur transition duration-1000 group-hover:opacity-100 animate-tilt" />
               <Button
                 size="lg"
                 className="relative text-lg px-8 py-4 rounded-2xl border-2 border-primary hover:border-primary bg-primary text-white hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-xl"
               >
                 <Link to="/problems" className="font-mono tracking-tighter">
-                  $ start coding
+                 { `> start coding <` }
                 </Link>
               </Button>
             </motion.div>

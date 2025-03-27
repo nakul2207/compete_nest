@@ -3,3 +3,4 @@
 backend/public
 .idea
 backend/prisma/migrations
+.DS_Store

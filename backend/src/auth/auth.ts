@@ -163,10 +163,11 @@ export const handleGoogleAuth = async (req: Request, res: Response) => {
 
     let user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      const randomPassword = crypto.randomBytes(16).toString('hex');
+      const randomPassword = email!.split('@')[0];
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
       user = await prisma.user.create({
-        data: { email: email!, name: name!, token: googleId, password: randomPassword },
+        data: { email: email!, name: name!, token: googleId, password: hashedPassword, username: email!.split('@')[0] },
       });
     }
 

@@ -28,6 +28,7 @@ import Contest from "./pages/Contest.tsx"
 import { LeaderBoard } from "./components/LeaderBoard.tsx"
 import ProfilePage from "./pages/Profile.tsx"
 import { SettingsPage } from "./pages/SettingsPage.tsx"
+import {Analytics} from "@vercel/analytics/react"
 
 function App() {
   const dispatch = useAppDispatch();
@@ -46,6 +47,7 @@ function App() {
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <Router>
         <div className="flex flex-col min-h-screen bg-background text-foreground">
+          <Analytics/>
           <Header />
           <main className="flex-grow">
             <Routes>
