@@ -149,6 +149,7 @@ export function HomePage() {
         "[background-size:40px_40px]",
         "[background-image:linear-gradient(to_right,#e4e4e7_1px,transparent_1px),linear-gradient(to_bottom,#e4e4e7_1px,transparent_1px)]",
         "dark:[background-image:linear-gradient(to_right,#262626_1px,transparent_1px),linear-gradient(to_bottom,#262626_1px,transparent_1px)]",
+        "z-0"
           )}
         />
         {/* Radial gradient for the container to give a faded look */}
@@ -212,8 +213,8 @@ export function HomePage() {
         </AnimatedSection>
       </section>
 
-      <AnimatedSection>
-        <div className=" grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 bg-primary">
+      <AnimatedSection >
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 bg-primary ">
           <div className="flex flex-col justify-center p-6 md:p-8 space-y-2 md:space-y-4">
             <h2 className="text-3xl md:text-4xl font-bold font-mono bg-white bg-clip-text text-transparent relative inline-block">
               <span className="absolute inset-0  opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-full h-full -skew-x-12" />
