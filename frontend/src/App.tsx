@@ -47,7 +47,6 @@ function App() {
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <Router>
         <div className="flex flex-col min-h-screen bg-background text-foreground">
-          <Analytics/>
           <Header />
           <main className="flex-grow">
             <Routes>
@@ -85,6 +84,7 @@ function App() {
               <Route path="/loader" element={<Loader />} />
             </Routes>
           </main>
+          <Analytics/>
         </div>
       </Router>
     </ThemeProvider>
