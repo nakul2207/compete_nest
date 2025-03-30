@@ -7,7 +7,13 @@ import { ThemeProvider } from './components/ThemeProvider'
 import {Provider} from "react-redux";
 import {store} from "./redux/store.tsx"
 import { Toaster } from 'sonner';
+import TagManager from 'react-gtm-module'
 
+const tagManagerArgs = {
+  gtmId: 'GTM-K9CDT37W'
+}
+
+TagManager.initialize(tagManagerArgs)
 
 createRoot(document.getElementById('root')!).render(
       <Provider store={store}>
