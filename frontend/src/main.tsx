@@ -10,7 +10,7 @@ import { Toaster } from 'sonner';
 import TagManager from 'react-gtm-module'
 
 const tagManagerArgs = {
-  gtmId: 'GTM-K9CDT37W'
+  gtmId: 'GTM-KDLPMHHL'
 }
 
 TagManager.initialize(tagManagerArgs)
