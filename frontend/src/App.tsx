@@ -28,7 +28,6 @@ import Contest from "./pages/Contest.tsx"
 import { LeaderBoard } from "./components/LeaderBoard.tsx"
 import ProfilePage from "./pages/Profile.tsx"
 import { SettingsPage } from "./pages/SettingsPage.tsx"
-import {Analytics} from "@vercel/analytics/react"
 
 function App() {
   const dispatch = useAppDispatch();
@@ -84,7 +83,6 @@ function App() {
               <Route path="/loader" element={<Loader />} />
             </Routes>
           </main>
-          <Analytics/>
         </div>
       </Router>
     </ThemeProvider>

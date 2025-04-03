@@ -8,6 +8,7 @@ import {Provider} from "react-redux";
 import {store} from "./redux/store.tsx"
 import { Toaster } from 'sonner';
 import TagManager from 'react-gtm-module'
+import {Analytics} from "@vercel/analytics/react"
 
 const tagManagerArgs = {
   gtmId: 'GTM-KDLPMHHL'
@@ -21,6 +22,7 @@ createRoot(document.getElementById('root')!).render(
           <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID!}>
             <Toaster position="top-center" richColors />
             <App />
+            <Analytics/>
           </GoogleOAuthProvider> 
         </ThemeProvider>
       </Provider>
